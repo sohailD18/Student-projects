@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Products - Multi-Vendor Marketplace{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Categories</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{% url 'product_list' %}" class="list-group-item list-group-item-action {% if not request.GET.category %}active{% endif %}">
+                    All Categories
+                </a>
+                {% for category in categories %}
+                <a href="?category={{ category.id }}" class="list-group-item list-group-item-action {% if request.GET.category == category.id|stringformat:'s' %}active{% endif %}">
+                    {{ category.name }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Price Range</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" action="">
+                    {% if request.GET.q %}<input type="hidden" name="q" value="{{ request.GET.q }}">{% endif %}
+                    {% if request.GET.category %}<input type="hidden" name="category" value="{{ request.GET.category }}">{% endif %}
+                    <div class="mb-2">
+                        <label>Min Price</label>
+                        <input type="number" name="min_price" class="form-control" value="{{ request.GET.min_price }}" min="0">
+                    </div>
+                    <div class="mb-2">
+                        <label>Max Price</label>
+                        <input type="number" name="max_price" class="form-control" value="{{ request.GET.max_price }}" min="0">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Apply</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Products {% if request.GET.q %} - Search: "{{ request.GET.q }}"{% endif %}</h4>
+            <div class="btn-group">
+                <a href="?sort=-created_at" class="btn btn-outline-secondary {% if request.GET.sort == '-created_at' or not request.GET.sort %}active{% endif %}">Newest</a>
+                <a href="?sort=price" class="btn btn-outline-secondary {% if request.GET.sort == 'price' %}active{% endif %}">Price: Low</a>
+                <a href="?sort=-price" class="btn btn-outline-secondary {% if request.GET.sort == '-price' %}active{% endif %}">Price: High</a>
+            </div>
+        </div>
+        
+        <div class="row">
+            {% for product in products %}
+            <div class="col-md-4 col-sm-6 mb-4">
+                <div class="card card-product h-100">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <i class="fas fa-image fa-3x text-muted"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <a href="{% url 'product_detail' product.slug %}" class="text-decoration-none text-dark">
+                                {{ product.name|truncatewords:10 }}
+                            </a>
+                        </h6>
+                        <p class="card-text text-muted small">
+                            <a href="{% url 'vendor_store' product.vendor.store_slug %}">{{ product.vendor.store_name }}</a>
+                        </p>
+                        <div class="mb-2">
+                            {% if product.sale_price and product.sale_price < product.price %}
+                            <span class="price-original">${{ product.price }}</span>
+                            <span class="price-sale">${{ product.sale_price }}</span>
+                            {% else %}
+                            <span class="fw-bold">${{ product.price }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="star-rating mb-2">
+                            {% for i in "12345" %}
+                            <i class="fas fa-star{% if forloop.counter <= product.rating %}{% else %}-o{% endif %}"></i>
+                            {% endfor %}
+                            <small class="text-muted">({{ product.review_count }})</small>
+                         </div>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-danger btn-sm" onclick="addToWishlist({{ product.id }})">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="addToCart({{ product.id }})">
+                                <i class="fas fa-cart-plus"></i> Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p class="text-muted">No products found.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

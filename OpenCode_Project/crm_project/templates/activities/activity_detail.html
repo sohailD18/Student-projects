@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ activity.subject }} - CRM System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ activity.subject }}</h1>
+    <div class="btn-group">
+        <a href="{% url 'activity_update' activity.pk %}" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Edit Activity
+        </a>
+        <a href="{% url 'activity_delete' activity.pk %}" class="btn btn-danger">
+            <i class="fas fa-trash"></i> Delete Activity
+        </a>
+        <a href="{% url 'activity_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Activities
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Activity Details</h5>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Type:</strong> {{ activity.get_activity_type_display }}</p>
+                        <p><strong>Status:</strong> {{ activity.get_status_display }}</p>
+                        <p><strong>Priority:</strong> {{ activity.get_priority_display }}</p>
+                        <p><strong>Date:</strong> {{ activity.activity_date }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Duration:</strong> {{ activity.duration|default:"N/A" }} minutes</p>
+                        <p><strong>Owner:</strong> {{ activity.user.username }}</p>
+                    </div>
+                </div>
+                <hr>
+                <h6>Description</h6>
+                <p>{{ activity.description }}</p>
+                {% if activity.outcome %}
+                <hr>
+                <h6>Outcome</h6>
+                <p>{{ activity.outcome }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Related Contact</h5>
+                <hr>
+                {% if activity.contact %}
+                <p><strong>{{ activity.contact.full_name }}</strong></p>
+                <p>{{ activity.contact.job_title }}</p>
+                <a href="{% url 'contact_detail' activity.contact.pk %}" class="btn btn-sm btn-outline-primary">View Contact</a>
+                {% else %}
+                <p class="text-muted">No contact associated</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Related Deal</h5>
+                <hr>
+                {% if activity.deal %}
+                <p><strong>{{ activity.deal.title }}</strong></p>
+                <p>${{ activity.deal.value }}</p>
+                <a href="{% url 'deal_detail' activity.deal.pk %}" class="btn btn-sm btn-outline-primary">View Deal</a>
+                {% else %}
+                <p class="text-muted">No deal associated</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

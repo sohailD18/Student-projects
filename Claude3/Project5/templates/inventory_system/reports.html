@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load inventory_filters %}
+
+{% block title %}Reports - AI Inventory Management{% endblock %}
+
+{% block content %}
+<!-- Low Stock Alert -->
+{% if low_stock_products %}
+<div class="card" style="border-left: 4px solid #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title">🚨 Immediate Reorder Required</h3>
+            <p class="card-subtitle">
+                {{ total_low_stock }} product(s) need immediate attention.
+                <strong>Estimated order value: ${{ total_order_value|floatformat:2 }}</strong>
+            </p>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Priority</th>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Current Stock</th>
+                    <th>Recommended</th>
+                    <th>Quantity to Order</th>
+                    <th>Unit Price</th>
+                    <th>Order Value</th>
+                    <th>AI Confidence</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in low_stock_products %}
+                <tr>
+                    <td>
+                        {% if forloop.counter == 1 %}
+                            <span class="badge low-stock">⚠️ Critical</span>
+                        {% else %}
+                            <span class="badge low-stock">High</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ product.name }}</strong></td>
+                    <td>{{ product.category }}</td>
+                    <td>
+                        <strong style="color: #dc2626;">{{ product.current_stock }}</strong>
+                    </td>
+                    <td>{{ product.recommended_stock }}</td>
+                    <td>
+                        <strong style="color: #dc2626;">+{{ product.urgency }}</strong>
+                    </td>
+                    <td>${{ product.unit_price }}</td>
+                    <td><strong>${{ product.order_value|floatformat:2 }}</strong></td>
+                    <td>
+                        {% if product.confidence %}
+                            <small>{{ product.confidence|percentage }}</small>
+                        {% else %}
+                            <span class="text-secondary">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-top: 24px; padding: 20px; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-radius: var(--radius-lg); border: 1px solid rgba(239, 68, 68, 0.3);">
+        <strong style="color: #991b1b; font-size: 1.05rem;">📋 Recommended Actions:</strong>
+        <ul style="margin: 14px 0 0 24px; font-size: 0.9rem; line-height: 1.8;">
+            <li>Contact suppliers immediately for critical items</li>
+            <li>Consider expedited shipping for top 3 priority items</li>
+            <li>Review demand forecasts to adjust order quantities</li>
+            <li>Total estimated investment: <strong style="color: #991b1b;">${{ total_order_value|floatformat:2 }}</strong></li>
+        </ul>
+    </div>
+</div>
+{% else %}
+<div class="card" style="border: 1px solid rgba(16, 185, 129, 0.3); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);">
+    <div class="card-header">
+        <h3 class="card-title">✅ Stock Levels Healthy</h3>
+    </div>
+    <div style="padding: 32px; text-align: center; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: var(--radius-lg);">
+        <p style="font-size: 1.25rem; margin-bottom: 8px; color: #166534; font-weight: 600;">No products require immediate reordering.</p>
+        <p style="color: #15803d;">All inventory is at optimal levels.</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Overstock Alert -->
+{% if overstock_products %}
+<div class="card" style="margin-top: 28px; border-left: 4px solid #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title">⚠️ Overstock Detected</h3>
+            <p class="card-subtitle">
+                {{ total_overstock }} product(s) have excess inventory.
+                <strong>Excess value: ${{ total_excess_value|floatformat:2 }}</strong>
+            </p>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Current Stock</th>
+                    <th>Recommended Level</th>
+                    <th>Excess Units</th>
+                    <th>Excess Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in overstock_products %}
+                <tr>
+                    <td><strong>{{ product.name }}</strong></td>
+                    <td>{{ product.current_stock }}</td>
+                    <td>{{ product.recommended_stock }}</td>
+                    <td>
+                        <strong style="color: #d97706;">+{{ product.excess }}</strong>
+                    </td>
+                    <td><strong>${{ product.excess_value|floatformat:2 }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-top: 24px; padding: 20px; background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%); border-radius: var(--radius-lg); border: 1px solid rgba(245, 158, 11, 0.3);">
+        <strong style="color: #92400e; font-size: 1.05rem;">💡 Recommendations:</strong>
+        <ul style="margin: 14px 0 0 24px; font-size: 0.9rem; line-height: 1.8;">
+            <li>Consider running promotions for overstocked items</li>
+            <li>Bundle slow-moving products with popular items</li>
+            <li>Review order quantities for these products in the future</li>
+            <li>Potential cost savings: <strong style="color: #92400e;">${{ total_excess_value|floatformat:2 }}</strong></li>
+        </ul>
+    </div>
+</div>
+{% endif %}
+
+<!-- Summary Actions -->
+<div class="card" style="margin-top: 24px;">
+    <div class="card-header">
+        <h3 class="card-title">Quick Actions</h3>
+    </div>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <a href="{% url 'inventory_system:run_predictions' %}" class="btn btn-primary">
+            🤖 Run New Predictions
+        </a>
+        <a href="{% url 'inventory_system:dashboard' %}" class="btn btn-secondary">
+            📊 Back to Dashboard
+        </a>
+        <a href="/admin/inventory_system/product/" class="btn btn-secondary">
+            ⚙️ Manage Products
+        </a>
+    </div>
+</div>
+
+<!-- Report Summary -->
+<div class="card" style="margin-top: 28px;">
+    <div class="card-header">
+        <h3 class="card-title">Report Summary</h3>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
+        <div style="padding: 24px; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-radius: var(--radius-lg); text-align: center; border: 1px solid rgba(239, 68, 68, 0.3); box-shadow: 0 2px 8px rgba(239, 68, 68, 0.1); transition: all 0.3s ease;">
+            <div style="font-size: 0.8rem; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Low Stock Items</div>
+            <div style="font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-top: 8px;">{{ total_low_stock }}</div>
+        </div>
+        <div style="padding: 24px; background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%); border-radius: var(--radius-lg); text-align: center; border: 1px solid rgba(245, 158, 11, 0.3); box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1); transition: all 0.3s ease;">
+            <div style="font-size: 0.8rem; color: #92400e; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Overstock Items</div>
+            <div style="font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-top: 8px;">{{ total_overstock }}</div>
+        </div>
+        <div style="padding: 24px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: var(--radius-lg); text-align: center; border: 1px solid rgba(16, 185, 129, 0.3); box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1); transition: all 0.3s ease;">
+            <div style="font-size: 0.8rem; color: #166534; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Order Value Needed</div>
+            <div style="font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #059669 0%, #10b981 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-top: 8px;">${{ total_order_value|floatformat:0 }}</div>
+        </div>
+        <div style="padding: 24px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: var(--radius-lg); text-align: center; border: 1px solid rgba(59, 130, 246, 0.3); box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1); transition: all 0.3s ease;">
+            <div style="font-size: 0.8rem; color: #1e40af; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Excess Inventory Value</div>
+            <div style="font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-top: 8px;">${{ total_excess_value|floatformat:0 }}</div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

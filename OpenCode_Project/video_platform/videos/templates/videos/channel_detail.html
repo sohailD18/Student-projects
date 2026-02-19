@@ -1,0 +1,150 @@
+{% extends 'videos/base.html' %}
+
+{% block title %}{{ channel.name }} - VideoStream{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-2 text-center">
+                    {% if channel.profile_image %}
+                    <img src="{{ channel.profile_image.url }}" class="rounded-circle" alt="{{ channel.name }}" style="width: 120px; height: 120px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                        <span class="text-white fs-2">{{ channel.name|first|upper }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-8">
+                    <h2 class="mb-1">{{ channel.name }}</h2>
+                    <p class="text-muted mb-2 subscriber-count">{{ channel.subscriber_count }} subscribers • {{ channel.total_videos }} videos</p>
+                    <p class="mb-0">{{ channel.description }}</p>
+                </div>
+                <div class="col-md-2 text-center">
+                    {% if user.is_authenticated %}
+                    <button class="btn {% if is_subscribed %}btn-outline-secondary{% else %}btn-primary{% endif %} subscribe-btn" onclick="subscribeChannel({{ channel.id }})">
+                        {% if is_subscribed %} Subscribed {% else %} Subscribe {% endif %}
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="mb-3">Videos</h4>
+    <div class="row mb-4">
+        {% for video in videos %}
+        <div class="col-md-3 mb-3">
+            <div class="card video-card h-100" onclick="location.href='{% url 'video_detail' video.slug %}'">
+                <div class="video-thumbnail">
+                    {% if video.thumbnail %}
+                    <img src="{{ video.thumbnail.url }}" class="card-img-top" alt="{{ video.title }}" style="height: 180px; object-fit: cover;">
+                    {% else %}
+                    <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 180px;">
+                        <span class="text-white">No Thumbnail</span>
+                    </div>
+                    {% endif %}
+                    <span class="duration-badge">{{ video.formatted_duration }}</span>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">{{ video.title|truncatewords:10 }}</h6>
+                    <p class="card-text small">{{ video.view_count }} views • {{ video.created_at|timesince }} ago</p>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="text-center text-muted">No videos uploaded yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if playlists %}
+    <h4 class="mb-3">Playlists</h4>
+    <div class="row">
+        {% for playlist in playlists %}
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 playlist-card" style="cursor: pointer;" onclick="location.href='{% url 'playlist_detail' playlist.id %}'">
+                {% if playlist.thumbnail %}
+                <img src="{{ playlist.thumbnail.url }}" class="card-img-top" alt="{{ playlist.name }}" style="height: 120px; object-fit: cover;">
+                {% elif playlist.videos.first %}
+                {% with first_video=playlist.videos.first %}
+                {% if first_video.thumbnail %}
+                <img src="{{ first_video.thumbnail.url }}" class="card-img-top" alt="{{ playlist.name }}" style="height: 120px; object-fit: cover;">
+                {% else %}
+                <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 120px;">
+                    <span class="text-white">No Thumbnail</span>
+                </div>
+                {% endif %}
+                {% endwith %}
+                {% else %}
+                <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 120px;">
+                    <span class="text-white">No Videos</span>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <h6 class="card-title">{{ playlist.name|truncatewords:8 }}</h6>
+                    <p class="card-text small text-muted">{{ playlist.videos.count }} videos</p>
+                    {% if playlist.videos.exists %}
+                    <div class="small text-muted">
+                        <strong>Videos:</strong>
+                        {% for video in playlist.videos.all|slice:":3" %}
+                        <div>{{ video.title|truncatewords:5 }}</div>
+                        {% endfor %}
+                        {% if playlist.videos.count > 3 %}
+                        <div class="text-primary">+{{ playlist.videos.count|add:"-3" }} more</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function subscribeChannel(channelId) {
+    fetch(`/channel/${channelId}/subscribe/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const btn = document.querySelector('.subscribe-btn');
+        const subscriberCount = document.querySelector('.subscriber-count');
+        
+        if (data.subscribed) {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline-secondary');
+            btn.textContent = ' Subscribed ';
+        } else {
+            btn.classList.remove('btn-outline-secondary');
+            btn.classList.add('btn-primary');
+            btn.textContent = ' Subscribe ';
+        }
+        
+        subscriberCount.textContent = data.subscriber_count + ' subscribers';
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

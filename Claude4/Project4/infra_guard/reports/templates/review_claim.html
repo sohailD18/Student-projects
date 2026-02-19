@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Review Claim - InfraGuard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Review Claim #{{ claim.id }}</h1>
+        <a href="{% url 'reports:manage_claims' %}" class="btn btn-secondary">← Back to Claims</a>
+    </div>
+
+    <!-- Incident & Claim Details -->
+    <div class="two-column-grid">
+        <!-- Incident Info -->
+        <div class="card">
+            <h3>Incident Details</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">Type:</span>
+                    <span class="incident-type-badge type-{{ claim.incident.incident_type }}">
+                        {{ claim.incident.get_incident_type_display }}
+                    </span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Location:</span>
+                    <span>{{ claim.incident.location }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Severity:</span>
+                    <span class="severity-badge {{ claim.incident.get_severity_color }}">
+                        {{ claim.incident.severity_score }} ({{ claim.incident.get_severity_level }})
+                    </span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Reported by:</span>
+                    <span>{{ claim.incident.reported_by.username }}</span>
+                </div>
+            </div>
+            <div class="claim-description">
+                <h4>Description:</h4>
+                <p>{{ claim.incident.description }}</p>
+            </div>
+        </div>
+
+        <!-- Claim Info -->
+        <div class="card">
+            <h3>Claim Details</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">Victim:</span>
+                    <span>{{ claim.victim_name }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Claim Amount:</span>
+                    <span class="amount-highlight">${{ claim.claim_amount }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Status:</span>
+                    <span class="status-badge {{ claim.get_status_color }}">
+                        {{ claim.get_status_display }}
+                    </span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Filed Date:</span>
+                    <span>{{ claim.filed_date|date:"F d, Y" }}</span>
+                </div>
+            </div>
+            <div class="claim-description">
+                <h4>Evidence Description:</h4>
+                <p>{{ claim.evidence_description }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Form -->
+    <div class="card form-card">
+        <h3>Review Decision</h3>
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>Action Required:</label>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="action" value="approve" required>
+                        <span class="radio-label radio-success">
+                            <strong>✅ Approve Claim</strong>
+                            <small>This claim is valid and should be compensated</small>
+                        </span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="action" value="under_review">
+                        <span class="radio-label radio-warning">
+                            <strong>⏳ Mark for Further Review</strong>
+                            <small>Requires additional investigation</small>
+                        </span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="action" value="reject">
+                        <span class="radio-label radio-danger">
+                            <strong>❌ Reject Claim</strong>
+                            <small>This claim is invalid or insufficient</small>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.approved_amount.id_for_label }}">
+                    Approved Amount <span class="optional">(if different from claimed)</span>
+                </label>
+                <div class="currency-input">
+                    <span class="currency-symbol">$</span>
+                    {{ form.approved_amount }}
+                </div>
+                <small class="form-help">Leave blank to approve full claimed amount</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.review_notes.id_for_label }}">
+                    Review Notes <span class="required">*</span>
+                </label>
+                {{ form.review_notes }}
+                <small class="form-help">Explain your decision for record-keeping</small>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-large">
+                    <span class="btn-icon">📋</span> Submit Review
+                </button>
+                <a href="{% url 'reports:manage_claims' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

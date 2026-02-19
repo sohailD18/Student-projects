@@ -1,0 +1,360 @@
+{% extends "tasks/base.html" %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Stats Grid -->
+    <div class="stats-grid" id="statsGrid">
+        <div class="skeleton" style="height: 120px;"></div>
+        <div class="skeleton" style="height: 120px;"></div>
+        <div class="skeleton" style="height: 120px;"></div>
+        <div class="skeleton" style="height: 120px;"></div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+        <!-- Status Distribution Chart -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Task Status Distribution</h3>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" id="statusChart">
+                    <canvas id="statusChartCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completion Trend Chart -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Completion Trend (Last 30 Days)</h3>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" id="trendChart">
+                    <canvas id="trendChartCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tasks & Risks Row -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 1.5rem;">
+        <!-- Prioritized Tasks -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">AI-Prioritized Tasks</h3>
+                <a href="{% url 'tasks:tasks' %}" class="btn btn-sm btn-secondary">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="task-list" id="prioritizedTasks">
+                    <div class="skeleton" style="height: 80px;"></div>
+                    <div class="skeleton" style="height: 80px;"></div>
+                    <div class="skeleton" style="height: 80px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- At-Risk Tasks -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: var(--danger-500); margin-right: 0.5rem;">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    At-Risk Tasks
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="task-list" id="atRiskTasks">
+                    <div class="skeleton" style="height: 80px;"></div>
+                    <div class="skeleton" style="height: 80px;"></div>
+                    <div class="skeleton" style="height: 80px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Performers -->
+    <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header">
+            <h3 class="card-title">Top Performers (Last 30 Days)</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="table" id="performersTable">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Tasks Completed</th>
+                            <th>Hours Logged</th>
+                            <th>Avg per Task</th>
+                        </tr>
+                    </thead>
+                    <tbody id="performersBody">
+                        <tr>
+                            <td colspan="4" style="text-align: center;">
+                                <div class="skeleton" style="height: 40px;"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Deadlines -->
+    <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header">
+            <h3 class="card-title">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style="color: var(--warning-500); margin-right: 0.5rem;">
+                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Upcoming Deadlines (Next 7 Days)
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="task-list" id="upcomingTasks">
+                <div class="skeleton" style="height: 60px;"></div>
+                <div class="skeleton" style="height: 60px;"></div>
+                <div class="skeleton" style="height: 60px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Dashboard Controller
+const Dashboard = {
+    data: null,
+    charts: {},
+
+    async init() {
+        try {
+            await this.loadData();
+            this.renderStats();
+            this.renderCharts();
+            this.renderTaskLists();
+            this.renderPerformers();
+        } catch (error) {
+            console.error('Dashboard error:', error);
+            Toast.error('Failed to load dashboard data');
+        }
+    },
+
+    async loadData() {
+        this.data = await API.dashboard.getData();
+    },
+
+    renderStats() {
+        const summary = this.data.data.summary;
+        const statsGrid = document.getElementById('statsGrid');
+
+        const stats = [
+            {
+                label: 'Total Tasks',
+                value: summary.total_tasks,
+                icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+                color: 'primary',
+            },
+            {
+                label: 'Completed',
+                value: summary.completed_tasks,
+                icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+                color: 'success',
+            },
+            {
+                label: 'At Risk',
+                value: summary.at_risk_tasks,
+                icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+                color: 'warning',
+            },
+            {
+                label: 'Overdue',
+                value: summary.overdue_tasks,
+                icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+                color: 'danger',
+            },
+        ];
+
+        statsGrid.innerHTML = stats.map(stat => `
+            <div class="stat-card">
+                <div class="stat-icon ${stat.color}">
+                    ${stat.icon}
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">${stat.label}</div>
+                    <div class="stat-value">${Format.number(stat.value)}</div>
+                </div>
+            </div>
+        `).join('');
+    },
+
+    renderCharts() {
+        const charts = this.data.data.charts;
+
+        // Status Distribution Chart
+        const statusData = charts.status_distribution;
+        const statusLabels = Object.keys(statusData);
+        const statusValues = Object.values(statusData);
+
+        const statusCtx = document.getElementById('statusChartCanvas').getContext('2d');
+        this.charts.status = new Chart(statusCtx, ChartConfig.createDoughnut(statusValues, statusLabels));
+
+        // Completion Trend Chart
+        const trendData = charts.completion_trend;
+        const trendLabels = trendData.map(d => {
+            const date = new Date(d.date);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        });
+        const trendValues = trendData.map(d => d.count);
+
+        const trendCtx = document.getElementById('trendChartCanvas').getContext('2d');
+        this.charts.trend = new Chart(trendCtx, ChartConfig.createLine(trendValues, trendLabels));
+    },
+
+    renderTaskLists() {
+        const tasks = this.data.data.tasks;
+
+        // Prioritized Tasks
+        const prioritizedTasks = document.getElementById('prioritizedTasks');
+        if (tasks.prioritized.length > 0) {
+            prioritizedTasks.innerHTML = tasks.prioritized.map(task => this.renderTaskCard(task)).join('');
+        } else {
+            prioritizedTasks.innerHTML = '<p class="text-muted text-center">No tasks found</p>';
+        }
+
+        // At-Risk Tasks
+        const atRiskTasks = document.getElementById('atRiskTasks');
+        if (tasks.at_risk.length > 0) {
+            atRiskTasks.innerHTML = tasks.at_risk.map(task => this.renderTaskCard(task, true)).join('');
+        } else {
+            atRiskTasks.innerHTML = '<p class="text-muted text-center">No at-risk tasks</p>';
+        }
+
+        // Upcoming Tasks
+        const upcomingTasks = document.getElementById('upcomingTasks');
+        if (tasks.upcoming.length > 0) {
+            upcomingTasks.innerHTML = tasks.upcoming.slice(0, 5).map(task => this.renderUpcomingTask(task)).join('');
+        } else {
+            upcomingTasks.innerHTML = '<p class="text-muted text-center">No upcoming deadlines</p>';
+        }
+    },
+
+    renderTaskCard(task, showRisk = false) {
+        const riskClass = task.is_at_risk ? 'at-risk' : '';
+        const overdueClass = task.is_overdue ? 'overdue' : '';
+        const scoreClass = task.smart_priority_score >= 70 ? 'score-high' :
+                          task.smart_priority_score >= 40 ? 'score-medium' : 'score-low';
+
+        return `
+            <div class="task-card ${riskClass} ${overdueClass}" onclick="window.location.href='/tasks/${task.id}/'">
+                <div class="task-header">
+                    <div>
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-meta">
+                            ${task.assignee ? `<span>Assigned to: ${task.assignee.username}</span>` : ''}
+                            ${task.project ? `<span>• ${task.project.name}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="task-priority-score">
+                        <div class="score-badge ${scoreClass}">${task.smart_priority_score}</div>
+                    </div>
+                </div>
+                <div class="task-footer" style="display: flex; align-items: center; gap: 1rem; margin-top: 0.75rem;">
+                    ${StatusHelper.getBadge(task.status_code, task.status)}
+                    ${showRisk ? RiskHelper.getIndicator(task.risk_level_code, task.risk_level) : ''}
+                    ${task.due_date ? `<span style="font-size: 0.75rem; color: var(--gray-500); margin-left: auto;">
+                        ${Format.timeUntil(task.due_date)}
+                    </span>` : ''}
+                </div>
+            </div>
+        `;
+    },
+
+    renderUpcomingTask(task) {
+        const daysUntil = task.days_until_due;
+        const urgencyClass = daysUntil <= 1 ? 'text-danger' : daysUntil <= 3 ? 'text-warning' : 'text-info';
+
+        return `
+            <div class="task-card" style="padding: 0.75rem 1rem; cursor: pointer;" onclick="window.location.href='/tasks/${task.id}/'">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 500; margin-bottom: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${task.title}</div>
+                        <div style="font-size: 0.75rem; color: var(--gray-500);">
+                            ${task.assignee ? task.assignee.username : 'Unassigned'}
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="${urgencyClass}" style="font-weight: 600; font-size: 0.875rem;">
+                            ${daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `${daysUntil} days`}
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--gray-500);">
+                            ${Format.date(task.due_date, { weekday: 'short' })}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    renderPerformers() {
+        const performers = this.data.data.top_performers;
+        const performersBody = document.getElementById('performersBody');
+
+        if (performers.length > 0) {
+            performersBody.innerHTML = performers.map((user, index) => {
+                const avgHours = user.hours_logged > 0 && user.tasks_completed > 0
+                    ? (user.hours_logged / user.tasks_completed).toFixed(1)
+                    : '0';
+
+                return `
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, var(--primary-400), var(--primary-600)); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.75rem;">
+                                    ${(user.username || 'U')[0].toUpperCase()}
+                                </div>
+                                <div>
+                                    <div style="font-weight: 500;">${user.username || 'Unknown'}</div>
+                                    ${index < 3 ? `<div style="font-size: 0.75rem; color: var(--warning-500);">
+                                        ${index === 0 ? '🥇 Top Performer' : index === 1 ? '🥈 Second Place' : '🥉 Third Place'}
+                                    </div>` : ''}
+                                </div>
+                            </div>
+                        </td>
+                        <td><strong>${user.tasks_completed}</strong></td>
+                        <td>${Format.hours(user.hours_logged)}</td>
+                        <td>${avgHours}h</td>
+                    </tr>
+                `;
+            }).join('');
+        } else {
+            performersBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No data available</td></tr>';
+        }
+    },
+};
+
+// Initialize dashboard when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    Dashboard.init();
+});
+
+// Refresh dashboard data
+document.getElementById('refreshBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('refreshBtn');
+    btn.classList.add('loading');
+    try {
+        await Dashboard.init();
+        Toast.success('Dashboard refreshed');
+    } catch (error) {
+        Toast.error('Failed to refresh dashboard');
+    } finally {
+        btn.classList.remove('loading');
+    }
+});
+</script>
+{% endblock %}

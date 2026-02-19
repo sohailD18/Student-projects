@@ -1,0 +1,72 @@
+{% extends 'campaigns/base.html' %}
+
+{% block title %}Send Campaign - Email Marketing Platform{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Send Campaign</h1>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <i class="bi bi-send"></i> Confirm Campaign Sending
+            </div>
+            <div class="card-body">
+                <h4>{{ campaign.name }}</h4>
+
+                <div class="alert alert-info">
+                    <h6><i class="bi bi-info-circle"></i> Campaign Details</h6>
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td><strong>Email Template:</strong></td>
+                            <td>{{ campaign.email_template.name }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Email List:</strong></td>
+                            <td>{{ campaign.email_list.name }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Recipients:</strong></td>
+                            <td>{{ campaign.total_recipients }} subscribers</td>
+                        </tr>
+                        {% if campaign.is_ab_test %}
+                        <tr>
+                            <td><strong>Type:</strong></td>
+                            <td><span class="badge bg-info">A/B Test Campaign</span></td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+
+                {% if campaign.scheduled_at %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-clock"></i>
+                    <strong>Scheduled:</strong> This campaign will be sent on {{ campaign.scheduled_at|date:"M d, Y H:i" }}
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Immediate Sending:</strong> Emails will be queued immediately after confirmation.
+                </div>
+                {% endif %}
+
+                <p class="mb-3">Are you ready to send this campaign?</p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'campaigns:campaign_detail' campaign.pk %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-send"></i> {{ campaign.scheduled_at|yesno:"Schedule,Send" }} Campaign
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

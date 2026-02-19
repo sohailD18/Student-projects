@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - Multi-Vendor Marketplace{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Checkout</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Shipping Address</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Full Address</label>
+                        <textarea name="shipping_address" class="form-control" rows="3" required placeholder="Street address, City, State, ZIP"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Items</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in cart.items.all %}
+                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                        <div>
+                            <strong>{{ item.product.name }}</strong>
+                            <small class="text-muted d-block">{{ item.product.vendor.store_name }}</small>
+                        </div>
+                        <div>
+                            {{ item.quantity }} x ${{ item.product.current_price }} = ${{ item.subtotal }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-lg w-100">
+                <i class="fas fa-lock"></i> Place Order
+            </button>
+        </form>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Order Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Subtotal</span>
+                    <span>${{ cart.total_price }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Shipping</span>
+                    <span>{% if cart.total_price >= 100 %}FREE{% else %}$10.00{% endif %}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Tax</span>
+                    <span>${{ cart.total_price|multiply:0.08|floatformat:2 }}</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <strong>Total</strong>
+                    <strong>
+                        {% if cart.total_price >= 100 %}
+                        ${{ cart.total_price|add:cart.total_price|multiply:0.08|floatformat:2 }}
+                        {% else %}
+                        ${{ cart.total_price|add:10|add:cart.total_price|multiply:0.08|floatformat:2 }}
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load inventory_filters %}
+
+{% block title %}Dashboard - AI Inventory Management{% endblock %}
+
+{% block content %}
+<!-- Summary Cards -->
+<div class="summary-cards">
+    <div class="summary-card">
+        <div class="label">Total Products</div>
+        <div class="value">{{ total_products }}</div>
+        <div class="subtext">Active inventory items</div>
+    </div>
+
+    <div class="summary-card success">
+        <div class="label">Optimal Stock</div>
+        <div class="value">{{ optimal_count }}</div>
+        <div class="subtext">Products at ideal levels</div>
+    </div>
+
+    <div class="summary-card danger">
+        <div class="label">Low Stock</div>
+        <div class="value">{{ low_stock_count }}</div>
+        <div class="subtext">Needs immediate attention</div>
+    </div>
+
+    <div class="summary-card warning">
+        <div class="label">Overstock</div>
+        <div class="value">{{ overstock_count }}</div>
+        <div class="subtext">Excess inventory detected</div>
+    </div>
+
+    <div class="summary-card">
+        <div class="label">Total Inventory Value</div>
+        <div class="value">${{ total_inventory_value|floatformat:2 }}</div>
+        <div class="subtext">Current stock value</div>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title">Inventory Overview</h3>
+            <p class="card-subtitle">Real-time AI predictions and stock status</p>
+        </div>
+        <div>
+            <a href="{% url 'inventory_system:analytics' %}" class="btn btn-primary">View Analytics</a>
+            <a href="{% url 'inventory_system:reports' %}" class="btn btn-secondary">View Reports</a>
+        </div>
+    </div>
+
+    {% if products %}
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Category</th>
+                    <th>Current Stock</th>
+                    <th>Predicted Demand</th>
+                    <th>Recommended Stock</th>
+                    <th>Status</th>
+                    <th>Confidence</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>
+                        <strong>{{ product.name }}</strong><br>
+                        <small class="text-secondary">${{ product.unit_price }}/unit</small>
+                    </td>
+                    <td>{{ product.category }}</td>
+                    <td>
+                        <strong>{{ product.current_stock }}</strong>
+                        <small class="text-secondary">units</small>
+                    </td>
+                    <td>
+                        {% if product.predicted_demand %}
+                            <strong>{{ product.predicted_demand }}</strong>
+                        {% else %}
+                            <span class="text-secondary">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if product.recommended_stock %}
+                            <strong>{{ product.recommended_stock }}</strong>
+                        {% else %}
+                            <span class="text-secondary">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if product.status_code == 'low_stock' %}
+                            <span class="badge low-stock">Low Stock</span>
+                        {% elif product.status_code == 'optimal' %}
+                            <span class="badge optimal">Optimal</span>
+                        {% elif product.status_code == 'overstock' %}
+                            <span class="badge overstock">Overstock</span>
+                        {% else %}
+                            <span class="badge none">{{ product.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if product.confidence %}
+                            <small>{{ product.confidence|percentage }}</small>
+                        {% else %}
+                            <span class="text-secondary">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'inventory_system:product_detail' product.id %}"
+                           class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem;">
+                            Details
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <strong>No products found.</strong>
+        <a href="/admin/inventory_system/product/add/" class="btn btn-primary" style="margin-left: 12px;">
+            Add Products
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Quick Actions</h3>
+    </div>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <a href="{% url 'inventory_system:run_predictions' %}" class="btn btn-primary">
+            🤖 Run AI Predictions
+        </a>
+        <a href="{% url 'inventory_system:analytics' %}" class="btn btn-secondary">
+            📈 View Analytics
+        </a>
+        <a href="{% url 'inventory_system:reports' %}" class="btn btn-secondary">
+            📋 Reorder Reports
+        </a>
+        <a href="/admin/inventory_system/" class="btn btn-secondary">
+            ⚙️ Manage Products
+        </a>
+    </div>
+</div>
+
+{% if low_stock_count > 0 %}
+<div class="alert alert-warning">
+    <strong>⚠️ Alert:</strong> You have <strong>{{ low_stock_count }}</strong> product(s) with low stock.
+    <a href="{% url 'inventory_system:reports' %}" class="btn btn-primary" style="margin-left: 12px; padding: 6px 16px;">
+        View Reorder Report
+    </a>
+</div>
+{% endif %}
+
+{% endblock %}

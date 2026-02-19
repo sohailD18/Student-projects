@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Analyze Soil - AgriSense{% endblock %}
+
+{% block extra_css %}
+<style>
+.input-range {
+    font-size: 0.875rem;
+    color: #666;
+    margin-top: 0.25rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="analyze-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>🔬 Soil Health Analysis</h1>
+            <p>Enter your soil parameters below to get AI-powered crop recommendations and fertilizer advice.</p>
+        </div>
+
+        <div class="analyze-container">
+            <div class="form-card">
+                <form id="analyzeForm" method="POST" action="{% url 'analyze' %}">
+                    {% csrf_token %}
+
+                    <div class="form-section">
+                        <h2><span class="step-number">1</span> Soil Nutrients</h2>
+
+                        <div class="form-group">
+                            <label for="nitrogen">
+                                Nitrogen (N) <span class="required">*</span>
+                                <span class="input-help">mg/kg</span>
+                            </label>
+                            <input type="number" id="nitrogen" name="nitrogen" required
+                                   min="0" max="200" step="1" placeholder="e.g., 60"
+                                   value="{{ request.POST.nitrogen|default:'' }}">
+                            <span class="input-range">Range: 0-200 mg/kg (Ideal: 50-90)</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phosphorus">
+                                Phosphorus (P) <span class="required">*</span>
+                                <span class="input-help">mg/kg</span>
+                            </label>
+                            <input type="number" id="phosphorus" name="phosphorus" required
+                                   min="0" max="150" step="1" placeholder="e.g., 35"
+                                   value="{{ request.POST.phosphorus|default:'' }}">
+                            <span class="input-range">Range: 0-150 mg/kg (Ideal: 20-50)</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="potassium">
+                                Potassium (K) <span class="required">*</span>
+                                <span class="input-help">mg/kg</span>
+                            </label>
+                            <input type="number" id="potassium" name="potassium" required
+                                   min="0" max="200" step="1" placeholder="e.g., 50"
+                                   value="{{ request.POST.potassium|default:'' }}">
+                            <span class="input-range">Range: 0-200 mg/kg (Ideal: 30-80)</span>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h2><span class="step-number">2</span> Soil Properties</h2>
+
+                        <div class="form-group">
+                            <label for="ph_level">
+                                pH Level <span class="required">*</span>
+                                <span class="input-help">0-14 scale</span>
+                            </label>
+                            <input type="number" id="ph_level" name="ph_level" required
+                                   min="0" max="14" step="0.1" placeholder="e.g., 6.5"
+                                   value="{{ request.POST.ph_level|default:'' }}">
+                            <span class="input-range">Range: 0-14 (Ideal: 6.0-7.0 for most crops)</span>
+                            <div class="ph-scale">
+                                <span>Acidic</span>
+                                <span>Neutral</span>
+                                <span>Alkaline</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="moisture">
+                                Soil Moisture <span class="required">*</span>
+                                <span class="input-help">Percentage</span>
+                            </label>
+                            <input type="number" id="moisture" name="moisture" required
+                                   min="0" max="100" step="1" placeholder="e.g., 55"
+                                   value="{{ request.POST.moisture|default:'' }}">
+                            <span class="input-range">Range: 0-100% (Ideal: 40-80%)</span>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-large">
+                            <span>🔍</span> Analyze Soil
+                        </button>
+                        <button type="reset" class="btn btn-secondary">
+                            <span>🔄</span> Reset Form
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="info-sidebar">
+                <div class="sidebar-card">
+                    <h3>💡 Tips for Accurate Results</h3>
+                    <ul>
+                        <li>Use values from a recent soil test (within 6 months)</li>
+                        <li>Collect samples from multiple locations in your field</li>
+                        <li>Mix samples thoroughly before testing</li>
+                        <li>For best results, test during the same season each year</li>
+                    </ul>
+                </div>
+
+                <div class="sidebar-card">
+                    <h3>📊 How It Works</h3>
+                    <ol>
+                        <li>Enter your soil parameters</li>
+                        <li>Our AI analyzes the data using ML models</li>
+                        <li>Get instant crop recommendations</li>
+                        <li>Receive personalized fertilizer advice</li>
+                        <li>Save results for future reference</li>
+                    </ol>
+                </div>
+
+                <div class="sidebar-card highlight">
+                    <h3>🌱 Did You Know?</h3>
+                    <p>Proper soil analysis can increase crop yields by up to 30% while reducing fertilizer costs by 20%!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Form validation
+document.getElementById('analyzeForm').addEventListener('submit', function(e) {
+    const nitrogen = parseFloat(document.getElementById('nitrogen').value);
+    const phosphorus = parseFloat(document.getElementById('phosphorus').value);
+    const potassium = parseFloat(document.getElementById('potassium').value);
+    const ph = parseFloat(document.getElementById('ph_level').value);
+    const moisture = parseFloat(document.getElementById('moisture').value);
+
+    if (nitrogen < 0 || nitrogen > 200) {
+        e.preventDefault();
+        alert('Nitrogen must be between 0 and 200 mg/kg');
+        return false;
+    }
+
+    if (phosphorus < 0 || phosphorus > 150) {
+        e.preventDefault();
+        alert('Phosphorus must be between 0 and 150 mg/kg');
+        return false;
+    }
+
+    if (potassium < 0 || potassium > 200) {
+        e.preventDefault();
+        alert('Potassium must be between 0 and 200 mg/kg');
+        return false;
+    }
+
+    if (ph < 0 || ph > 14) {
+        e.preventDefault();
+        alert('pH must be between 0 and 14');
+        return false;
+    }
+
+    if (moisture < 0 || moisture > 100) {
+        e.preventDefault();
+        alert('Moisture must be between 0 and 100%');
+        return false;
+    }
+
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<span>⏳</span> Analyzing...';
+    submitBtn.disabled = true;
+});
+</script>
+{% endblock %}

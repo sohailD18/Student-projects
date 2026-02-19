@@ -1,0 +1,189 @@
+{% extends "core/base.html" %}
+
+{% block title %}Fleet Vehicles - Fleet Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-car-front"></i> Fleet Vehicles
+        </h1>
+    </div>
+</div>
+
+<!-- Vehicle Stats Overview -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-primary">{{ vehicles|length }}</h5>
+                <p class="card-text text-muted">Total Vehicles</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-success">
+                    {% for v in vehicles %}{% if v.vehicle.status == 'active' %}{{ forloop.counter0|add:1 }}{% endif %}{% endfor %}
+                </h5>
+                <p class="card-text text-muted">Active</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-warning">
+                    {% for v in vehicles %}{% if v.vehicle.status == 'maintenance' %}{{ forloop.counter0|add:1 }}{% endif %}{% endfor %}
+                </h5>
+                <p class="card-text text-muted">In Maintenance</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-info">
+                    {% for v in vehicles %}{% if v.active_alerts > 0 %}{{ forloop.counter0|add:1 }}{% endif %}{% endfor %}
+                </h5>
+                <p class="card-text text-muted">With Alerts</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vehicles Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-list-ul"></i> All Vehicles</h5>
+        <div>
+            <a href="/admin/core/vehicle/add/" class="btn btn-primary" target="_blank">
+                <i class="bi bi-plus-lg"></i> Add Vehicle (Admin)
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if vehicles %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Vehicle</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Mileage</th>
+                        <th>Total Distance</th>
+                        <th>Fuel Efficiency</th>
+                        <th>Cost/Mile</th>
+                        <th>Rating</th>
+                        <th>Alerts</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in vehicles %}
+                    <tr>
+                        <td>
+                            <strong>{{ item.vehicle.plate }}</strong><br>
+                            <small class="text-muted">{{ item.vehicle.year }} {{ item.vehicle.make }} {{ item.vehicle.model }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ item.vehicle.get_vehicle_type_display }}</span>
+                        </td>
+                        <td>
+                            {% with status=item.vehicle.status %}
+                                {% if status == 'active' %}
+                                    <span class="badge bg-success">Active</span>
+                                {% elif status == 'maintenance' %}
+                                    <span class="badge bg-warning">Maintenance</span>
+                                {% elif status == 'inactive' %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Retired</span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>{{ item.vehicle.current_mileage|floatformat }} mi</td>
+                        <td>{{ item.total_distance|floatformat }} mi</td>
+                        <td>
+                            {% if item.fuel_efficiency > 0 %}
+                                <span class="text-success">{{ item.fuel_efficiency }} MPG</span>
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>${{ item.cost_per_mile|floatformat:2 }}</td>
+                        <td>
+                            {% with rating=item.rating %}
+                                {% if rating >= 80 %}
+                                    <span class="badge bg-success">{{ item.rating_label }}</span>
+                                {% elif rating >= 60 %}
+                                    <span class="badge bg-info">{{ item.rating_label }}</span>
+                                {% elif rating >= 40 %}
+                                    <span class="badge bg-warning">{{ item.rating_label }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ item.rating_label }}</span>
+                                {% endif %}
+                            {% endwith %}
+                            <small class="text-muted d-block">{{ item.rating }}/100</small>
+                        </td>
+                        <td>
+                            {% if item.active_alerts > 0 %}
+                                <span class="badge bg-danger">{{ item.active_alerts }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">0</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'core:vehicle_detail' item.vehicle.id %}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-car-front display-1 text-muted"></i>
+            <p class="mt-3 text-muted">No vehicles found. Add vehicles through the admin panel.</p>
+            <a href="/admin/core/vehicle/add/" class="btn btn-primary" target="_blank">
+                <i class="bi bi-plus-lg"></i> Add First Vehicle
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Efficiency Legend -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6 class="card-title"><i class="bi bi-info-circle"></i> Efficiency Rating Guide</h6>
+                <div class="row">
+                    <div class="col-md-3">
+                        <span class="badge bg-success">Excellent (80-100)</span>
+                        <p class="small text-muted mb-0">High efficiency, low cost per mile</p>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge bg-info">Good (60-79)</span>
+                        <p class="small text-muted mb-0">Above average performance</p>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge bg-warning">Fair (40-59)</span>
+                        <p class="small text-muted mb-0">Average performance, room for improvement</p>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge bg-danger">Poor (0-39)</span>
+                        <p class="small text-muted mb-0">Low efficiency, high operating costs</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

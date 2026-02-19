@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Ticket - HelpDeskPro</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background: #f5f7fa;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 2rem 0;
+        }
+
+        .update-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            border: none;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 2rem;
+            border: none;
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .card-header .ticket-id {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+
+        .card-body {
+            padding: 2.5rem;
+        }
+
+        /* Ticket Details Panel */
+        .details-panel {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .detail-row {
+            display: flex;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #6c757d;
+            min-width: 150px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            color: #212529;
+            font-weight: 500;
+        }
+
+        /* Status & Priority Badges */
+        .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .status-open {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-in_progress {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-closed {
+            background: #d6d8db;
+            color: #383d41;
+        }
+
+        .status-escalated {
+            background: #ffe3e3;
+            color: #dc3545;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .priority-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .priority-high {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .priority-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .priority-low {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        /* Form Styling */
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+        }
+
+        .form-text {
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        /* Buttons */
+        .btn-save {
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 10px;
+            padding: 0.875rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .btn-cancel {
+            border-radius: 10px;
+            padding: 0.875rem 2rem;
+            font-weight: 600;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .breadcrumb-item a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .breadcrumb-item a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb-item.active {
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'tickets:home' %}"><i class="bi bi-house-door"></i> Home</a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'tickets:dashboard' %}">Dashboard</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">Update Ticket</li>
+                    </ol>
+                </nav>
+
+                <!-- Update Card -->
+                <div class="card update-card">
+                    <div class="card-header">
+                        <h2><i class="bi bi-pencil-square"></i> Update Ticket</h2>
+                        <span class="ticket-id">{{ ticket.unique_ticket_id }}</span>
+                    </div>
+
+                    <div class="card-body">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message|safe }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <!-- Ticket Details Panel -->
+                        <div class="details-panel">
+                            <h5 class="mb-3" style="color: #212529; font-weight: 700;">
+                                <i class="bi bi-info-circle"></i> Ticket Details
+                            </h5>
+                            <div class="detail-row">
+                                <div class="detail-label">Customer Name</div>
+                                <div class="detail-value">
+                                    <i class="bi bi-person"></i> {{ ticket.complaint.name }}
+                                </div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Email</div>
+                                <div class="detail-value">
+                                    <i class="bi bi-envelope"></i> {{ ticket.complaint.email }}
+                                </div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Category</div>
+                                <div class="detail-value">
+                                    <i class="bi bi-folder"></i> {{ ticket.complaint.get_category_display }}
+                                </div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Priority</div>
+                                <div class="detail-value">
+                                    <span class="priority-badge priority-{{ ticket.complaint.priority }}">
+                                        <i class="bi bi-flag-fill"></i> {{ ticket.complaint.get_priority_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Current Status</div>
+                                <div class="detail-value">
+                                    <span class="status-badge status-{{ ticket.status }}">
+                                        <i class="bi bi-{% if ticket.status == 'open' %}envelope{% elif ticket.status == 'in_progress' %}arrow-repeat{% elif ticket.status == 'escalated' %}exclamation-triangle-fill{% else %}check-circle{% endif %}"></i>
+                                        {{ ticket.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Created</div>
+                                <div class="detail-value">
+                                    <i class="bi bi-calendar"></i> {{ ticket.created_at|date:"F d, Y H:i" }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description Box -->
+                        <div class="bg-light p-3 rounded mb-4" style="border-left: 4px solid #667eea;">
+                            <small class="text-muted fw-semibold" style="text-transform: uppercase; font-size: 0.75rem;">
+                                <i class="bi bi-chat-left-text"></i> Complaint Description
+                            </small>
+                            <p class="mb-0 mt-2" style="color: #495057; line-height: 1.7;">
+                                {{ ticket.complaint.description }}
+                            </p>
+                        </div>
+
+                        <!-- Update Form -->
+                        <h5 class="mb-3" style="color: #212529; font-weight: 700;">
+                            <i class="bi bi-sliders"></i> Update Information
+                        </h5>
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <!-- Status Field -->
+                            <div class="mb-4">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">
+                                    <i class="bi bi-flag"></i> {{ form.status.label }}
+                                </label>
+                                {{ form.status }}
+                                <div class="form-text">{{ form.status.help_text }}</div>
+                                {% if form.status.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.status.errors %}
+                                            <small><i class="bi bi-exclamation-circle"></i> {{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Assigned Staff Field -->
+                            <div class="mb-4">
+                                <label for="{{ form.assigned_staff.id_for_label }}" class="form-label">
+                                    <i class="bi bi-person-check"></i> {{ form.assigned_staff.label }}
+                                </label>
+                                {{ form.assigned_staff }}
+                                <div class="form-text">{{ form.assigned_staff.help_text }}</div>
+                                {% if form.assigned_staff.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.assigned_staff.errors %}
+                                            <small><i class="bi bi-exclamation-circle"></i> {{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-flex gap-3 justify-content-end">
+                                <a href="{% url 'tickets:dashboard' %}" class="btn btn-outline-secondary btn-cancel">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary btn-save">
+                                    <i class="bi bi-check-circle"></i> Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

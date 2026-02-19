@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}My Products - Vendor Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>My Products</h2>
+    <a href="{% url 'vendor_product_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add Product
+    </a>
+</div>
+
+{% if products %}
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 50px; height: 50px; object-fit: cover;" class="rounded me-3">
+                                {% else %}
+                                <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                    <i class="fas fa-image text-muted"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <strong>{{ product.name }}</strong>
+                                    <small class="text-muted d-block">SKU: {{ product.sku }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ product.category|default:"Uncategorized" }}</td>
+                        <td>
+                            {% if product.sale_price and product.sale_price < product.price %}
+                            <span class="price-original">${{ product.price }}</span>
+                            <span class="price-sale">${{ product.sale_price }}</span>
+                            {% else %}
+                            ${{ product.price }}
+                            {% endif %}
+                        </td>
+                        <td>{{ product.stock_quantity }}</td>
+                        <td>
+                            <span class="badge bg-{% if product.status == 'ACTIVE' %}success{% elif product.status == 'DRAFT' %}warning{% else %}secondary{% endif %}">
+                                {{ product.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'vendor_product_update' product.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-box fa-5x text-muted mb-4"></i>
+    <h3>No products yet</h3>
+    <p class="text-muted">Add your first product to start selling.</p>
+    <a href="{% url 'vendor_product_create' %}" class="btn btn-primary">Add Product</a>
+</div>
+{% endif %}
+{% endblock %}

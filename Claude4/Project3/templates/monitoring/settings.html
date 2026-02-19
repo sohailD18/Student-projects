@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings - AI Safety System{% endblock %}
+
+{% block page_title %}System Settings{% endblock %}
+
+{% block content %}
+<!-- Settings Grid -->
+<div class="settings-grid">
+    <!-- Cameras Section -->
+    <div class="settings-card">
+        <div class="card-header">
+            <h3><i class="fas fa-video"></i> Camera Configuration</h3>
+            <button class="btn-add" onclick="showAddCameraModal()">
+                <i class="fas fa-plus"></i> Add Camera
+            </button>
+        </div>
+
+        <div class="settings-list">
+            {% for camera in cameras %}
+                <div class="settings-item">
+                    <div class="item-info">
+                        <h4>{{ camera.name }}</h4>
+                        <p>ID: {{ camera.camera_id }} | Type: {{ camera.get_camera_type_display }}</p>
+                        <p class="item-detail">{{ camera.source_path }}</p>
+                    </div>
+                    <div class="item-status">
+                        {% if camera.is_active %}
+                            <span class="status-dot active"></span>
+                            <span>Active</span>
+                        {% else %}
+                            <span class="status-dot inactive"></span>
+                            <span>Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="no-items">
+                    <i class="fas fa-video-slash"></i>
+                    <p>No cameras configured</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Restricted Zones Section -->
+    <div class="settings-card">
+        <div class="card-header">
+            <h3><i class="fas fa-draw-polygon"></i> Restricted Zones</h3>
+            <button class="btn-add" onclick="showAddZoneModal()">
+                <i class="fas fa-plus"></i> Add Zone
+            </button>
+        </div>
+
+        <div class="settings-list">
+            {% for zone in zones %}
+                <div class="settings-item">
+                    <div class="item-info">
+                        <h4>{{ zone.name }}</h4>
+                        <p class="item-detail">{{ zone.description|truncatewords:10 }}</p>
+                        <p class="item-detail">
+                            Coordinates: ({{ zone.x1 }}, {{ zone.y1 }}) to ({{ zone.x2 }}, {{ zone.y2 }})
+                        </p>
+                    </div>
+                    <div class="item-status">
+                        <span class="status-dot active"></span>
+                        <span>Active</span>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="no-items">
+                    <i class="fas fa-map"></i>
+                    <p>No restricted zones defined</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Detection Settings -->
+    <div class="settings-card">
+        <div class="card-header">
+            <h3><i class="fas fa-brain"></i> Detection Settings</h3>
+        </div>
+
+        <div class="settings-form">
+            <div class="form-group">
+                <label for="confidenceThreshold">Confidence Threshold</label>
+                <input
+                    type="range"
+                    id="confidenceThreshold"
+                    min="0"
+                    max="100"
+                    value="50"
+                    class="slider"
+                    oninput="updateThresholdValue(this.value)"
+                >
+                <span id="thresholdValue">50%</span>
+            </div>
+
+            <div class="form-group">
+                <label for="snapshotInterval">Snapshot Interval (seconds)</label>
+                <input type="number" id="snapshotInterval" value="5" min="1" max="60" class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="autoSnapshot" checked>
+                    <span>Auto-save snapshots on violation</span>
+                </label>
+            </div>
+
+            <button class="btn-primary" onclick="saveDetectionSettings()">
+                <i class="fas fa-save"></i> Save Settings
+            </button>
+        </div>
+    </div>
+
+    <!-- System Information -->
+    <div class="settings-card">
+        <div class="card-header">
+            <h3><i class="fas fa-info-circle"></i> System Information</h3>
+        </div>
+
+        <div class="info-list">
+            <div class="info-item">
+                <span class="info-label">Version:</span>
+                <span class="info-value">1.0.0</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Database:</span>
+                <span class="info-value">SQLite</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Detection Model:</span>
+                <span class="info-value">OpenCV DNN / MobileNet SSD</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Status:</span>
+                <span class="info-value status-online">Online</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for adding camera (hidden by default) -->
+<div id="cameraModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Add Camera</h3>
+            <button class="modal-close" onclick="closeCameraModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="cameraForm" onsubmit="saveCamera(event)">
+                <div class="form-group">
+                    <label for="cameraId">Camera ID:</label>
+                    <input type="text" id="cameraId" required class="form-input" placeholder="CAM-02">
+                </div>
+                <div class="form-group">
+                    <label for="cameraName">Name:</label>
+                    <input type="text" id="cameraName" required class="form-input" placeholder="Main Entrance">
+                </div>
+                <div class="form-group">
+                    <label for="cameraType">Type:</label>
+                    <select id="cameraType" class="form-input">
+                        <option value="WEBCAM">Webcam</option>
+                        <option value="IP_CAMERA">IP Camera</option>
+                        <option value="VIDEO_FILE">Video File</option>
+                        <option value="RTSP_STREAM">RTSP Stream</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="cameraSource">Source Path:</label>
+                    <input type="text" id="cameraSource" required class="form-input" placeholder="0 or rtsp://...">
+                </div>
+                <button type="submit" class="btn-primary">Save Camera</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for adding zone (hidden by default) -->
+<div id="zoneModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Add Restricted Zone</h3>
+            <button class="modal-close" onclick="closeZoneModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="zoneForm" onsubmit="saveZone(event)">
+                <div class="form-group">
+                    <label for="zoneName">Zone Name:</label>
+                    <input type="text" id="zoneName" required class="form-input" placeholder="Equipment Room">
+                </div>
+                <div class="form-group">
+                    <label for="zoneDescription">Description:</label>
+                    <textarea id="zoneDescription" class="form-input" rows="3" placeholder="Restricted access area"></textarea>
+                </div>
+                <div class="coordinates-grid">
+                    <div class="form-group">
+                        <label for="zoneX1">Top-Left X:</label>
+                        <input type="number" id="zoneX1" required class="form-input" value="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="zoneY1">Top-Left Y:</label>
+                        <input type="number" id="zoneY1" required class="form-input" value="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="zoneX2">Bottom-Right X:</label>
+                        <input type="number" id="zoneX2" required class="form-input" value="300">
+                    </div>
+                    <div class="form-group">
+                        <label for="zoneY2">Bottom-Right Y:</label>
+                        <input type="number" id="zoneY2" required class="form-input" value="300">
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">Save Zone</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Modal functions
+function showAddCameraModal() {
+    document.getElementById('cameraModal').style.display = 'block';
+}
+
+function closeCameraModal() {
+    document.getElementById('cameraModal').style.display = 'none';
+}
+
+function showAddZoneModal() {
+    document.getElementById('zoneModal').style.display = 'block';
+}
+
+function closeZoneModal() {
+    document.getElementById('zoneModal').style.display = 'none';
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    const cameraModal = document.getElementById('cameraModal');
+    const zoneModal = document.getElementById('zoneModal');
+
+    if (event.target === cameraModal) {
+        cameraModal.style.display = 'none';
+    }
+    if (event.target === zoneModal) {
+        zoneModal.style.display = 'none';
+    }
+}
+
+// Save camera
+function saveCamera(event) {
+    event.preventDefault();
+
+    const data = {
+        camera_id: document.getElementById('cameraId').value,
+        name: document.getElementById('cameraName').value,
+        camera_type: document.getElementById('cameraType').value,
+        source_path: document.getElementById('cameraSource').value,
+        is_active: true
+    };
+
+    // Send to backend (implementation needed)
+    console.log('Saving camera:', data);
+
+    showToast('Camera configuration saved', 'success');
+    closeCameraModal();
+    setTimeout(() => location.reload(), 1000);
+}
+
+// Save zone
+async function saveZone(event) {
+    event.preventDefault();
+
+    const data = {
+        name: document.getElementById('zoneName').value,
+        description: document.getElementById('zoneDescription').value,
+        x1: parseInt(document.getElementById('zoneX1').value),
+        y1: parseInt(document.getElementById('zoneY1').value),
+        x2: parseInt(document.getElementById('zoneX2').value),
+        y2: parseInt(document.getElementById('zoneY2').value)
+    };
+
+    try {
+        const response = await fetch('/monitoring/api/zone/add/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showToast('Restricted zone added successfully', 'success');
+            closeZoneModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('Failed to add zone: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error saving zone:', error);
+        showToast('Error adding zone', 'error');
+    }
+}
+
+// Update threshold value display
+function updateThresholdValue(value) {
+    document.getElementById('thresholdValue').textContent = value + '%';
+}
+
+// Save detection settings
+function saveDetectionSettings() {
+    const threshold = document.getElementById('confidenceThreshold').value;
+    const interval = document.getElementById('snapshotInterval').value;
+    const autoSnapshot = document.getElementById('autoSnapshot').checked;
+
+    console.log('Saving detection settings:', { threshold, interval, autoSnapshot });
+
+    showToast('Detection settings saved', 'success');
+}
+
+// Get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Show toast notification
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    container.appendChild(toast);
+
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+{% endblock %}

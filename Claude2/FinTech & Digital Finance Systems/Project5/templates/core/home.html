@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="enhanced-home">
+    <!-- Animated Hero Section -->
+    <section class="hero-section glow-effect">
+        <div class="hero-background">
+            <div class="gradient-orb orb-1"></div>
+            <div class="gradient-orb orb-2"></div>
+            <div class="gradient-orb orb-3"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="badge-icon">🎯</span>
+                <span>AI-Powered Financial Intelligence</span>
+            </div>
+            <h1 class="hero-title">
+                <span class="title-line">Transform Your Financial</span>
+                <span class="title-gradient">Future with AI Insights</span>
+            </h1>
+            <p class="hero-description">
+                Leverage advanced AI algorithms to analyze your financial behavior, calculate risk tolerance,
+                and receive personalized investment strategies tailored to your unique profile.
+            </p>
+            <div class="hero-actions">
+                <a href="{% url 'core:profile_create' %}" class="btn btn-primary btn-lg">
+                    <span class="btn-icon">🚀</span>
+                    Get Started Free
+                </a>
+                <a href="{% url 'core:profile_list' %}" class="btn btn-glass">
+                    <span class="btn-icon">👁</span>
+                    View Demo
+                </a>
+            </div>
+            <div class="hero-trust">
+                <div class="trust-item">
+                    <span class="trust-icon">🔒</span>
+                    <span>Bank-Level Security</span>
+                </div>
+                <div class="trust-item">
+                    <span class="trust-icon">⚡</span>
+                    <span>Instant Analysis</span>
+                </div>
+                <div class="trust-item">
+                    <span class="trust-icon">📊</span>
+                    <span>Data-Driven Insights</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Enhanced Stats Section -->
+    <section class="stats-section">
+        <div class="section-header">
+            <h2 class="section-title">Platform Statistics</h2>
+            <p class="section-subtitle">Real-time insights from our financial ecosystem</p>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-card-enhanced stat-primary spotlight-card elastic-hover interactive-cursor" data-aos="fade-up">
+                <div class="stat-icon-wrapper">
+                    <span class="stat-icon pulse-ring">👥</span>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value-animated" data-target="{{ user_count }}">0</div>
+                    <div class="stat-label">Active Profiles</div>
+                    <div class="stat-trend positive">
+                        <span>↑ 12%</span>
+                        <span class="trend-label">vs last month</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card-enhanced stat-success spotlight-card elastic-hover interactive-cursor" data-aos="fade-up" data-aos-delay="100">
+                <div class="stat-icon-wrapper">
+                    <span class="stat-icon pulse-ring">💳</span>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value-animated" data-target="{{ transaction_count }}">0</div>
+                    <div class="stat-label">Transactions</div>
+                    <div class="stat-trend positive">
+                        <span>↑ 8%</span>
+                        <span class="trend-label">processed</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card-enhanced stat-accent spotlight-card elastic-hover interactive-cursor" data-aos="fade-up" data-aos-delay="200">
+                <div class="stat-icon-wrapper">
+                    <span class="stat-icon pulse-ring">📈</span>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value-animated" data-target="{{ risk_profile_count }}">0</div>
+                    <div class="stat-label">Risk Analyses</div>
+                    <div class="stat-trend positive">
+                        <span>↑ 23%</span>
+                        <span class="trend-label">completed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Enhanced Features Section -->
+    <section class="features-section">
+        <div class="section-header">
+            <h2 class="section-title">Powerful Features for Smart Investors</h2>
+            <p class="section-subtitle">Everything you need to make informed financial decisions</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card spotlight-card interactive-cursor" data-aos="fade-up">
+                <div class="feature-icon feature-icon-1 heartbeat">
+                    <span class="icon-emoji">📊</span>
+                </div>
+                <h3 class="feature-title">Smart Data Collection</h3>
+                <p class="feature-description">
+                    Comprehensive tracking of income, expenses, and demographic data to build your complete financial profile with intelligent categorization.
+                </p>
+                <ul class="feature-list">
+                    <li><span class="check-icon">✓</span> Auto-categorization</li>
+                    <li><span class="check-icon">✓</span> Multi-source imports</li>
+                    <li><span class="check-icon">✓</span> Real-time sync</li>
+                </ul>
+            </div>
+
+            <div class="feature-card spotlight-card interactive-cursor" data-aos="fade-up" data-aos-delay="100">
+                <div class="feature-icon feature-icon-2 heartbeat">
+                    <span class="icon-emoji">🧠</span>
+                </div>
+                <h3 class="feature-title">AI Risk Profiling</h3>
+                <p class="feature-description">
+                    Advanced algorithmic engine analyzes multiple factors including age, income stability, and spending patterns to calculate your risk tolerance.
+                </p>
+                <ul class="feature-list">
+                    <li><span class="check-icon">✓</span> ML-based analysis</li>
+                    <li><span class="check-icon">✓</span> Behavioral insights</li>
+                    <li><span class="check-icon">✓</span> Dynamic scoring</li>
+                </ul>
+            </div>
+
+            <div class="feature-card spotlight-card interactive-cursor" data-aos="fade-up" data-aos-delay="200">
+                <div class="feature-icon feature-icon-3 heartbeat">
+                    <span class="icon-emoji">📈</span>
+                </div>
+                <h3 class="feature-title">Interactive Dashboards</h3>
+                <p class="feature-description">
+                    Beautiful, interactive charts showing risk vs. return analysis across different asset classes with real-time updates.
+                </p>
+                <ul class="feature-list">
+                    <li><span class="check-icon">✓</span> Chart.js powered</li>
+                    <li><span class="check-icon">✓</span> Customizable views</li>
+                    <li><span class="check-icon">✓</span> Export options</li>
+                </ul>
+            </div>
+
+            <div class="feature-card spotlight-card interactive-cursor" data-aos="fade-up" data-aos-delay="300">
+                <div class="feature-icon feature-icon-4 heartbeat">
+                    <span class="icon-emoji">💡</span>
+                </div>
+                <h3 class="feature-title">Personalized Insights</h3>
+                <p class="feature-description">
+                    Tailored investment recommendations based on your unique risk classification, financial goals, and market conditions.
+                </p>
+                <ul class="feature-list">
+                    <li><span class="check-icon">✓</span> Custom strategies</li>
+                    <li><span class="check-icon">✓</span> Goal tracking</li>
+                    <li><span class="check-icon">✓</span> Progress reports</li>
+                </ul>
+            </div>
+
+            <div class="feature-card spotlight-card interactive-cursor" data-aos="fade-up" data-aos-delay="400">
+                <div class="feature-icon feature-icon-5 heartbeat">
+                    <span class="icon-emoji">🔮</span>
+                </div>
+                <h3 class="feature-title">Scenario Analysis</h3>
+                <p class="feature-description">
+                    Advanced what-if calculator to project portfolio growth under different market conditions, contribution rates, and time horizons.
+                </p>
+                <ul class="feature-list">
+                    <li><span class="check-icon">✓</span> Monte Carlo sims</li>
+                    <li><span class="check-icon">✓</span> Stress testing</li>
+                    <li><span class="check-icon">✓</span> Sensitivity analysis</li>
+                </ul>
+            </div>
+
+            <div class="feature-card spotlight-card interactive-cursor" data-aos="fade-up" data-aos-delay="500">
+                <div class="feature-icon feature-icon-6 heartbeat">
+                    <span class="icon-emoji">📄</span>
+                </div>
+                <h3 class="feature-title">Financial Reports</h3>
+                <p class="feature-description">
+                    Comprehensive, professionally formatted reports summarizing your financial health, risk profile, and actionable recommendations.
+                </p>
+                <ul class="feature-list">
+                    <li><span class="check-icon">✓</span> PDF export</li>
+                    <li><span class="check-icon">✓</span> Executive summary</li>
+                    <li><span class="check-icon">✓</span> Print-ready format</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-card morphing-shape glow-effect">
+            <div class="cta-content">
+                <h2 class="cta-title">Ready to Optimize Your Financial Future?</h2>
+                <p class="cta-description">
+                    Join thousands of users who are already making smarter investment decisions with FinRisk AI.
+                </p>
+                <div class="cta-actions">
+                    <a href="{% url 'core:profile_create' %}" class="btn btn-primary btn-lg">
+                        <span>Start Free Analysis</span>
+                        <span class="btn-arrow">→</span>
+                    </a>
+                </div>
+            </div>
+            <div class="cta-visual">
+                <div class="floating-card card-1">
+                    <span>📊</span>
+                </div>
+                <div class="floating-card card-2">
+                    <span>📈</span>
+                </div>
+                <div class="floating-card card-3">
+                    <span>💰</span>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

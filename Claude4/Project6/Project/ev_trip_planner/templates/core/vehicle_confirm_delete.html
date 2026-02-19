@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Vehicle - EV Trip Planner{% endblock %}
+
+{% block content %}
+<section class="vehicle-form-section">
+    <div class="container">
+        <div class="form-card">
+            <div class="form-header">
+                <h1>Delete Vehicle</h1>
+                <p>{{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}</p>
+            </div>
+
+            <div class="delete-confirmation">
+                <div class="warning-icon">⚠️</div>
+                <h2>Are you sure?</h2>
+                <p>This action cannot be undone. You will permanently delete this vehicle from your profile.</p>
+
+                <div class="vehicle-details">
+                    <p><strong>Make:</strong> {{ vehicle.make }}</p>
+                    <p><strong>Model:</strong> {{ vehicle.model }}</p>
+                    <p><strong>Year:</strong> {{ vehicle.year }}</p>
+                    <p><strong>Battery:</strong> {{ vehicle.battery_capacity }} kWh</p>
+                    <p><strong>Range:</strong> {{ vehicle.range_km }} km</p>
+                </div>
+
+                <form method="post" class="confirmation-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Yes, Delete This Vehicle</button>
+                    <a href="{% url 'core:vehicle_list' %}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

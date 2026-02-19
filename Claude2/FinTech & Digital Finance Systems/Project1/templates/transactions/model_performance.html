@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Model Performance - Fraud Detection System{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <h1 class="page-title">Model Performance Monitoring</h1>
+    <p class="page-subtitle">AI model metrics and evaluation</p>
+</div>
+
+<!-- Model Status -->
+<div class="stat-card" style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Model Status</h3>
+            <p style="color: var(--text-muted); margin: 0;">
+                {% if model_info.is_trained %}
+                    <span style="color: var(--secondary-light);">●</span> Model Trained & Active
+                {% else %}
+                    <span style="color: var(--danger-light);">●</span> Model Not Trained
+                {% endif %}
+            </p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <div>
+                <div class="form-label">Model Type</div>
+                <div style="font-weight: 600;">{{ model_info.model_type|title }}</div>
+            </div>
+            <div>
+                <div class="form-label">Version</div>
+                <div style="font-weight: 600;">v{{ model_info.version }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Metrics -->
+{% if latest_metrics %}
+<div class="stats-grid">
+    <div class="stat-card primary">
+        <div class="label">Accuracy</div>
+        <div class="value">{{ latest_metrics.accuracy|floatformat:4 }}</div>
+        <div style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">
+            {{ latest_metrics.training_samples }} training samples
+        </div>
+    </div>
+    <div class="stat-card success">
+        <div class="label">Precision</div>
+        <div class="value">{{ latest_metrics.precision|floatformat:4 }}</div>
+        <div style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">
+            {{ latest_metrics.test_samples }} test samples
+        </div>
+    </div>
+    <div class="stat-card warning">
+        <div class="label">Recall</div>
+        <div class="value">{{ latest_metrics.recall|floatformat:4 }}</div>
+        <div style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">
+            {{ latest_metrics.fraud_samples }} fraud samples
+        </div>
+    </div>
+    <div class="stat-card danger">
+        <div class="label">F1 Score</div>
+        <div class="value">{{ latest_metrics.f1_score|floatformat:4 }}</div>
+        <div style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">
+            Trained {{ latest_metrics.trained_at|timesince }} ago
+        </div>
+    </div>
+</div>
+
+<!-- Confusion Matrix -->
+<div class="charts-container">
+    <div class="chart-card">
+        <h3 class="chart-title">Confusion Matrix</h3>
+
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.5rem;">
+            <div class="stat-card success">
+                <div class="label">True Negatives</div>
+                <div class="value" style="font-size: 1.75rem;">{{ latest_metrics.true_negatives }}</div>
+                <div style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">
+                    Correctly identified legitimate
+                </div>
+            </div>
+            <div class="stat-card danger">
+                <div class="label">False Positives</div>
+                <div class="value" style="font-size: 1.75rem;">{{ latest_metrics.false_positives }}</div>
+                <div style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">
+                    Incorrectly flagged as fraud
+                </div>
+            </div>
+            <div class="stat-card danger">
+                <div class="label">False Negatives</div>
+                <div class="value" style="font-size: 1.75rem;">{{ latest_metrics.false_negatives }}</div>
+                <div style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">
+                    Missed fraud transactions
+                </div>
+            </div>
+            <div class="stat-card success">
+                <div class="label">True Positives</div>
+                <div class="value" style="font-size: 1.75rem;">{{ latest_metrics.true_positives }}</div>
+                <div style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">
+                    Correctly detected fraud
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detection Statistics -->
+    <div class="chart-card">
+        <h3 class="chart-title">Detection Statistics</h3>
+
+        <div style="margin-top: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <div class="form-label">Overall Detection Rate</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-light);">
+                    {{ detection_rate }}%
+                </div>
+            </div>
+            <div style="height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                <div style="width: {{ detection_rate }}%; height: 100%; background: var(--primary-light);"></div>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <div class="form-label">Dataset Overview</div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem;">
+                <div style="padding: 1rem; background: var(--bg-tertiary); border-radius: 8px;">
+                    <div style="color: var(--text-muted); font-size: 0.875rem;">Total Transactions</div>
+                    <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);">{{ total_transactions }}</div>
+                </div>
+                <div style="padding: 1rem; background: var(--bg-tertiary); border-radius: 8px;">
+                    <div style="color: var(--text-muted); font-size: 0.875rem;">Total Fraud Cases</div>
+                    <div style="font-size: 1.5rem; font-weight: 600; color: var(--danger-light);">{{ total_fraud }}</div>
+                </div>
+                <div style="padding: 1rem; background: var(--bg-tertiary); border-radius: 8px;">
+                    <div style="color: var(--text-muted); font-size: 0.875rem;">Detected Fraud</div>
+                    <div style="font-size: 1.5rem; font-weight: 600; color: var(--secondary-light);">{{ detected_fraud }}</div>
+                </div>
+                <div style="padding: 1rem; background: var(--bg-tertiary); border-radius: 8px;">
+                    <div style="color: var(--text-muted); font-size: 0.875rem;">Missed Fraud</div>
+                    <div style="font-size: 1.5rem; font-weight: 600; color: var(--warning-light);">{{ total_fraud|add:detected_fraud|negate }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Training History -->
+{% if metrics_history %}
+<div class="chart-card">
+    <h3 class="chart-title">Training History</h3>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Model</th>
+                    <th>Accuracy</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1 Score</th>
+                    <th>Samples</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for metric in metrics_history %}
+                <tr>
+                    <td>{{ metric.trained_at|date:"M d, Y H:i" }}</td>
+                    <td>{{ metric.model_name }} v{{ metric.model_version }}</td>
+                    <td>{{ metric.accuracy|floatformat:4 }}</td>
+                    <td>{{ metric.precision|floatformat:4 }}</td>
+                    <td>{{ metric.recall|floatformat:4 }}</td>
+                    <td>{{ metric.f1_score|floatformat:4 }}</td>
+                    <td>{{ metric.training_samples }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="stat-card text-center" style="padding: 3rem;">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--warning-light); margin-bottom: 1rem;">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <h3 style="margin-bottom: 0.5rem;">No Model Metrics Available</h3>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+        Train the model to see performance metrics and evaluation results.
+    </p>
+    <div style="background: var(--bg-tertiary); padding: 1rem; border-radius: 8px; text-align: left; display: inline-block;">
+        <code style="color: var(--primary-light);">
+            python manage.py train_model --save-model
+        </code>
+    </div>
+</div>
+{% endif %}
+
+<!-- Model Parameters -->
+{% if model_info.parameters %}
+<div class="stat-card" style="margin-top: 2rem;">
+    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Model Parameters</h3>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        {% for key, value in model_info.parameters.items %}
+        <div style="padding: 1rem; background: var(--bg-tertiary); border-radius: 8px;">
+            <div class="form-label">{{ key }}</div>
+            <div style="font-weight: 600;">{{ value }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

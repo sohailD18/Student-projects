@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Post a Job - JobPortal{% endblock %}
+
+{% block content %}
+<div class="bg-light py-4">
+    <div class="container">
+        <h1><i class="fas fa-plus-circle me-2"></i>Post a New Job</h1>
+        <p class="text-muted">Fill in the details below to post a new job opening</p>
+    </div>
+</div>
+
+<div class="py-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Job Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+
+                            <!-- Basic Information -->
+                            <div class="mb-4">
+                                <h6 class="border-bottom pb-2 mb-3">Basic Information</h6>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Job Title *</label>
+                                    {{ form.title }}
+                                    {% if form.title.errors %}
+                                    <div class="text-danger">{{ form.title.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Company Name *</label>
+                                    {{ form.company }}
+                                    {% if form.company.errors %}
+                                    <div class="text-danger">{{ form.company.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Location *</label>
+                                    {{ form.location }}
+                                    {% if form.location.errors %}
+                                    <div class="text-danger">{{ form.location.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Job Type *</label>
+                                        {{ form.job_type }}
+                                        {% if form.job_type.errors %}
+                                        <div class="text-danger">{{ form.job_type.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Experience Level *</label>
+                                        {{ form.experience_level }}
+                                        {% if form.experience_level.errors %}
+                                        <div class="text-danger">{{ form.experience_level.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Category</label>
+                                    {{ form.category }}
+                                    {% if form.category.errors %}
+                                    <div class="text-danger">{{ form.category.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Job Description -->
+                            <div class="mb-4">
+                                <h6 class="border-bottom pb-2 mb-3">Job Description</h6>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Description *</label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                    <div class="text-danger">{{ form.description.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Describe the role, responsibilities, and what makes this opportunity exciting.</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Requirements *</label>
+                                    {{ form.requirements }}
+                                    {% if form.requirements.errors %}
+                                    <div class="text-danger">{{ form.requirements.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">List the skills, qualifications, and experience required for this position.</div>
+                                </div>
+                            </div>
+
+                            <!-- Salary Information -->
+                            <div class="mb-4">
+                                <h6 class="border-bottom pb-2 mb-3">Salary Information</h6>
+
+                                <div class="row">
+                                    <div class="col-md-5 mb-3">
+                                        <label class="form-label">Minimum Salary</label>
+                                        {{ form.salary_min }}
+                                        {% if form.salary_min.errors %}
+                                        <div class="text-danger">{{ form.salary_min.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-5 mb-3">
+                                        <label class="form-label">Maximum Salary</label>
+                                        {{ form.salary_max }}
+                                        {% if form.salary_max.errors %}
+                                        <div class="text-danger">{{ form.salary_max.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-2 mb-3">
+                                        <label class="form-label">Visible</label>
+                                        <div class="mt-2">
+                                            {{ form.is_salary_visible }}
+                                            <small class="d-block text-muted">Show salary</small>
+                                        </div>
+                                        {% if form.is_salary_visible.errors %}
+                                        <div class="text-danger">{{ form.is_salary_visible.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Information -->
+                            <div class="mb-4">
+                                <h6 class="border-bottom pb-2 mb-3">Additional Information</h6>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Application Deadline</label>
+                                    {{ form.application_deadline }}
+                                    {% if form.application_deadline.errors %}
+                                    <div class="text-danger">{{ form.application_deadline.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Leave empty if there's no deadline</div>
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'jobs:job_list' %}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-check me-2"></i>Post Job
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const requiredFields = form.querySelectorAll('[required]');
+        let isValid = true;
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.classList.add('is-invalid');
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        if (!isValid) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Missing Information',
+                text: 'Please fill in all required fields.'
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

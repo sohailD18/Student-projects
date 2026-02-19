@@ -1,0 +1,28 @@
+# EV Trip Planner - Requirements
+# Python 3.9+ required
+
+# Django Framework
+Django>=4.2.0,<5.0.0
+
+# Database
+# SQLite is included with Python, no additional packages needed
+
+# Security & Authentication
+# Django's built-in authentication is used
+
+# Static Files Management
+whitenoise>=6.5.0
+
+# Environment Variables
+python-decouple>=3.8
+
+# Production Server (optional)
+gunicorn>=21.2.0
+
+# Development Tools
+django-debug-toolbar>=4.1.0
+
+# Additional Dependencies (for future enhancements)
+# Pillow>=10.0.0  # For image handling (if needed for user avatars)
+# django-cors-headers>=4.2.0  # For API CORS support
+# django-extensions>=3.2.0  # Additional Django utilities

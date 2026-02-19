@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+{% load fraud_filters %}
+
+{% block title %}Dashboard - Fraud Detection System{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <h1 class="page-title">Fraud Detection Dashboard</h1>
+    <p class="page-subtitle">Real-time monitoring and analytics</p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card primary">
+        <div class="label">Total Transactions</div>
+        <div class="value counter" data-count="{{ total_transactions }}">0</div>
+    </div>
+    <div class="stat-card danger">
+        <div class="label">Detected Fraud</div>
+        <div class="value counter" data-count="{{ total_fraud }}">0</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="label">Flagged Transactions</div>
+        <div class="value counter" data-count="{{ total_flagged }}">0</div>
+    </div>
+    <div class="stat-card success">
+        <div class="label">Fraud Rate</div>
+        <div class="value">{{ fraud_rate }}%</div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="charts-container">
+    <div class="chart-card">
+        <h3 class="chart-title">Transaction Trend (30 Days)</h3>
+        <div class="chart-wrapper">
+            <canvas id="transactionTrendChart"></canvas>
+        </div>
+    </div>
+    <div class="chart-card">
+        <h3 class="chart-title">Risk Score Distribution</h3>
+        <div class="chart-wrapper">
+            <canvas id="riskDistributionChart"></canvas>
+        </div>
+    </div>
+    <div class="chart-card">
+        <h3 class="chart-title">Fraud by Transaction Type</h3>
+        <div class="chart-wrapper">
+            <canvas id="fraudByTypeChart"></canvas>
+        </div>
+    </div>
+    <div class="chart-card">
+        <h3 class="chart-title">Fraud by Category</h3>
+        <div class="chart-wrapper">
+            <canvas id="fraudByCategoryChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Alerts -->
+{% if recent_alerts %}
+<div class="stat-card" style="margin-bottom: 2rem;">
+    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Recent Fraud Alerts</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Alert Type</th>
+                    <th>Risk Score</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alert in recent_alerts %}
+                <tr class="{% if alert.risk_score >= 0.7 %}high-risk{% elif alert.risk_score >= 0.5 %}medium-risk{% endif %}">
+                    <td>{{ alert.transaction.transaction_id }}</td>
+                    <td>{{ alert.alert_type|title }}</td>
+                    <td>
+                        <div class="risk-score">
+                            <span>{{ alert.risk_score|floatformat:3 }}</span>
+                            <div class="risk-score-bar">
+                                <div class="risk-score-fill {% if alert.risk_score >= 0.7 %}high{% elif alert.risk_score >= 0.4 %}medium{% else %}low{% endif %}"
+                                     style="width: {{ alert.risk_score|multiply:100 }}%"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge {% if alert.status == 'new' %}badge-danger{% elif alert.status == 'investigating' %}badge-warning{% else %}badge-success{% endif %}">
+                            {{ alert.status|title }}
+                        </span>
+                    </td>
+                    <td>{{ alert.created_at|date:"M d, H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Risky Merchants -->
+{% if risky_merchants %}
+<div class="chart-card">
+    <h3 class="chart-title">High-Risk Merchants</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Merchant</th>
+                    <th>Fraud Count</th>
+                    <th>Total Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for merchant in risky_merchants %}
+                <tr>
+                    <td>{{ merchant.merchant }}</td>
+                    <td>{{ merchant.fraud_count }}</td>
+                    <td>${{ merchant.total_amount|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Chart.js Global Configuration
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = '#334155';
+
+// Transaction Trend Chart
+async function loadTransactionTrend() {
+    const response = await fetch('/api/dashboard-data/');
+    const data = await response.json();
+
+    const trendData = data.transaction_trend;
+    const labels = trendData.map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+    const totalData = trendData.map(d => d.total);
+    const fraudData = trendData.map(d => d.fraud);
+
+    new Chart(document.getElementById('transactionTrendChart'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Total Transactions',
+                    data: totalData,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                },
+                {
+                    label: 'Fraudulent',
+                    data: fraudData,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+// Risk Distribution Chart
+async function loadRiskDistribution() {
+    const response = await fetch('/api/dashboard-data/');
+    const data = await response.json();
+
+    const riskData = data.risk_distribution;
+    const labels = riskData.map(d => d.range);
+    const counts = riskData.map(d => d.count);
+
+    new Chart(document.getElementById('riskDistributionChart'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Transaction Count',
+                data: counts,
+                backgroundColor: [
+                    '#10b981',
+                    '#34d399',
+                    '#fbbf24',
+                    '#f59e0b',
+                    '#f87171',
+                    '#ef4444'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+// Fraud by Type Chart
+async function loadFraudByType() {
+    const response = await fetch('/api/dashboard-data/');
+    const data = await response.json();
+
+    const typeData = data.fraud_by_type;
+    const labels = typeData.map(d => d.transaction_type);
+    const counts = typeData.map(d => d.count);
+
+    new Chart(document.getElementById('fraudByTypeChart'), {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: counts,
+                backgroundColor: [
+                    '#3b82f6',
+                    '#10b981',
+                    '#f59e0b',
+                    '#ef4444',
+                    '#8b5cf6'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// Fraud by Category Chart
+async function loadFraudByCategory() {
+    const categoryData = {{ fraud_by_category|safe }};
+    const labels = categoryData.map(d => d.merchant_category);
+    const counts = categoryData.map(d => d.count);
+
+    new Chart(document.getElementById('fraudByCategoryChart'), {
+        type: 'polarArea',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: counts,
+                backgroundColor: [
+                    'rgba(59, 130, 246, 0.7)',
+                    'rgba(16, 185, 129, 0.7)',
+                    'rgba(245, 158, 11, 0.7)',
+                    'rgba(239, 68, 68, 0.7)',
+                    'rgba(139, 92, 246, 0.7)',
+                    'rgba(6, 182, 212, 0.7)',
+                    'rgba(236, 72, 153, 0.7)',
+                    'rgba(251, 146, 60, 0.7)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// Initialize all charts
+document.addEventListener('DOMContentLoaded', function() {
+    loadTransactionTrend();
+    loadRiskDistribution();
+    loadFraudByType();
+    loadFraudByCategory();
+
+    // Create floating particles effect
+    createParticles();
+});
+
+// Floating Particles Effect
+function createParticles() {
+    const particlesContainer = document.getElementById('particles');
+    if (!particlesContainer) return;
+
+    const particleCount = 30;
+
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 15 + 's';
+        particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+        particlesContainer.appendChild(particle);
+    }
+}
+</script>
+{% endblock %}

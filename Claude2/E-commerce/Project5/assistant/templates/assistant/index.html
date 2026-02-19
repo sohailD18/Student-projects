@@ -1,0 +1,820 @@
+{% extends "assistant/base.html" %}
+
+{% block title %}Smart Shopping Assistant - AI-Powered Shopping{% endblock %}
+
+{% block content %}
+<style>
+    /* Chat Styles */
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 200px);
+        min-height: 600px;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .message {
+        display: flex;
+        gap: 0.75rem;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .message.user {
+        flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .message.assistant .message-avatar {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+
+    .message.user .message-avatar {
+        background: var(--text-secondary);
+    }
+
+    .message-content {
+        max-width: 75%;
+        padding: 0.875rem 1.125rem;
+        border-radius: var(--radius-lg);
+        word-wrap: break-word;
+        white-space: pre-wrap;
+    }
+
+    .message.assistant .message-content {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-top-left-radius: 0.25rem;
+    }
+
+    .message.user .message-content {
+        background: var(--primary-color);
+        color: white;
+        border-top-right-radius: 0.25rem;
+    }
+
+    .message-content p {
+        margin: 0;
+    }
+
+    .message-content strong {
+        font-weight: 600;
+    }
+
+    .chat-input-area {
+        padding: 1.25rem 1.5rem;
+        border-top: 1px solid var(--border-color);
+        background: var(--surface);
+    }
+
+    .quick-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .quick-action-btn {
+        padding: 0.375rem 0.75rem;
+        background: var(--background);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .quick-action-btn:hover {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+
+    /* Product Grid */
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .product-card {
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .product-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        background: var(--background);
+    }
+
+    .product-badges {
+        position: absolute;
+        top: 0.75rem;
+        left: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+    }
+
+    .product-content {
+        padding: 1.25rem;
+    }
+
+    .product-category {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .product-name {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+
+    .product-description {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.75rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .product-rating {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .stars {
+        color: var(--warning-color);
+        font-size: 1rem;
+    }
+
+    .rating-value {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .product-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .product-price {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .product-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    /* Comparison Panel */
+    .comparison-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .comparison-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: var(--background);
+        border-radius: var(--radius-md);
+    }
+
+    .comparison-item-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: var(--radius-sm);
+    }
+
+    .comparison-item-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .comparison-item-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .comparison-item-price {
+        color: var(--primary-color);
+        font-weight: 700;
+    }
+
+    .comparison-remove {
+        background: none;
+        border: none;
+        color: var(--danger-color);
+        cursor: pointer;
+        font-size: 1.25rem;
+        padding: 0.25rem;
+        border-radius: var(--radius-sm);
+        transition: background 0.2s;
+    }
+
+    .comparison-remove:hover {
+        background: #fee2e2;
+    }
+
+    .comparison-results {
+        margin-top: 1.5rem;
+        padding: 1.25rem;
+        background: var(--background);
+        border-radius: var(--radius-md);
+        white-space: pre-wrap;
+        font-size: 0.95rem;
+    }
+
+    .comparison-specs-table {
+        width: 100%;
+        margin-top: 1rem;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+    }
+
+    .comparison-specs-table th,
+    .comparison-specs-table td {
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        text-align: left;
+    }
+
+    .comparison-specs-table th {
+        background: var(--surface);
+        font-weight: 600;
+    }
+
+    /* Empty States */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+
+    .empty-state-text {
+        font-size: 0.95rem;
+    }
+
+    /* Typing Indicator */
+    .typing-indicator {
+        display: inline-flex;
+        gap: 0.25rem;
+        padding: 0.75rem 1rem;
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        border-top-left-radius: 0.25rem;
+    }
+
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--text-secondary);
+        border-radius: 50%;
+        animation: typingBounce 1.4s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: 0s; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingBounce {
+        0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+        40% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Scrollbar Styles */
+    .chat-messages::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+        background: var(--background);
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 3px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+        background: var(--text-secondary);
+    }
+</style>
+
+<div class="container">
+    <div class="main-grid">
+        <!-- Chat Panel -->
+        <div class="card chat-container">
+            <div class="card-header">
+                <h2 class="card-title">💬 AI Assistant</h2>
+                <button class="btn btn-sm btn-secondary" onclick="clearChat()">🔄 New Chat</button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message assistant">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-content">
+                        <p>👋 Hello! I'm your Smart Shopping Assistant. I can help you find the perfect products within your budget.
+
+Try asking me:
+• "Show me laptops under $1000"
+• "What are the best headphones?"
+• "Compare iPhone vs Samsung"
+• "Recommend a phone under $500"</p>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <div class="quick-actions">
+                    <button class="quick-action-btn" onclick="sendQuickMessage('Show me laptops under $1500')">
+                        💻 Laptops under $1500
+                    </button>
+                    <button class="quick-action-btn" onclick="sendQuickMessage('What are the best headphones?')">
+                        🎧 Best Headphones
+                    </button>
+                    <button class="quick-action-btn" onclick="sendQuickMessage('Recommend a phone under $800')">
+                        📱 Phone Deals
+                    </button>
+                    <button class="quick-action-btn" onclick="sendQuickMessage('Compare MacBook and Dell XPS')">
+                        ⚖️ Compare Products
+                    </button>
+                </div>
+                <form id="chatForm" onsubmit="sendMessage(event)">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input
+                            type="text"
+                            id="chatInput"
+                            class="form-input"
+                            placeholder="Ask me anything about products..."
+                            autocomplete="off"
+                        >
+                        <button type="submit" class="btn btn-primary" id="sendButton">
+                            <span id="sendButtonText">Send</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🛍️ Products</h2>
+                <div style="display: flex; gap: 0.5rem;">
+                    <select id="categoryFilter" class="form-input" style="width: auto;" onchange="filterProducts()">
+                        <option value="">All Categories</option>
+                        <option value="Laptop">Laptops</option>
+                        <option value="Phone">Phones</option>
+                        <option value="Headphones">Headphones</option>
+                    </select>
+                    <button class="btn btn-sm btn-secondary" onclick="loadProducts()">🔄 Refresh</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="products-grid" id="productsGrid">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <div class="empty-state-title">No products yet</div>
+                        <div class="empty-state-text">Chat with the assistant to see product recommendations</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison Panel -->
+        <div class="card" style="height: fit-content;">
+            <div class="card-header">
+                <h2 class="card-title">⚖️ Compare</h2>
+                <span class="badge badge-primary" id="compareCount">0 items</span>
+            </div>
+            <div class="card-body">
+                <div class="comparison-list" id="comparisonList">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔗</div>
+                        <div class="empty-state-title">No products selected</div>
+                        <div class="empty-state-text">Click "Add to Compare" on products to compare them</div>
+                    </div>
+                </div>
+                <div id="comparisonResults" class="hidden"></div>
+                <button
+                    class="btn btn-primary"
+                    style="width: 100%; margin-top: 1rem;"
+                    id="compareButton"
+                    onclick="compareProducts()"
+                    disabled
+                >
+                    Compare Selected
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Global state
+    let sessionId = localStorage.getItem('chatSessionId') || null;
+    let comparisonList = [];
+    let displayedProducts = [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        loadProducts();
+    });
+
+    // ============================================
+    // CHAT FUNCTIONALITY
+    // ============================================
+
+    async function sendMessage(event) {
+        event.preventDefault();
+
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+
+        if (!message) return;
+
+        // Add user message to chat
+        appendMessage('user', message);
+        input.value = '';
+
+        // Show typing indicator
+        showTypingIndicator();
+
+        // Send to backend
+        try {
+            const response = await fetch('/api/chat/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: message,
+                    session_id: sessionId
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                sessionId = data.session_id;
+                localStorage.setItem('chatSessionId', sessionId);
+
+                // Hide typing indicator and show response
+                hideTypingIndicator();
+                appendMessage('assistant', data.response.text);
+
+                // Display products if any
+                if (data.response.products && data.response.products.length > 0) {
+                    displayProducts(data.response.products);
+                }
+            } else {
+                hideTypingIndicator();
+                appendMessage('assistant', '❌ Sorry, I encountered an error: ' + data.error);
+            }
+        } catch (error) {
+            hideTypingIndicator();
+            appendMessage('assistant', '❌ Sorry, I encountered an error. Please try again.');
+            console.error('Error:', error);
+        }
+    }
+
+    function sendQuickMessage(message) {
+        document.getElementById('chatInput').value = message;
+        document.getElementById('chatForm').dispatchEvent(new Event('submit'));
+    }
+
+    function appendMessage(role, content) {
+        const messagesContainer = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${role}`;
+
+        const avatar = role === 'assistant' ? '🤖' : '👤';
+        const formattedContent = formatMessage(content);
+
+        messageDiv.innerHTML = `
+            <div class="message-avatar">${avatar}</div>
+            <div class="message-content"><p>${formattedContent}</p></div>
+        `;
+
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function formatMessage(content) {
+        // Format markdown-like bold text
+        content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        // Format newlines
+        content = content.replace(/\n/g, '<br>');
+        return content;
+    }
+
+    function showTypingIndicator() {
+        const messagesContainer = document.getElementById('chatMessages');
+        const indicator = document.createElement('div');
+        indicator.id = 'typingIndicator';
+        indicator.className = 'message assistant';
+        indicator.innerHTML = `
+            <div class="message-avatar">🤖</div>
+            <div class="typing-indicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        `;
+        messagesContainer.appendChild(indicator);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function hideTypingIndicator() {
+        const indicator = document.getElementById('typingIndicator');
+        if (indicator) indicator.remove();
+    }
+
+    function clearChat() {
+        sessionId = null;
+        localStorage.removeItem('chatSessionId');
+        const messagesContainer = document.getElementById('chatMessages');
+        messagesContainer.innerHTML = `
+            <div class="message assistant">
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    <p>👋 Chat cleared! How can I help you today?</p>
+                </div>
+            </div>
+        `;
+    }
+
+    // ============================================
+    // PRODUCTS FUNCTIONALITY
+    // ============================================
+
+    async function loadProducts() {
+        const category = document.getElementById('categoryFilter').value;
+
+        try {
+            let url = '/api/search/?';
+            if (category) url += `category=${category}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.success) {
+                displayProducts(data.products);
+            }
+        } catch (error) {
+            console.error('Error loading products:', error);
+        }
+    }
+
+    function filterProducts() {
+        loadProducts();
+    }
+
+    function displayProducts(products) {
+        displayedProducts = products;
+        const grid = document.getElementById('productsGrid');
+
+        if (products.length === 0) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔍</div>
+                    <div class="empty-state-title">No products found</div>
+                    <div class="empty-state-text">Try adjusting your filters or chat with the assistant</div>
+                </div>
+            `;
+            return;
+        }
+
+        grid.innerHTML = products.map(product => createProductCard(product)).join('');
+    }
+
+    function createProductCard(product) {
+        const badges = product.badges || [];
+        const isInCompare = comparisonList.some(p => p.id === product.id);
+
+        return `
+            <div class="product-card">
+                ${product.image_url ? `<img src="${product.image_url}" alt="${product.name}" class="product-image">` : ''}
+                ${badges.length > 0 ? `
+                    <div class="product-badges">
+                        ${badges.map(badge => `<span class="badge badge-success">${badge}</span>`).join('')}
+                    </div>
+                ` : ''}
+                <div class="product-content">
+                    <div class="product-category">${product.category}</div>
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-description">${product.description}</div>
+                    <div class="product-rating">
+                        <span class="stars">⭐</span>
+                        <span class="rating-value">${product.rating.toFixed(1)}</span>
+                    </div>
+                    <div class="product-footer">
+                        <div class="product-price">$${product.price.toFixed(2)}</div>
+                        <div class="product-actions">
+                            <button
+                                class="btn btn-sm ${isInCompare ? 'btn-success' : 'btn-secondary'}"
+                                onclick="toggleCompare('${product.id}')"
+                            >
+                                ${isInCompare ? '✓ Added' : 'Compare'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ============================================
+    // COMPARISON FUNCTIONALITY
+    // ============================================
+
+    function toggleCompare(productId) {
+        const index = comparisonList.findIndex(p => p.id === productId);
+
+        if (index > -1) {
+            // Remove from comparison
+            comparisonList.splice(index, 1);
+        } else {
+            // Add to comparison
+            const product = displayedProducts.find(p => p.id === productId);
+            if (product) {
+                comparisonList.push(product);
+            }
+        }
+
+        updateComparisonUI();
+        displayProducts(displayedProducts); // Refresh to update button states
+    }
+
+    function updateComparisonUI() {
+        const list = document.getElementById('comparisonList');
+        const count = document.getElementById('compareCount');
+        const button = document.getElementById('compareButton');
+
+        count.textContent = `${comparisonList.length} items`;
+        button.disabled = comparisonList.length < 2;
+
+        if (comparisonList.length === 0) {
+            list.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔗</div>
+                    <div class="empty-state-title">No products selected</div>
+                    <div class="empty-state-text">Click "Add to Compare" on products to compare them</div>
+                </div>
+            `;
+            return;
+        }
+
+        list.innerHTML = comparisonList.map(product => `
+            <div class="comparison-item">
+                ${product.image_url ? `<img src="${product.image_url}" alt="${product.name}" class="comparison-item-image">` : '<div class="comparison-item-image"></div>'}
+                <div class="comparison-item-info">
+                    <div class="comparison-item-name">${product.name}</div>
+                    <div class="comparison-item-price">$${product.price.toFixed(2)}</div>
+                </div>
+                <button class="comparison-remove" onclick="toggleCompare('${product.id}')" title="Remove">
+                    ✕
+                </button>
+            </div>
+        `).join('');
+    }
+
+    async function compareProducts() {
+        if (comparisonList.length < 2) return;
+
+        const resultsDiv = document.getElementById('comparisonResults');
+        resultsDiv.classList.remove('hidden');
+        resultsDiv.innerHTML = '<div class="text-center">Loading comparison...</div>';
+
+        try {
+            const response = await fetch('/api/compare/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    product_ids: comparisonList.map(p => p.id)
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                displayComparisonResults(data.comparison);
+            } else {
+                resultsDiv.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+            }
+        } catch (error) {
+            console.error('Error comparing products:', error);
+            resultsDiv.innerHTML = '<div class="alert alert-error">Failed to compare products</div>';
+        }
+    }
+
+    function displayComparisonResults(comparison) {
+        const resultsDiv = document.getElementById('comparisonResults');
+
+        let html = `<div class="comparison-results">${formatMessage(comparison.summary)}</div>`;
+
+        // Create specs comparison table
+        const allSpecs = new Set();
+        comparison.products.forEach(p => {
+            Object.keys(p.specs).forEach(key => allSpecs.add(key));
+        });
+
+        html += '<table class="comparison-specs-table">';
+        html += '<thead><tr><th>Specification</th>';
+        comparison.products.forEach(p => {
+            html += `<th>${p.name}</th>`;
+        });
+        html += '</tr></thead><tbody>';
+
+        allSpecs.forEach(spec => {
+            html += `<tr><td><strong>${spec.replace(/_/g, ' ').toUpperCase()}</strong></td>`;
+            comparison.products.forEach(p => {
+                html += `<td>${p.specs[spec] || '-'}</td>`;
+            });
+            html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+
+        resultsDiv.innerHTML = html;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,227 @@
+{% extends 'monitoring/base.html' %}
+
+{% block title %}Integrity Report - EduProctor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="app-container wide">
+        <!-- Header -->
+        <div class="app-header">
+            <h1><i class="bi bi-file-earmark-text me-2"></i>Integrity Report</h1>
+            <p class="mb-0">{{ exam.subject }}</p>
+            <p class="mb-0">
+                <small>Student: {{ student.name }} ({{ student.student_id }})</small>
+            </p>
+            <p class="mb-0">
+                <small>Generated: {% now "Y-m-d H:i:s" %}</small>
+            </p>
+            {% if session %}
+            <p class="mb-0">
+                <small>Session: {{ session.start_time|date:"M d, Y H:i" }} - {% if session.end_time %}{{ session.end_time|date:"H:i" }}{% else %}In Progress{% endif %}</small>
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- Score Cards -->
+        <div class="row mb-5">
+            <div class="col-md-6">
+                <div class="score-card integrity">
+                    <p class="text-muted mb-2">INTEGRITY SCORE</p>
+                    <div class="score-value text-primary">{{ integrity_score }}%</div>
+                    <small class="text-muted">Out of 100%</small>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="score-card risk">
+                    <p class="text-muted mb-2">RISK SCORE</p>
+                    <div class="score-value" style="color: {{ risk_color }};">{{ risk_score }}</div>
+                    <span class="badge rounded-pill" style="background: {{ risk_color }};">{{ risk_level }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exam Result (if available) -->
+        {% if result %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="bi bi-trophy me-2"></i>Exam Performance
+                </h5>
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="p-3">
+                            <small class="text-muted">Score</small>
+                            <div class="h4 mb-0">{{ result.score }}%</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3">
+                            <small class="text-muted">Correct</small>
+                            <div class="h4 mb-0">{{ result.correct_answers }}/{{ result.total_questions }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3">
+                            <small class="text-muted">Status</small>
+                            <div class="h4 mb-0">
+                                <span class="badge {% if result.status == 'pass' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ result.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3">
+                            <small class="text-muted">Violations</small>
+                            <div class="h4 mb-0">{{ total_violations }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Integrity Progress Bar -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="bi bi-graph-up me-2"></i>Overall Integrity
+                </h5>
+                <div class="progress" style="height: 35px;">
+                    {% if integrity_score >= 80 %}
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ integrity_score }}%;" aria-valuenow="{{ integrity_score }}" aria-valuemin="0" aria-valuemax="100">
+                        {{ integrity_score }}%
+                    </div>
+                    {% elif integrity_score >= 50 %}
+                    <div class="progress-bar bg-warning text-dark" role="progressbar" style="width: {{ integrity_score }}%;" aria-valuenow="{{ integrity_score }}" aria-valuemin="0" aria-valuemax="100">
+                        {{ integrity_score }}%
+                    </div>
+                    {% elif integrity_score >= 30 %}
+                    <div class="progress-bar bg-danger" role="progressbar" style="width: {{ integrity_score }}%;" aria-valuenow="{{ integrity_score }}" aria-valuemin="0" aria-valuemax="100">
+                        {{ integrity_score }}%
+                    </div>
+                    {% else %}
+                    <div class="progress-bar bg-dark" role="progressbar" style="width: {{ integrity_score }}%;" aria-valuenow="{{ integrity_score }}" aria-valuemin="0" aria-valuemax="100">
+                        {{ integrity_score }}%
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Violations Breakdown -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-4">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Violations Breakdown
+                </h5>
+                {% if violation_details %}
+                <div class="list-group list-group-flush">
+                    {% for vtype, info in violation_details.items %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <div>
+                            <span class="fw-semibold">{{ vtype }}</span>
+                            <small class="text-muted ms-2">(Severity: {{ info.severity_points }} pts)</small>
+                        </div>
+                        <span class="badge rounded-pill bg-secondary">{{ info.count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-success" role="alert">
+                    <i class="bi bi-check-circle me-2"></i>
+                    No violations were detected during this exam session.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Session Timeline -->
+        {% if session %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-4">
+                    <i class="bi bi-clock-history me-2"></i>Session Timeline
+                </h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Start Time:</strong> {{ session.start_time|date:"M d, Y H:i:s" }}</p>
+                        <p class="mb-1"><strong>End Time:</strong> {% if session.end_time %}{{ session.end_time|date:"M d, Y H:i:s" }}{% else %}N/A{% endif %}</p>
+                        <p class="mb-1"><strong>Duration:</strong> {% if session.duration_minutes %}{{ session.duration_minutes }} minutes{% else %}In Progress{% endif %}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Status:</strong> <span class="badge bg-info">{{ session.get_status_display }}</span></p>
+                        <p class="mb-1"><strong>Total Violations:</strong> {{ session.violation_count }}</p>
+                        <p class="mb-1"><strong>IP Address:</strong> {{ session.ip_address|default:"N/A" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Recommendations -->
+        {% if recommendations %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-4">
+                    <i class="bi bi-lightbulb me-2"></i>Recommendations
+                </h5>
+                <div class="list-group">
+                    {% for rec in recommendations %}
+                    <div class="list-group-item">
+                        <i class="bi bi-info-circle me-2 text-warning"></i>{{ rec|safe }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Detailed Violation Log -->
+        {% if violations %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-4">
+                    <i class="bi bi-list-ul me-2"></i>Detailed Proctoring Log
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Violation Type</th>
+                                <th>Notes</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in violations %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary">{{ log.get_violation_type_display }}</span>
+                                </td>
+                                <td>{{ log.notes|default:"-" }}</td>
+                                <td>{{ log.timestamp|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="d-flex gap-3 justify-content-center pt-3 border-top no-print">
+            <button onclick="window.print()" class="btn btn-outline-primary">
+                <i class="bi bi-printer me-2"></i>Print Report
+            </button>
+            <a href="{% url 'monitoring:exam_results' exam.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Results
+            </a>
+            <a href="{% url 'monitoring:exam_dashboard' %}" class="btn btn-primary-custom">
+                <i class="bi bi-grid me-2"></i>Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,598 @@
+{% extends 'base.html' %}
+{% load dict_filters %}
+
+{% block title %}Interview in Progress - JobPortal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .question-card {
+        transition: all 0.3s ease;
+    }
+    .question-card.answered {
+        opacity: 0.6;
+    }
+    .timer-warning {
+        animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<style>
+    .question-card {
+        transition: all 0.3s ease;
+    }
+    .question-card.answered {
+        opacity: 0.6;
+    }
+    .timer-warning {
+        animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+</style>
+
+<div class="bg-primary text-white py-4 sticky-top">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="mb-0"><i class="fas fa-robot me-2"></i>Interview Session</h4>
+                <p class="mb-0">{{ job.title }} at {{ job.company }}</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="alert alert-warning mb-0 d-inline-block">
+                    <i class="fas fa-clock me-1"></i>
+                    <span id="timer">{{ time_remaining_minutes }}</span> minutes remaining
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="py-5">
+    <div class="container">
+        <!-- Progress -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="progress" style="height: 30px;">
+                    {% if total_questions > 0 %}
+                    {% widthratio answered_count 1 total_questions as progress %}
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress|multiply:100 }}%">
+                        {{ answered_count }} / {{ total_questions }} Questions Answered
+                    </div>
+                    {% else %}
+                    <div class="progress-bar bg-success" role="progressbar" style="width: 0%">
+                        0 / {{ total_questions }} Questions Answered
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Question Navigation -->
+            <div class="col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Questions</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for question in questions %}
+                        <button class="btn w-100 mb-2 question-nav-btn
+                            {% if question.id in answered_question_ids %}btn-info{% else %}btn-outline-primary{% endif %}"
+                            data-question-id="{{ question.id }}">
+                            <span class="float-start">{{ forloop.counter }}.</span>
+                            <span class="d-inline-block text-truncate" style="max-width: 70%;">
+                                {% if question.question %}
+                                    {{ question.question|truncatechars:50 }}
+                                {% else %}
+                                    Question {{ forloop.counter }}
+                                {% endif %}
+                            </span>
+                            {% if question.id in answered_question_ids %}
+                            <i class="fas fa-check-circle float-end"></i>
+                            {% endif %}
+                        </button>
+                        {% empty %}
+                        <p class="text-muted">No questions available. Please contact support.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <a href="#" class="btn btn-success w-100 mb-2" id="completeInterviewBtn">
+                            <i class="fas fa-check-circle me-2"></i>Complete Interview
+                        </a>
+                        <small class="text-muted d-block text-center">Answer all questions before completing</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Display Area -->
+            <div class="col-lg-8">
+                <div class="card question-card" id="questionCard">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-question-circle me-2"></i>Question <span id="questionNumber">1</span></h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="questionDisplay">
+                            <div class="text-center text-muted py-5">
+                                <i class="fas fa-arrow-left" style="font-size: 2rem;"></i>
+                                <p class="mt-3">Select a question from the left to begin</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Answer Form (hidden initially) -->
+                <div class="card mt-3" id="answerForm" style="display: none;">
+                    <div class="card-body">
+                        <h6>Your Answer:</h6>
+
+                        <!-- MCQ Options (hidden by default) -->
+                        <div id="mcqOptions" style="display: none;">
+                            <div class="form-check mcq-option" style="display: none;">
+                                <input class="form-check-input" type="radio" name="mcqAnswer" id="mcqA" value="">
+                                <label class="form-check-label" for="mcqA" id="mcqLabelA"></label>
+                            </div>
+                            <div class="form-check mcq-option" style="display: none;">
+                                <input class="form-check-input" type="radio" name="mcqAnswer" id="mcqB" value="">
+                                <label class="form-check-label" for="mcqB" id="mcqLabelB"></label>
+                            </div>
+                            <div class="form-check mcq-option" style="display: none;">
+                                <input class="form-check-input" type="radio" name="mcqAnswer" id="mcqC" value="">
+                                <label class="form-check-label" for="mcqC" id="mcqLabelC"></label>
+                            </div>
+                            <div class="form-check mcq-option" style="display: none;">
+                                <input class="form-check-input" type="radio" name="mcqAnswer" id="mcqD" value="">
+                                <label class="form-check-label" for="mcqD" id="mcqLabelD"></label>
+                            </div>
+                            <div class="form-check mcq-option" style="display: none;">
+                                <input class="form-check-input" type="radio" name="mcqAnswer" id="mcqE" value="">
+                                <label class="form-check-label" for="mcqE" id="mcqLabelE"></label>
+                            </div>
+                            <div class="form-check mcq-option" style="display: none;">
+                                <input class="form-check-input" type="radio" name="mcqAnswer" id="mcqF" value="">
+                                <label class="form-check-label" for="mcqF" id="mcqLabelF"></label>
+                            </div>
+                        </div>
+
+                        <!-- Text Answer (shown for non-MCQ questions) -->
+                        <textarea class="form-control mb-3" id="answerText" rows="8" placeholder="Type your detailed answer here..."></textarea>
+
+                        <input type="hidden" id="currentQuestionId">
+                        <input type="hidden" id="currentQuestionType">
+                        <input type="hidden" id="questionStartTime">
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted" id="timeElapsed">Time: 0s</small>
+                            </div>
+                            <div>
+                                <button class="btn btn-outline-secondary me-2" id="skipBtn">Skip</button>
+                                <button class="btn btn-primary" id="submitAnswerBtn">
+                                    <i class="fas fa-paper-plane me-2"></i>Submit Answer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Response Feedback (shown after submission) -->
+                <div class="card mt-3" id="responseFeedback" style="display: none;">
+                    <div class="card-body">
+                        <h6><i class="fas fa-check-circle text-success me-2"></i>Answer Submitted!</h6>
+                        <div id="feedbackContent"></div>
+                        <button class="btn btn-primary mt-3" id="nextQuestionBtn">Next Question</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 mb-0">Analyzing your answer...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// CSRF Token helper
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+           getCookie('csrftoken');
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Data from server
+const sessionId = {{ session.id }};
+const totalQuestions = {{ total_questions }};
+let questionTimer = null;
+let currentQuestionIndex = 0;
+
+// Initialize answered questions list from server
+const answeredQuestionIds = [
+    {% for qid in answered_question_ids %}
+    {{ qid }},
+    {% endfor %}
+];
+
+// Timer countdown
+let timeRemaining = {{ time_remaining_minutes }} * 60;
+const timerInterval = setInterval(() => {
+    timeRemaining--;
+    const minutes = Math.floor(timeRemaining / 60);
+    const seconds = timeRemaining % 60;
+    document.getElementById('timer').textContent = minutes;
+
+    if (timeRemaining <= 300 && timeRemaining % 60 === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Time Warning',
+            text: `${minutes} minutes remaining!`,
+            timer: 3000,
+            showConfirmButton: false
+        });
+    }
+
+    if (timeRemaining <= 0) {
+        clearInterval(timerInterval);
+        Swal.fire({
+            icon: 'error',
+            title: 'Time Expired',
+            text: 'Your interview session has expired.',
+            confirmButtonText: 'OK'
+        }).then(() => {
+            window.location.href = `/interview/results/${sessionId}/`;
+        });
+    }
+}, 1000);
+
+// Question data
+const questionsData = {};
+{% for question in questions %}
+questionsData[{{ question.id }}] = {
+    id: {{ question.id }},
+    question: "{{ question.question|default:'Question'|escapejs }}",
+    type: "{{ question.question_type|default:'technical' }}",
+    difficulty: "{{ question.difficulty|default:'medium' }}",
+    number: {{ forloop.counter }},
+    {% if question.question_type == 'mcq' %}
+    choices: {{ question.choices|to_json|safe }},
+    correctAnswer: "{{ question.correct_answer|escapejs }}",
+    {% else %}
+    choices: [],
+    correctAnswer: "",
+    {% endif %}
+};
+{% endfor %}
+
+// Question navigation
+document.querySelectorAll('.question-nav-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        if (this.disabled) return;
+
+        const questionId = this.getAttribute('data-question-id');
+        showQuestion(questionId);
+    });
+});
+
+function showQuestion(questionId) {
+    const data = questionsData[questionId];
+    if (!data) return;
+
+    document.getElementById('questionNumber').textContent = data.number;
+    document.getElementById('questionDisplay').innerHTML = `
+        <div class="mb-3">
+            <span class="badge bg-info">${data.type}</span>
+            <span class="badge bg-secondary">${data.difficulty}</span>
+        </div>
+        <h4>${data.question}</h4>
+        ${data.type === 'mcq' ? '<p class="text-muted mt-3">Select the correct answer from the options below.</p>' : '<p class="text-muted mt-3">Provide a detailed answer based on your experience and skills.</p>'}
+    `;
+
+    document.getElementById('answerForm').style.display = 'block';
+    document.getElementById('responseFeedback').style.display = 'none';
+    document.getElementById('currentQuestionId').value = questionId;
+    document.getElementById('currentQuestionType').value = data.type;
+
+    // Handle MCQ vs text questions
+    const mcqOptionsDiv = document.getElementById('mcqOptions');
+    const answerTextarea = document.getElementById('answerText');
+
+    if (data.type === 'mcq' && data.choices && data.choices.length > 0) {
+        // Show MCQ options
+        mcqOptionsDiv.style.display = 'block';
+        answerTextarea.style.display = 'none';
+        answerTextarea.required = false;
+
+        // Clear previous selections
+        document.querySelectorAll('input[name="mcqAnswer"]').forEach(radio => {
+            radio.checked = false;
+            radio.closest('.form-check').style.display = 'none';
+        });
+
+        // Populate choices
+        const choiceLabels = ['A', 'B', 'C', 'D', 'E', 'F'];
+        data.choices.forEach((choice, index) => {
+            if (index < choiceLabels.length) {
+                const label = choiceLabels[index];
+                const radio = document.getElementById(`mcq${label}`);
+                const labelEl = document.getElementById(`mcqLabel${label}`);
+                if (radio && labelEl) {
+                    radio.value = choice;
+                    labelEl.textContent = `${label}. ${choice}`;
+                    radio.closest('.form-check').style.display = 'block';
+                }
+            }
+        });
+    } else {
+        // Show text area
+        mcqOptionsDiv.style.display = 'none';
+        answerTextarea.style.display = 'block';
+        answerTextarea.required = true;
+        answerTextarea.value = '';
+        answerTextarea.focus();
+    }
+
+    // Start question timer
+    const startTime = Date.now();
+    document.getElementById('questionStartTime').value = startTime;
+
+    if (questionTimer) clearInterval(questionTimer);
+    questionTimer = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        document.getElementById('timeElapsed').textContent = `Time: ${elapsed}s`;
+    }, 1000);
+
+    // Update active button
+    document.querySelectorAll('.question-nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-question-id="${questionId}"]`).classList.add('active');
+}
+
+// Submit answer
+document.getElementById('submitAnswerBtn').addEventListener('click', async function() {
+    const questionId = document.getElementById('currentQuestionId').value;
+    const questionType = document.getElementById('currentQuestionType').value;
+    let answer = '';
+
+    // Get answer based on question type
+    if (questionType === 'mcq') {
+        const selectedRadio = document.querySelector('input[name="mcqAnswer"]:checked');
+        if (!selectedRadio) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Answer Selected',
+                text: 'Please select an answer from the options.',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        answer = selectedRadio.value;
+    } else {
+        answer = document.getElementById('answerText').value.trim();
+        if (answer.length < 20) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Answer Too Short',
+                text: 'Please provide a more detailed answer (at least 20 characters).',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+    }
+
+    const timeTaken = Math.floor((Date.now() - parseInt(document.getElementById('questionStartTime').value)) / 1000);
+
+    try {
+        const formData = new FormData();
+        formData.append('answer', answer);
+        if (timeTaken) formData.append('time_taken', timeTaken);
+        formData.append('csrfmiddlewaretoken', getCSRFToken());
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+        const response = await fetch(`/interview/${sessionId}/submit/${questionId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+            },
+            body: formData,
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        clearInterval(questionTimer);
+
+        if (data.success) {
+            // Mark question as answered in UI (but don't disable)
+            const btn = document.querySelector(`[data-question-id="${questionId}"]`);
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-info');
+            btn.innerHTML += '<i class="fas fa-check-circle float-end"></i>';
+
+            // Add to answered list
+            if (!answeredQuestionIds.includes(questionId)) {
+                answeredQuestionIds.push(questionId);
+            }
+
+            // Show brief feedback message
+            Swal.fire({
+                icon: 'success',
+                title: 'Answer Submitted!',
+                text: `Score: ${data.score}/${data.max_score} (${data.percentage}%)`,
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+            // Auto-load next question after short delay
+            setTimeout(() => {
+                const unansweredBtn = Array.from(document.querySelectorAll('.question-nav-btn:not(.btn-info)'));
+                if (unansweredBtn.length > 0) {
+                    unansweredBtn[0].click();
+                } else {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'All Questions Answered!',
+                        text: 'Click "Complete Interview" to finish and see your final score.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            }, 1800);
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.error || 'Failed to submit answer.',
+                confirmButtonText: 'OK'
+            });
+        }
+    } catch (error) {
+        clearInterval(questionTimer);
+
+        if (error.name === 'AbortError') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Request Timeout',
+                text: 'The request took too long. Please try again.',
+                confirmButtonText: 'OK'
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to submit answer. Please try again.',
+                confirmButtonText: 'OK'
+            });
+        }
+        console.error('Error submitting answer:', error);
+    }
+});
+
+// Next question button
+document.getElementById('nextQuestionBtn').addEventListener('click', function() {
+    const unansweredBtn = Array.from(document.querySelectorAll('.question-nav-btn.btn-outline-primary'));
+    if (unansweredBtn.length > 0) {
+        unansweredBtn[0].click();
+    } else {
+        Swal.fire({
+            icon: 'info',
+            title: 'All Questions Answered',
+            text: 'Click "Complete Interview" to see your results.',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    }
+});
+
+// Skip button
+document.getElementById('skipBtn').addEventListener('click', function() {
+    Swal.fire({
+        icon: 'question',
+        title: 'Skip Question?',
+        text: 'You can come back to it later.',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Skip',
+        cancelButtonText: 'No, Continue'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('answerForm').style.display = 'none';
+            document.getElementById('questionDisplay').innerHTML = `
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-arrow-left" style="font-size: 2rem;"></i>
+                    <p class="mt-3">Select another question to continue</p>
+                </div>
+            `;
+        }
+    });
+});
+
+// Complete interview
+document.getElementById('completeInterviewBtn').addEventListener('click', function() {
+    const answeredCount = answeredQuestionIds.length;
+
+    if (answeredCount < totalQuestions) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Questions Remaining',
+            text: `You have ${totalQuestions - answeredCount} unanswered question(s). Complete them first?`,
+            showCancelButton: true,
+            confirmButtonText: 'Complete Anyway',
+            cancelButtonText: 'Continue Interview'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                completeInterview();
+            }
+        });
+    } else {
+        completeInterview();
+    }
+});
+
+function completeInterview() {
+    // Show loading modal
+    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    modal.show();
+
+    // Update modal text
+    document.querySelector('#loadingModal .modal-body p').textContent = 'Analyzing your answers and calculating your score...';
+
+    Swal.fire({
+        icon: 'question',
+        title: 'Complete Interview?',
+        text: 'Your answers will be analyzed and a final score will be generated.',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Complete',
+        cancelButtonText: 'Continue'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            modal.hide();
+            window.location.href = `/interview/${sessionId}/complete/`;
+        } else {
+            modal.hide();
+        }
+    });
+}
+</script>
+{% endblock %}

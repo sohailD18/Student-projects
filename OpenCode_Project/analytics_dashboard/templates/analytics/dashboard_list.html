@@ -1,0 +1,41 @@
+{% extends 'analytics/base.html' %}
+
+{% block title %}Dashboards - Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Dashboards</h1>
+        <a href="/dashboards/create/" class="btn btn-primary">Create Dashboard</a>
+    </div>
+
+    {% if dashboards %}
+    <div class="dashboard-list">
+        {% for dashboard in dashboards %}
+        <div class="card dashboard-card">
+            <h2><a href="/dashboards/{{ dashboard.id }}/">{{ dashboard.name }}</a></h2>
+            {% if dashboard.description %}
+            <p>{{ dashboard.description }}</p>
+            {% endif %}
+            <div class="dashboard-meta">
+                <span>Created by: {{ dashboard.created_by.username }}</span>
+                <span>{{ dashboard.created_at|date:"M d, Y" }}</span>
+                {% if dashboard.is_public %}
+                <span class="badge badge-success">Public</span>
+                {% endif %}
+            </div>
+            <div class="dashboard-stats">
+                <span>{{ dashboard.widgets.count }} widgets</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h2>No dashboards yet</h2>
+        <p>Create your first dashboard to start tracking metrics.</p>
+        <a href="/dashboards/create/" class="btn btn-primary">Create Dashboard</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

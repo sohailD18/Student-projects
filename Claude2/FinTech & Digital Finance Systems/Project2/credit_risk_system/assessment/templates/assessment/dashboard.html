@@ -1,0 +1,344 @@
+{% extends 'assessment/base.html' %}
+
+{% block title %}Dashboard - Credit Risk Assessment System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">
+                    <i class="bi bi-graph-up text-primary"></i>
+                    Analytics Dashboard
+                </h2>
+                <p class="text-muted mb-0">Real-time insights and statistics</p>
+            </div>
+            <a href="{% url 'assessment:new_assessment' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> New Assessment
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <div class="stat-icon bg-primary text-white">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Total Applicants</h6>
+                        <h3 class="mb-0">{{ stats.total_applicants }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <div class="stat-icon bg-success text-white">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Approved</h6>
+                        <h3 class="mb-0">{{ stats.approved_count }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <div class="stat-icon bg-warning text-white">
+                            <i class="bi bi-question-circle-fill"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Manual Review</h6>
+                        <h3 class="mb-0">{{ stats.manual_review_count }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <div class="stat-icon bg-danger text-white">
+                            <i class="bi bi-x-circle-fill"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Rejected</h6>
+                        <h3 class="mb-0">{{ stats.rejected_count }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Stats -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Approval Rate</h6>
+                        <h3 class="mb-0">{{ stats.approval_rate }}%</h3>
+                    </div>
+                    <div class="progress-circle" data-percent="{{ stats.approval_rate }}">
+                        <i class="bi bi-graph-up-arrow text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Avg. Income</h6>
+                        <h3 class="mb-0">${{ stats.average_income|floatformat:0 }}</h3>
+                    </div>
+                    <i class="bi bi-cash-stack text-primary" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Avg. Credit Score</h6>
+                        <h3 class="mb-0">{{ stats.average_credit_score|floatformat:0 }}</h3>
+                    </div>
+                    <i class="bi bi-credit-card text-info" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row mb-4">
+    <!-- Risk Distribution Pie Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">
+                    <i class="bi bi-pie-chart text-primary"></i>
+                    Risk Category Distribution
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="riskPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Distribution Pie Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">
+                    <i class="bi bi-pie-chart text-success"></i>
+                    Approval Status Distribution
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="statusPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bar Chart -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">
+                    <i class="bi bi-bar-chart text-info"></i>
+                    Average Income by Approval Status
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="incomeBarChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Risk Category Breakdown -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">
+                    <i class="bi bi-table text-warning"></i>
+                    Risk Category Breakdown
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Risk Category</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                                <th>Visual</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge bg-success">Low Risk</span></td>
+                                <td>{{ stats.low_risk_count }}</td>
+                                <td>{{ stats.low_risk_percentage }}%</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-success" style="width: {{ stats.low_risk_percentage }}%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-warning text-dark">Medium Risk</span></td>
+                                <td>{{ stats.medium_risk_count }}</td>
+                                <td>{{ stats.medium_risk_percentage }}%</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-warning text-dark" style="width: {{ stats.medium_risk_percentage }}%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-danger">High Risk</span></td>
+                                <td>{{ stats.high_risk_count }}</td>
+                                <td>{{ stats.high_risk_percentage }}%</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-danger" style="width: {{ stats.high_risk_percentage }}%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Risk Distribution Pie Chart
+const riskCtx = document.getElementById('riskPieChart').getContext('2d');
+new Chart(riskCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+        datasets: [{
+            data: [
+                {{ stats.low_risk_count }},
+                {{ stats.medium_risk_count }},
+                {{ stats.high_risk_count }}
+            ],
+            backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Status Distribution Pie Chart
+const statusCtx = document.getElementById('statusPieChart').getContext('2d');
+new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Approved', 'Manual Review', 'Rejected'],
+        datasets: [{
+            data: [
+                {{ stats.approved_count }},
+                {{ stats.manual_review_count }},
+                {{ stats.rejected_count }}
+            ],
+            backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Income by Status Bar Chart
+const incomeCtx = document.getElementById('incomeBarChart').getContext('2d');
+new Chart(incomeCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Approved', 'Manual Review', 'Rejected'],
+        datasets: [{
+            label: 'Average Annual Income ($)',
+            data: [
+                {{ stats.income_by_status.approved }},
+                {{ stats.income_by_status.manual_review }},
+                {{ stats.income_by_status.rejected }}
+            ],
+            backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '$' + value.toLocaleString();
+                    }
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

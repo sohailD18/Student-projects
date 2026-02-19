@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-folder-open"></i> Case: {{ case.case_number }}</h1>
+    <div>
+        <a href="{% url 'fraud_cases' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+</div>
+
+<!-- Case Overview -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Case Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr><th width="30%">Case Number:</th><td>{{ case.case_number }}</td></tr>
+                    <tr><th>Title:</th><td>{{ case.title }}</td></tr>
+                    <tr><th>Status:</th><td>
+                        <span class="badge bg-{% if case.status == 'open' %}danger{% elif case.status == 'investigating' %}warning{% elif case.status == 'closed' %}success{% else %}info{% endif %}">
+                            {{ case.status|title }}
+                        </span>
+                    </td></tr>
+                    <tr><th>Priority:</th><td>
+                        <span class="badge bg-{% if case.priority == 'p1' %}danger{% elif case.priority == 'p2' %}warning{% elif case.priority == 'p3' %}info{% else %}secondary{% endif %}">
+                            {{ case.priority|upper }} - {% if case.priority == 'p1' %}Critical{% elif case.priority == 'p2' %}High{% elif case.priority == 'p3' %}Medium{% else %}Low{% endif %}
+                        </span>
+                    </td></tr>
+                    <tr><th>Assigned To:</th><td>{{ case.assigned_to|default:"Unassigned" }}</td></tr>
+                    <tr><th>Suspected Amount:</th><td>${{ case.suspected_amount }}</td></tr>
+                    <tr><th>Confirmed Fraud Amount:</th><td>${{ case.confirmed_fraud_amount }}</td></tr>
+                    <tr><th>Created:</th><td>{{ case.created_at|date:"M d, Y H:i" }}</td></tr>
+                    {% if case.closed_at %}
+                    <tr><th>Closed:</th><td>{{ case.closed_at|date:"M d, Y H:i" }} by {{ case.closed_by }}</td></tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if case.status != 'closed' %}
+                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+                        <i class="bi bi-arrow-repeat"></i> Update Status
+                    </button>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNoteModal">
+                        <i class="bi bi-plus-circle"></i> Add Note
+                    </button>
+                    {% if not case.sar %}
+                    <a href="{% url 'generate_sar' case.case_number %}" class="btn btn-danger">
+                        <i class="bi bi-file-earmark-text"></i> Generate SAR
+                    </a>
+                    {% endif %}
+                    {% else %}
+                    <div class="alert alert-success mb-0">
+                        <strong>Case Closed</strong><br>
+                        {{ case.resolution_summary }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Description -->
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="bi bi-card-text"></i> Description</h5>
+    </div>
+    <div class="card-body">
+        {{ case.description }}
+    </div>
+</div>
+
+<!-- Related Transactions & Alerts -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-receipt"></i> Related Transactions ({{ related_transactions|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% for txn in related_transactions %}
+                <div class="d-flex justify-content-between border-bottom py-2">
+                    <div>
+                        <strong>#{{ txn.id }}</strong> - {{ txn.merchant }}<br>
+                        <small>{{ txn.user }} | {{ txn.timestamp|date:"M d, Y" }}</small>
+                    </div>
+                    <div class="text-end">
+                        <strong>${{ txn.amount }}</strong><br>
+                        <span class="badge severity-{{ txn.risk_score|default:'low' }}">{{ txn.risk_score|default:0 }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">No transactions linked</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-bell"></i> Related Alerts ({{ related_alerts|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% for alert in related_alerts %}
+                <div class="d-flex justify-content-between border-bottom py-2">
+                    <div>
+                        <strong>Alert #{{ alert.id }}</strong><br>
+                        <small>{{ alert.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge severity-{{ alert.severity }}">{{ alert.severity|title }}</span>
+                        <span class="badge bg-secondary">{{ alert.risk_score }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">No alerts linked</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notes -->
+<div class="card mb-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="bi bi-chat-left-text"></i> Case Notes</h5>
+    </div>
+    <div class="card-body">
+        {% for note in notes %}
+        <div class="card mb-3 {% if note.is_internal %}border-warning{% endif %}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <strong>{{ note.author }}</strong>
+                    <small class="text-muted">{{ note.created_at|date:"M d, Y H:i" }}</small>
+                </div>
+                <p class="mb-0">{{ note.note }}</p>
+                {% if note.is_internal %}
+                <small class="text-warning"><i class="bi bi-lock"></i> Internal Note</small>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">No notes yet</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'update_case_status' case.case_number %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Case Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="status" class="form-label">New Status</label>
+                        <select name="status" id="status" class="form-select" required>
+                            <option value="open">Open</option>
+                            <option value="investigating">Investigating</option>
+                            <option value="evidence_collection">Evidence Collection</option>
+                            <option value="pending_review">Pending Review</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="resolutionDiv" style="display: none;">
+                        <label for="resolution_summary" class="form-label">Resolution Summary</label>
+                        <textarea name="resolution_summary" id="resolution_summary" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Note Modal -->
+<div class="modal fade" id="addNoteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'add_case_note' case.case_number %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Note</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="note" class="form-label">Note</label>
+                        <textarea name="note" id="note" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="is_internal" id="is_internal" class="form-check-input" checked>
+                        <label for="is_internal" class="form-check-label">
+                            <i class="bi bi-lock"></i> Internal note (not visible to customer)
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('status').addEventListener('change', function() {
+    document.getElementById('resolutionDiv').style.display = this.value === 'closed' ? 'block' : 'none';
+});
+</script>
+{% endblock %}

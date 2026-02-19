@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load finance_filters %}
+
+{% block title %}Budgets - Finance Intelligence{% endblock %}
+
+{% block content %}
+<div class="budgets-container">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-piggy-bank"></i> Budgets - {{ month_name }} {{ current_year }}</h1>
+        <a href="{% url 'finance:budget_add' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Add Budget
+        </a>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Total Budget</h6>
+                    <h3 class="text-primary">${{ total_budget|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Total Spent</h6>
+                    <h3 class="text-warning">${{ total_spent|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Total Remaining</h6>
+                    <h3 class="{% if total_remaining >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        ${{ total_remaining|floatformat:2 }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budgets Grid -->
+    {% if budgets %}
+    <div class="row">
+        {% for budget in budgets %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card budget-card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ budget.category }}</h5>
+                    <span class="badge bg-{{ budget|get_budget_status_color }}">{{ budget.status }}</span>
+                </div>
+                <div class="card-body">
+                    <!-- Progress Bar -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Budget Utilization</small>
+                            <small class="text-muted">{{ budget.utilization_percentage|floatformat:1 }}%</small>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-{{ budget|get_progress_color }}"
+                                 role="progressbar"
+                                 style="width: {{ budget.utilization_percentage|floatformat:0 }}%"
+                                 aria-valuenow="{{ budget.utilization_percentage }}"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Amounts -->
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <small class="text-muted d-block">Budget</small>
+                            <strong>${{ budget.limit_amount|floatformat:2 }}</strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Spent</small>
+                            <strong class="{% if budget.is_over_budget %}text-danger{% else %}text-success{% endif %}">
+                                ${{ budget.spent_amount|floatformat:2 }}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Remaining -->
+                    <div class="text-center">
+                        <small class="text-muted">Remaining</small>
+                        <h5 class="{% if budget.remaining_amount >= 0 %}text-success{% else %}text-danger{% endif %} mb-0">
+                            ${{ budget.remaining_amount|floatformat:2 }}
+                        </h5>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <small class="text-muted">
+                        {% if budget.is_over_budget %}
+                        <i class="bi bi-exclamation-circle text-danger"></i> Over budget by ${{ budget.spent_amount|sub:budget.limit_amount|floatformat:2 }}
+                        {% else %}
+                        <i class="bi bi-check-circle text-success"></i> On track
+                        {% endif %}
+                    </small>
+                    <div>
+                        <a href="{% url 'finance:budget_edit' budget.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{% url 'finance:budget_delete' budget.pk %}" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-piggy-bank fs-1 d-block mb-3 text-muted"></i>
+            <h4>No budgets set for {{ month_name }}</h4>
+            <p class="text-muted">Create budgets for your expense categories to track your spending.</p>
+            <a href="{% url 'finance:budget_add' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Create Your First Budget
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

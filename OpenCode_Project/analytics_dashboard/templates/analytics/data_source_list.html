@@ -1,0 +1,45 @@
+{% extends 'analytics/base.html' %}
+
+{% block title %}Data Sources - Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Data Sources</h1>
+        <a href="/data-sources/create/" class="btn btn-primary">Add Data Source</a>
+    </div>
+
+    {% if data_sources %}
+    <div class="data-sources-grid">
+        {% for source in data_sources %}
+        <div class="card data-source-card">
+            <h2>{{ source.name }}</h2>
+            <div class="data-source-details">
+                <span class="badge">{{ source.get_source_type_display }}</span>
+                {% if source.is_active %}
+                <span class="badge badge-success">Active</span>
+                {% else %}
+                <span class="badge">Inactive</span>
+                {% endif %}
+            </div>
+            <div class="data-source-meta">
+                <span>Refresh Interval: {{ source.refresh_interval }}s</span>
+                {% if source.last_refreshed %}
+                <span>Last Refreshed: {{ source.last_refreshed|timesince }} ago</span>
+                {% endif %}
+            </div>
+            <div class="data-source-metrics">
+                <span>{{ source.metrics.count }} metrics</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h2>No data sources yet</h2>
+        <p>Add data sources to connect your analytics dashboard to external data.</p>
+        <a href="/data-sources/create/" class="btn btn-primary">Add Data Source</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

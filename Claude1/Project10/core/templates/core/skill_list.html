@@ -1,0 +1,238 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Browse Skills - SkillSwap{% endblock %}
+
+{% block extra_css %}
+<style>
+    .skill-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .skill-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15) !important;
+    }
+
+    .category-icon {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+    }
+
+    .tech-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .art-bg { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .language-bg { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .music-bg { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .cooking-bg { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    .sports-bg { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+    .academic-bg { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+    .other-bg { background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%); }
+
+    .search-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .category-chip {
+        transition: all 0.2s ease;
+    }
+
+    .category-chip:hover {
+        transform: scale(1.05);
+    }
+
+    .category-chip.active {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .points-badge {
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .no-results {
+        background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5 fw-bold mb-2">
+                        <i class="bi bi-book-fill text-primary"></i> Browse Skills
+                    </h1>
+                    <p class="lead text-muted">Discover and learn from our community of expert teachers</p>
+                </div>
+                {% if user.is_authenticated and user.skills_teaching.exists %}
+                <a href="{% url 'core:create_skill' %}" class="btn btn-success btn-lg">
+                    <i class="bi bi-plus-circle-fill"></i> Create New Skill
+                </a>
+                {% elif user.is_authenticated and not user.skills_teaching.exists %}
+                <a href="{% url 'core:create_skill' %}" class="btn btn-success btn-lg">
+                    <i class="bi bi-plus-circle-fill"></i> Start Teaching
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card search-card text-white p-4 mb-4">
+        <form method="get">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white text-dark">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" name="q" class="form-control" placeholder="Search skills by title or description..." value="{{ query }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select name="category" class="form-select">
+                        <option value="">All Categories</option>
+                        {% for value, label in categories %}
+                        <option value="{{ value }}" {% if selected_category == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-light w-100 fw-bold">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Quick Category Filters -->
+    <div class="row g-2 mb-4">
+        <div class="col-12">
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'core:skill_list' %}" class="category-chip btn {% if not selected_category %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                    All Skills
+                </a>
+                {% for value, label in categories %}
+                <a href="?category={{ value }}" class="category-chip btn {% if selected_category == value %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                    <i class="bi bi-tag"></i> {{ label }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Info -->
+    {% if query or selected_category %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <p class="text-muted">
+                <i class="bi bi-funnel"></i>
+                {% if query %}
+                Showing results for "{{ query }}"
+                {% else %}
+                Showing {{ category|default:"All" }} skills
+                {% endif %}
+                <span class="badge bg-primary rounded-pill">{{ skills.count }}</span>
+                <a href="{% url 'core:skill_list' %}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="bi bi-x-circle"></i> Clear
+                </a>
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Skills Grid -->
+    <div class="row g-4">
+        {% for skill in skills %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card skill-card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <!-- Category Badge & Points -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="category-icon tech-bg text-white rounded-3">
+                            {% if skill.category == 'tech' %}<i class="bi bi-laptop"></i>
+                            {% elif skill.category == 'art' %}<i class="bi bi-palette"></i>
+                            {% elif skill.category == 'language' %}<i class="bi bi-translate"></i>
+                            {% elif skill.category == 'music' %}<i class="bi bi-music-note"></i>
+                            {% elif skill.category == 'cooking' %}<i class="bi bi-egg-fried"></i>
+                            {% elif skill.category == 'sports' %}<i class="bi bi-lightning-charge"></i>
+                            {% elif skill.category == 'academic' %}<i class="bi bi-mortarboard"></i>
+                            {% else %}<i class="bi bi-grid"></i>{% endif %}
+                        </span>
+                        <span class="points-badge badge rounded-pill">
+                            <i class="bi bi-star-fill"></i> {{ skill.hourly_rate_points }} pts
+                        </span>
+                    </div>
+
+                    <!-- Skill Title -->
+                    <h5 class="card-title fw-bold mb-2">{{ skill.title }}</h5>
+
+                    <!-- Teacher Info -->
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-person-fill text-primary"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Taught by</small>
+                            <span class="fw-bold text-dark">{{ skill.teacher.username }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <p class="card-text text-muted small mb-3">{{ skill.description|truncatewords:25 }}</p>
+
+                    <!-- Category Label -->
+                    <div class="mb-3">
+                        <span class="badge bg-light text-dark border">{{ skill.get_category_display }}</span>
+                    </div>
+                </div>
+
+                <!-- Card Footer -->
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'core:skill_detail' skill.id %}" class="btn btn-outline-primary">
+                            <i class="bi bi-info-circle"></i> View Details
+                        </a>
+                        <a href="{% url 'core:book_session' skill.id %}" class="btn btn-primary">
+                            <i class="bi bi-calendar-check"></i> Book Session
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert no-results rounded-3 p-5 text-center">
+                <i class="bi bi-search" style="font-size: 3rem;"></i>
+                <h4 class="fw-bold mt-3">No skills found</h4>
+                <p class="mb-0">Try adjusting your search or filters to find what you're looking for.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination Hint -->
+    {% if skills.count > 0 %}
+    <div class="text-center mt-4">
+        <p class="text-muted small">
+            <i class="bi bi-info-circle"></i>
+            Showing {{ skills.count }} skill{{ skills.count|pluralize }}
+            {% if skills.count == 1 %} - Book a session to start learning!{% endif %}
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

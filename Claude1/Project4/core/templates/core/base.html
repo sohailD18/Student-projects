@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="EcoTrack - Track your carbon footprint and earn rewards for sustainable living">
+    <meta name="keywords" content="carbon footprint, sustainability, eco-friendly, environment">
+    <title>{% block title %}EcoTrack - Track Your Carbon Footprint{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
+
+    <!-- External CSS (Font Awesome for icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
+
+    {% block extra_css %}
+    {% endblock %}
+</head>
+<body>
+    <!-- Header -->
+    <header id="header">
+        <div class="container">
+            <nav>
+                <a href="{% url 'dashboard' %}" class="logo">
+                    <span class="logo-icon">🌱</span>
+                    <span>EcoTrack</span>
+                </a>
+
+                <!-- Mobile Menu Toggle -->
+                <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+
+                <!-- Navigation Links -->
+                <ul class="nav-links" id="navLinks">
+                    {% if user.is_authenticated %}
+                        <li>
+                            <a href="{% url 'dashboard' %}">
+                                <i class="fas fa-chart-line"></i> Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'log_activity' %}">
+                                <i class="fas fa-plus-circle"></i> Log Activity
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'leaderboard' %}">
+                                <i class="fas fa-trophy"></i> Leaderboard
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'profile' %}">
+                                <i class="fas fa-user-circle"></i> Profile
+                            </a>
+                        </li>
+                        {% if user.is_staff %}
+                            <li>
+                                <a href="{% url 'community_stats' %}">
+                                    <i class="fas fa-users"></i> Community
+                                </a>
+                            </li>
+                        {% endif %}
+                        <li>
+                            <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="logout-btn">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li><a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+                        <li><a href="{% url 'register' %}"><i class="fas fa-user-plus"></i> Register</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Messages -->
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">
+                        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
+                        <span>{{ message }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <!-- Page Content -->
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-logo">🌱 EcoTrack</div>
+            <p><strong>Track Your Carbon Footprint, Save the Planet</strong></p>
+            <p class="mb-2">Making sustainability measurable and rewarding since 2025</p>
+            <div class="social-links" style="margin-top: 1rem;">
+                <a href="#" style="color: var(--primary); margin: 0 10px; font-size: 1.5rem;"><i class="fab fa-twitter"></i></a>
+                <a href="#" style="color: var(--primary); margin: 0 10px; font-size: 1.5rem;"><i class="fab fa-facebook"></i></a>
+                <a href="#" style="color: var(--primary); margin: 0 10px; font-size: 1.5rem;"><i class="fab fa-instagram"></i></a>
+                <a href="#" style="color: var(--primary); margin: 0 10px; font-size: 1.5rem;"><i class="fab fa-github"></i></a>
+            </div>
+            <p style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--gray);">
+                &copy; 2025 EcoTrack. All rights reserved. | Built with 💚 for the planet
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Mobile menu toggle
+        document.getElementById('menuToggle').addEventListener('click', function() {
+            document.getElementById('navLinks').classList.toggle('active');
+        });
+
+        // Close mobile menu when clicking on a link
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.getElementById('navLinks').classList.remove('active');
+            });
+        });
+
+        // Header scroll effect
+        let lastScroll = 0;
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('header');
+            const currentScroll = window.pageYOffset;
+
+            if (currentScroll > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+
+            lastScroll = currentScroll;
+        });
+
+        // Auto-hide messages after 5 seconds
+        setTimeout(function() {
+            const messages = document.querySelectorAll('.messages li');
+            messages.forEach(function(message) {
+                message.style.opacity = '0';
+                setTimeout(function() {
+                    message.remove();
+                }, 300);
+            });
+        }, 5000);
+    </script>
+
+    {% block extra_js %}
+    {% endblock %}
+</body>
+</html>

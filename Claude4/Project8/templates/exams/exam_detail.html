@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ exam.title }} - GovExamPortal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'exam_list' %}">Browse Exams</a></li>
+                    <li class="breadcrumb-item active">{{ exam.title }}</li>
+                </ol>
+            </nav>
+
+            <!-- Header Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <span class="badge bg-primary mb-2">{{ exam.category.name|default:exam.get_exam_type_display }}</span>
+                            <h1 class="mb-2">{{ exam.title }}</h1>
+                        </div>
+                        <div class="text-end">
+                            {% if is_application_open %}
+                            <span class="badge bg-success fs-6">
+                                <i class="bi bi-check-circle"></i> Applications Open
+                            </span>
+                            {% elif is_upcoming %}
+                            <span class="badge bg-info fs-6">
+                                <i class="bi bi-clock"></i> Upcoming
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary fs-6">
+                                <i class="bi bi-x-circle"></i> Closed
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <p class="text-muted mb-3">{{ exam.description }}</p>
+
+                    {% if exam.official_link %}
+                    <a href="{{ exam.official_link }}" target="_blank" class="btn btn-outline-primary">
+                        <i class="bi bi-box-arrow-up-right"></i> Official Website
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Important Dates -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-calendar-event"></i> Important Dates</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded">
+                                <h6 class="text-muted mb-1">Application Start</h6>
+                                <p class="fs-5 mb-0">{{ exam.application_start_date|date:"F d, Y" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 {% if is_application_open %}bg-warning bg-opacity-10{% else %}bg-light{% endif %} rounded">
+                                <h6 class="text-muted mb-1">Application End</h6>
+                                <p class="fs-5 mb-0">
+                                    {{ exam.application_end_date|date:"F d, Y" }}
+                                    {% if days_until_deadline > 0 %}
+                                    <span class="badge bg-danger ms-2">{{ days_until_deadline }} days left</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 bg-info bg-opacity-10 rounded">
+                                <h6 class="text-muted mb-1">Examination Date</h6>
+                                <p class="fs-5 mb-0">
+                                    {{ exam.exam_date|date:"F d, Y" }}
+                                    {% if days_until_exam > 0 %}
+                                    <span class="badge bg-primary ms-2">{{ days_until_exam }} days to go</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Eligibility Criteria -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-person-check"></i> Eligibility Criteria</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Age Limit</h6>
+                            <p class="fs-5 mb-0">{{ exam.age_limit_min }} - {{ exam.age_limit_max }} years</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Educational Qualification</h6>
+                            <p class="fs-5 mb-0">{{ exam.educational_qualification }}</p>
+                        </div>
+                    </div>
+                    {% if exam.eligibility_criteria %}
+                    <hr>
+                    <h6 class="fw-bold">Detailed Requirements</h6>
+                    <div class="bg-light p-3 rounded mt-2">
+                        <p class="mb-0">{{ exam.eligibility_criteria|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Syllabus -->
+            {% if exam.syllabus_text %}
+            <div class="card mb-4">
+                <div class="card-header bg-warning bg-opacity-75 text-dark">
+                    <h4 class="mb-0"><i class="bi bi-book"></i> Syllabus</h4>
+                </div>
+                <div class="card-body">
+                    <div class="bg-light p-3 rounded">
+                        <p class="mb-0">{{ exam.syllabus_text|linebreaks }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Action Section -->
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="mb-3">Ready to Apply?</h5>
+                    {% if exam.official_link %}
+                    <a href="{{ exam.official_link }}" target="_blank" class="btn btn-primary btn-lg me-2">
+                        <i class="bi bi-box-arrow-up-right"></i> Apply on Official Website
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'exam_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-arrow-left"></i> Back to Exams
+                    </a>
+
+                    {% if user.is_authenticated %}
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            Visit your <a href="{% url 'dashboard' %}">Dashboard</a> to see more recommendations
+                        </small>
+                    </div>
+                    {% else %}
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <a href="{% url 'login' %}">Login</a> or <a href="{% url 'register' %}">Register</a>
+                            to get personalized exam recommendations
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

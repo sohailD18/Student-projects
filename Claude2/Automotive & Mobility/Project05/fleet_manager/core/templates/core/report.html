@@ -1,0 +1,192 @@
+{% extends "core/base.html" %}
+
+{% block title %}Reports - Fleet Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-file-earmark-bar-graph"></i> Fleet Reports
+        </h1>
+    </div>
+</div>
+
+<!-- Report Stats -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-primary">{{ total_vehicles }}</h5>
+                <p class="card-text text-muted">Vehicles in Fleet</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-success">{{ total_trips }}</h5>
+                <p class="card-text text-muted">Trips Recorded</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-info">{{ total_maintenance }}</h5>
+                <p class="card-text text-muted">Maintenance Records</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Available Reports -->
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="report-icon bg-primary text-white me-3">
+                        <i class="bi bi-car-front fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Fleet Overview Report</h5>
+                        <p class="text-muted small mb-0">Comprehensive fleet status and metrics</p>
+                    </div>
+                </div>
+                <p class="card-text">
+                    Export a complete overview of your fleet including vehicle details, current mileage,
+                    total distance traveled, fuel efficiency, cost per mile, maintenance costs, and active alerts.
+                </p>
+                <ul class="list-unstyled small text-muted mb-3">
+                    <li><i class="bi bi-check2"></i> Vehicle specifications</li>
+                    <li><i class="bi bi-check2"></i> Performance metrics</li>
+                    <li><i class="bi bi-check2"></i> Cost analysis</li>
+                    <li><i class="bi bi-check2"></i> Alert status</li>
+                </ul>
+                <a href="{% url 'core:export_report' %}?type=fleet" class="btn btn-primary">
+                    <i class="bi bi-download"></i> Export CSV
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="report-icon bg-success text-white me-3">
+                        <i class="bi bi-route fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Trips Report</h5>
+                        <p class="text-muted small mb-0">Detailed trip history and analysis</p>
+                    </div>
+                </div>
+                <p class="card-text">
+                    Export all trip records including driver information, routes, distances, fuel consumption,
+                    fuel efficiency calculations, and trip status for comprehensive operational analysis.
+                </p>
+                <ul class="list-unstyled small text-muted mb-3">
+                    <li><i class="bi bi-check2"></i> Trip dates and duration</li>
+                    <li><i class="bi bi-check2"></i> Driver assignments</li>
+                    <li><i class="bi bi-check2"></i> Route information</li>
+                    <li><i class="bi bi-check2"></i> Fuel efficiency per trip</li>
+                </ul>
+                <a href="{% url 'core:export_report' %}?type=trips" class="btn btn-success">
+                    <i class="bi bi-download"></i> Export CSV
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="report-icon bg-warning text-white me-3">
+                        <i class="bi bi-tools fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Maintenance Report</h5>
+                        <p class="text-muted small mb-0">Maintenance history and costs</p>
+                    </div>
+                </div>
+                <p class="card-text">
+                    Export complete maintenance records including service types, mileage at service,
+                    costs, severity levels, descriptions, and service providers for cost tracking and analysis.
+                </p>
+                <ul class="list-unstyled small text-muted mb-3">
+                    <li><i class="bi bi-check2"></i> Service history</li>
+                    <li><i class="bi bi-check2"></i> Cost breakdown</li>
+                    <li><i class="bi bi-check2"></i> Service types</li>
+                    <li><i class="bi bi-check2"></i> Severity levels</li>
+                </ul>
+                <a href="{% url 'core:export_report' %}?type=maintenance" class="btn btn-warning">
+                    <i class="bi bi-download"></i> Export CSV
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="report-icon bg-info text-white me-3">
+                        <i class="bi bi-robot fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">AI Analytics Report</h5>
+                        <p class="text-muted small mb-0">Predictive maintenance insights</p>
+                    </div>
+                </div>
+                <p class="card-text">
+                    Export AI-powered predictions including predicted next maintenance mileage, miles until maintenance,
+                    failure probability scores, risk levels, urgency ratings, and prediction confidence levels.
+                </p>
+                <ul class="list-unstyled small text-muted mb-3">
+                    <li><i class="bi bi-check2"></i> Predicted maintenance dates</li>
+                    <li><i class="bi bi-check2"></i> Failure probability scores</li>
+                    <li><i class="bi bi-check2"></i> Risk level assessment</li>
+                    <li><i class="bi bi-check2"></i> Model confidence ratings</li>
+                </ul>
+                <a href="{% url 'core:export_report' %}?type=analytics" class="btn btn-info">
+                    <i class="bi bi-download"></i> Export CSV
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Info -->
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-info-circle"></i> About Reports</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>CSV Format</h6>
+                        <p class="small text-muted">
+                            All reports are exported in CSV (Comma Separated Values) format, which can be opened
+                            in Microsoft Excel, Google Sheets, or any spreadsheet application for further analysis.
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Data Freshness</h6>
+                        <p class="small text-muted">
+                            Reports are generated in real-time based on the latest data in the system.
+                            For historical analysis, consider exporting reports regularly and storing them.
+                        </p>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-lightbulb"></i>
+                    <strong>Tip:</strong> Use the AI Analytics Report combined with Fleet Overview for comprehensive
+                    fleet planning and budget forecasting.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Template - {{ object.name }} - CMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0"><i class="fas fa-trash"></i> Delete Template</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Warning</h5>
+                    <p>Are you sure you want to delete template <strong>"{{ object.name }}"</strong>?</p>
+                    <p class="mb-0">This action cannot be undone. All sections and configurations will be permanently deleted.</p>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title">Template Information</h6>
+                        <p class="mb-1"><strong>Name:</strong> {{ object.name }}</p>
+                        <p class="mb-1"><strong>Slug:</strong> {{ object.slug }}</p>
+                        <p class="mb-0"><strong>Type:</strong> {{ object.get_template_type_display }}</p>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'templates:template_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Delete Template
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

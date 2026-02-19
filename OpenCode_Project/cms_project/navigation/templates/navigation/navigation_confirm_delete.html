@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Navigation - {{ object.name }} - CMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0"><i class="fas fa-trash"></i> Delete Navigation</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Warning</h5>
+                    <p>Are you sure you want to delete the navigation menu <strong>"{{ object.name }}"</strong>?</p>
+                    <p class="mb-0">This action cannot be undone. All menu items will be permanently deleted.</p>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title">Navigation Information</h6>
+                        <p class="mb-1"><strong>Name:</strong> {{ object.name }}</p>
+                        <p class="mb-1"><strong>Slug:</strong> /{{ object.slug }}</p>
+                        <p class="mb-0"><strong>Status:</strong> 
+                            <span class="badge bg-{% if object.is_active %}success{% else %}secondary{% endif %}">
+                                {% if object.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </p>
+                        <p class="mb-0"><strong>Items:</strong> {{ object.items.count }}</p>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'navigation:navigation_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Delete Navigation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

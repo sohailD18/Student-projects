@@ -1,0 +1,432 @@
+{% extends 'performance/base.html' %}
+
+{% block title %}{{ employee.name }} - AI Performance Analyst{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Employee Header -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h1 class="card-title">{{ employee.name }}</h1>
+                <p class="card-subtitle">{{ employee.role }} | {{ employee.department }}</p>
+            </div>
+            <div class="btn-group">
+                <a href="{% url 'add_record' %}" class="btn btn-success">
+                    <span>➕</span> Add Record
+                </a>
+                <a href="{% url 'print_report' employee.id %}" class="btn btn-outline" target="_blank">
+                    <span>📄</span> Print Report
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if analysis.has_data %}
+        <!-- Performance Summary Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Overall Score</div>
+                <div class="stat-value">{{ analysis.averages.overall_score|floatformat:2 }}</div>
+                <div class="stat-subtext">Average performance</div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-label">Efficiency</div>
+                <div class="stat-value">{{ analysis.averages.efficiency|floatformat:2 }}</div>
+                <div class="stat-subtext">Task completion rate</div>
+            </div>
+
+            <div class="stat-card info">
+                <div class="stat-label">Quality</div>
+                <div class="stat-value">{{ analysis.averages.quality|floatformat:2 }}</div>
+                <div class="stat-subtext">Work quality rating</div>
+            </div>
+
+            <div class="stat-card warning">
+                <div class="stat-label">Productivity</div>
+                <div class="stat-value">{{ analysis.averages.productivity|floatformat:2 }}</div>
+                <div class="stat-subtext">Tasks per hour</div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-2">
+            <!-- Performance Trend Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📈 Performance Trend</h2>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Productivity Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📊 Productivity Overview</h2>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="productivityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Analysis Section -->
+        <div class="grid grid-2">
+            <!-- Prediction Box -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">🤖 AI Prediction</h2>
+                    <p class="card-subtitle">Next Month Performance Forecast</p>
+                </div>
+                <div class="card-body">
+                    <div class="prediction-box">
+                        <div class="prediction-title">
+                            <span>🔮</span> Predicted Performance for Next Month
+                        </div>
+                        <div class="prediction-metrics">
+                            <div class="prediction-metric">
+                                <div class="prediction-metric-label">Efficiency</div>
+                                <div class="prediction-metric-value">{{ analysis.prediction.predicted_efficiency|floatformat:2 }}</div>
+                            </div>
+                            <div class="prediction-metric">
+                                <div class="prediction-metric-label">Quality</div>
+                                <div class="prediction-metric-value">{{ analysis.prediction.predicted_quality|floatformat:2 }}</div>
+                            </div>
+                            <div class="prediction-metric">
+                                <div class="prediction-metric-label">Overall Score</div>
+                                <div class="prediction-metric-value">{{ analysis.prediction.predicted_overall_score|floatformat:2 }}</div>
+                            </div>
+                            <div class="prediction-metric">
+                                <div class="prediction-metric-label">Productivity</div>
+                                <div class="prediction-metric-value">{{ analysis.prediction.predicted_productivity|floatformat:2 }}</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span style="font-size: 0.875rem; font-weight: 600;">Prediction Confidence</span>
+                                <span style="font-size: 0.875rem; font-weight: 600;">{{ analysis.prediction.confidence_level|floatformat:1 }}%</span>
+                            </div>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: {{ analysis.prediction.confidence_level }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendation Box -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">💡 AI Recommendations</h2>
+                    <p class="card-subtitle">Actionable insights for development</p>
+                </div>
+                <div class="card-body">
+                    <div class="recommendation-box">
+                        <div class="recommendation-title">
+                            <span>🎯</span> Recommendation Summary
+                        </div>
+                        <div class="recommendation-summary">
+                            {{ analysis.recommendation.summary }}
+                        </div>
+                        <ul class="recommendation-actions">
+                            {% for action in analysis.recommendation.actions %}
+                            <li>
+                                <strong>{{ action.category|title }}:</strong> {{ action.action }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Strengths and Weaknesses -->
+        <div class="grid grid-2">
+            <!-- Strengths -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">💪 Strengths</h2>
+                </div>
+                <div class="card-body">
+                    {% if analysis.strengths_weaknesses.strengths %}
+                        {% for strength in analysis.strengths_weaknesses.strengths %}
+                        <div class="strength-item">
+                            <div class="strength-title">
+                                <span>✅</span> {{ strength.area }}
+                            </div>
+                            <div>{{ strength.description }}</div>
+                            <div style="margin-top: 0.5rem; font-weight: 600;">Score: {{ strength.value }}/10</div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon">💪</div>
+                            <div class="empty-state-title">No Specific Strengths Identified</div>
+                            <div class="empty-state-text">Continue monitoring performance to identify strengths.</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Areas for Improvement -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">🎯 Areas for Improvement</h2>
+                </div>
+                <div class="card-body">
+                    {% if analysis.strengths_weaknesses.weaknesses %}
+                        {% for weakness in analysis.strengths_weaknesses.weaknesses %}
+                        <div class="weakness-item">
+                            <div class="weakness-title">
+                                <span>⚠️</span> {{ weakness.area }}
+                            </div>
+                            <div>{{ weakness.description }}</div>
+                            <div style="margin-top: 0.5rem; font-weight: 600;">Score: {{ weakness.value }}/10</div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🌟</div>
+                            <div class="empty-state-title">No Critical Weaknesses</div>
+                            <div class="empty-state-text">Employee is performing well across all metrics!</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Trend Analysis -->
+        {% if analysis.trends %}
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📉 Trend Analysis</h2>
+                <p class="card-subtitle">Performance changes over time</p>
+            </div>
+            <div class="card-body">
+                <div class="analysis-grid">
+                    <div class="analysis-item">
+                        <div class="analysis-label">Efficiency Trend</div>
+                        <div class="analysis-value">{{ analysis.trends.efficiency_trend|floatformat:4 }}</div>
+                        <div class="analysis-trend {% if analysis.trends.efficiency_trend > 0.1 %}positive{% elif analysis.trends.efficiency_trend < -0.1 %}negative{% else %}neutral{% endif %}">
+                            {% if analysis.trends.efficiency_trend > 0.1 %}↗️ Improving{% elif analysis.trends.efficiency_trend < -0.1 %}↘️ Declining{% else %}→ Stable{% endif %}
+                        </div>
+                        <div style="font-size: 0.875rem; color: var(--gray-600); margin-top: 0.5rem;">
+                            {{ analysis.trend_interpretation.efficiency }}
+                        </div>
+                    </div>
+
+                    <div class="analysis-item">
+                        <div class="analysis-label">Quality Trend</div>
+                        <div class="analysis-value">{{ analysis.trends.quality_trend|floatformat:4 }}</div>
+                        <div class="analysis-trend {% if analysis.trends.quality_trend > 0.1 %}positive{% elif analysis.trends.quality_trend < -0.1 %}negative{% else %}neutral{% endif %}">
+                            {% if analysis.trends.quality_trend > 0.1 %}↗️ Improving{% elif analysis.trends.quality_trend < -0.1 %}↘️ Declining{% else %}→ Stable{% endif %}
+                        </div>
+                        <div style="font-size: 0.875rem; color: var(--gray-600); margin-top: 0.5rem;">
+                            {{ analysis.trend_interpretation.quality }}
+                        </div>
+                    </div>
+
+                    <div class="analysis-item">
+                        <div class="analysis-label">Productivity Trend</div>
+                        <div class="analysis-value">{{ analysis.trends.productivity_trend|floatformat:4 }}</div>
+                        <div class="analysis-trend {% if analysis.trends.productivity_trend > 0.1 %}positive{% elif analysis.trends.productivity_trend < -0.1 %}negative{% else %}neutral{% endif %}">
+                            {% if analysis.trends.productivity_trend > 0.1 %}↗️ Improving{% elif analysis.trends.productivity_trend < -0.1 %}↘️ Declining{% else %}→ Stable{% endif %}
+                        </div>
+                        <div style="font-size: 0.875rem; color: var(--gray-600); margin-top: 0.5rem;">
+                            {{ analysis.trend_interpretation.productivity }}
+                        </div>
+                    </div>
+
+                    <div class="analysis-item">
+                        <div class="analysis-label">Overall Trend</div>
+                        <div class="analysis-value">{{ analysis.trends.overall_trend|floatformat:4 }}</div>
+                        <div class="analysis-trend {% if analysis.trends.overall_trend > 0.1 %}positive{% elif analysis.trends.overall_trend < -0.1 %}negative{% else %}neutral{% endif %}">
+                            {% if analysis.trends.overall_trend > 0.1 %}↗️ Improving{% elif analysis.trends.overall_trend < -0.1 %}↘️ Declining{% else %}→ Stable{% endif %}
+                        </div>
+                        <div style="font-size: 0.875rem; color: var(--gray-600); margin-top: 0.5rem;">
+                            Overall performance trajectory
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Performance Records -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📋 Recent Performance Records</h2>
+                <p class="card-subtitle">Last 10 entries ({{ analysis.record_count }} total)</p>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Tasks</th>
+                                <th>Hours</th>
+                                <th>Efficiency</th>
+                                <th>Quality</th>
+                                <th>Overall</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in records %}
+                            <tr>
+                                <td>{{ record.date|date:"M d, Y" }}</td>
+                                <td>{{ record.tasks_completed }}</td>
+                                <td>{{ record.hours_worked }}</td>
+                                <td>
+                                    <span class="badge {% if record.efficiency >= 7 %}badge-success{% elif record.efficiency >= 5 %}badge-warning{% else %}badge-danger{% endif %}">
+                                        {{ record.efficiency|floatformat:1 }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if record.quality >= 7 %}badge-success{% elif record.quality >= 5 %}badge-warning{% else %}badge-danger{% endif %}">
+                                        {{ record.quality|floatformat:1 }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>{{ record.get_overall_score|floatformat:1 }}</strong>
+                                </td>
+                                <td>
+                                    <div class="btn-group" style="gap: 0.25rem;">
+                                        <a href="{% url 'edit_record' record.id %}" class="btn btn-sm btn-outline">Edit</a>
+                                        <a href="{% url 'delete_record' record.id %}" class="btn btn-sm btn-danger">Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <!-- No Data State -->
+        <div class="card">
+            <div class="empty-state">
+                <div class="empty-state-icon">📊</div>
+                <div class="empty-state-title">No Performance Data Yet</div>
+                <div class="empty-state-text">
+                    Add performance records for {{ employee.name }} to see analysis and predictions.
+                </div>
+                <div style="margin-top: 1.5rem;">
+                    <a href="{% url 'add_record' %}" class="btn btn-primary">
+                        <span>➕</span> Add First Record
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if analysis.has_data %}
+<script>
+    // Trend Chart
+    const trendCtx = document.getElementById('trendChart').getContext('2d');
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_data.dates|safe }},
+            datasets: [
+                {
+                    label: 'Efficiency',
+                    data: {{ chart_data.efficiency|safe }},
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Quality',
+                    data: {{ chart_data.quality|safe }},
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 10,
+                    title: {
+                        display: true,
+                        text: 'Score (1-10)'
+                    }
+                }
+            }
+        }
+    });
+
+    // Productivity Chart
+    const productivityCtx = document.getElementById('productivityChart').getContext('2d');
+    new Chart(productivityCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_data.dates|safe }},
+            datasets: [
+                {
+                    label: 'Tasks Completed',
+                    data: {{ chart_data.tasks_completed|safe }},
+                    backgroundColor: 'rgba(37, 99, 235, 0.7)',
+                    borderColor: '#2563eb',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Productivity (Tasks/Hour)',
+                    data: {{ chart_data.productivity|safe }},
+                    backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                    borderColor: '#10b981',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Count / Rate'
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

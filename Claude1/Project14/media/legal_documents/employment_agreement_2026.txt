@@ -1,0 +1,33 @@
+EMPLOYMENT AGREEMENT
+
+This Employment Agreement is entered into as of January 15, 2026, between ABC Corporation (Employer) and John Doe (Employee).
+
+1. TERMS OF EMPLOYMENT
+The Employee shall serve as Senior Software Engineer. The employment shall commence on February 1, 2026.
+
+2. COMPENSATION
+The Employee shall receive an annual base salary of $95,000, payable in accordance with the Employer's standard payroll practices.
+
+3. TERMINATION
+Either party may terminate this agreement with 30 days written notice. The Employer reserves the right to terminate without cause upon payment of severance.
+
+4. CONFIDENTIALITY
+The Employee agrees to maintain the confidentiality of all proprietary information, trade secrets, and client data during and after employment.
+
+5. INTELLECTUAL PROPERTY
+All work product created by the Employee during employment shall be the exclusive property of the Employer.
+
+6. NON-COMPETE
+The Employee agrees not to work for competitors for a period of 12 months following termination.
+
+7. LIABILITY
+The Employee shall be liable for any intentional misconduct or gross negligence.
+
+8. DISPUTE RESOLUTION
+Any disputes arising from this agreement shall be resolved through binding arbitration.
+
+9. GOVERNING LAW
+This agreement shall be governed by the laws of the State of California.
+
+10. NOTICES
+All notices shall be delivered in writing to the addresses specified herein.

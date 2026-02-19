@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} Vehicle - EV Trip Planner{% endblock %}
+
+{% block content %}
+<section class="vehicle-form-section">
+    <div class="container">
+        <div class="form-card">
+            <div class="form-header">
+                <h1>{{ action }} Vehicle</h1>
+                {% if vehicle %}
+                    <p>{{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}</p>
+                {% endif %}
+            </div>
+
+            <form method="post" class="vehicle-form">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-error">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.make.id_for_label }}">Make</label>
+                        <input type="text" name="{{ form.make.name }}" id="{{ form.make.id_for_label }}" class="form-control" placeholder="e.g., Tata, Mahindra, Hyundai" value="{{ form.make.value|default:'' }}" required>
+                        {% if form.make.errors %}
+                            <div class="field-error">{% for error in form.make.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.model.id_for_label }}">Model</label>
+                        <input type="text" name="{{ form.model.name }}" id="{{ form.model.id_for_label }}" class="form-control" placeholder="e.g., Nexon EV, XUV400, Kona" value="{{ form.model.value|default:'' }}" required>
+                        {% if form.model.errors %}
+                            <div class="field-error">{% for error in form.model.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.year.id_for_label }}">Year</label>
+                        <input type="number" name="{{ form.year.name }}" id="{{ form.year.id_for_label }}" class="form-control" min="2010" max="2030" value="{{ form.year.value|default:'' }}" required>
+                        {% if form.year.errors %}
+                            <div class="field-error">{% for error in form.year.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.ev_type.id_for_label }}">EV Type</label>
+                        <select name="{{ form.ev_type.name }}" id="{{ form.ev_type.id_for_label }}" class="form-control" required>
+                            {% for value, label in form.fields.ev_type.choices %}
+                                <option value="{{ value }}" {% if form.ev_type.value == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if form.ev_type.errors %}
+                            <div class="field-error">{% for error in form.ev_type.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.battery_capacity.id_for_label }}">Battery Capacity (kWh)</label>
+                        <input type="number" name="{{ form.battery_capacity.name }}" id="{{ form.battery_capacity.id_for_label }}" class="form-control" step="0.1" min="10" placeholder="e.g., 75" value="{{ form.battery_capacity.value|default:'' }}" required>
+                        {% if form.battery_capacity.errors %}
+                            <div class="field-error">{% for error in form.battery_capacity.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.range_km.id_for_label }}">Range (km)</label>
+                        <input type="number" name="{{ form.range_km.name }}" id="{{ form.range_km.id_for_label }}" class="form-control" min="50" placeholder="e.g., 300" value="{{ form.range_km.value|default:'' }}" required>
+                        {% if form.range_km.errors %}
+                            <div class="field-error">{% for error in form.range_km.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.charging_speed.id_for_label }}">Max Charging Speed (kW)</label>
+                    <input type="number" name="{{ form.charging_speed.name }}" id="{{ form.charging_speed.id_for_label }}" class="form-control" step="0.1" min="1" placeholder="e.g., 50" value="{{ form.charging_speed.value|default:'' }}" required>
+                    <p class="form-hint">Typical values: Home AC (3-7 kW), Public AC (7-22 kW), DC Fast/Bharat DC (25-150 kW)</p>
+                    {% if form.charging_speed.errors %}
+                        <div class="field-error">{% for error in form.charging_speed.errors %}{{ error }}{% endfor %}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">{{ action }} Vehicle</button>
+                    <a href="{% url 'core:vehicle_list' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

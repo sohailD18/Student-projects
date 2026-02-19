@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ vendor.store_name }} Store - Multi-Vendor Marketplace{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Products</a></li>
+        <li class="breadcrumb-item active">{{ vendor.store_name }}</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-3">
+            {% if vendor.banner %}
+            <img src="{{ vendor.banner.url }}" class="card-img-top" alt="{{ vendor.store_name }}" style="height: 120px; object-fit: cover;">
+            {% endif %}
+            <div class="card-body text-center">
+                {% if vendor.logo %}
+                <img src="{{ vendor.logo.url }}" alt="{{ vendor.store_name }}" style="width: 80px; height: 80px; object-fit: cover;" class="rounded-circle mb-2">
+                {% else %}
+                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white mb-2 mx-auto" style="width: 80px; height: 80px;">
+                    <i class="fas fa-store fa-2x"></i>
+                </div>
+                {% endif %}
+                <h4 class="mb-1">{{ vendor.store_name }}</h4>
+                <p class="text-muted mb-2">{{ vendor.description|truncatewords:20 }}</p>
+                <span class="badge {% if vendor.is_approved %}bg-success{% else %}bg-warning{% endif %}">
+                    {% if vendor.is_approved %}Verified Seller{% else %}Pending Approval{% endif %}
+                </span>
+            </div>
+            <div class="card-body">
+                <p class="mb-1"><strong>Total Products:</strong> {{ vendor.total_products }}</p>
+                <p class="mb-1"><strong>Total Orders:</strong> {{ vendor.total_orders }}</p>
+                <p class="mb-1"><strong>Commission Rate:</strong> {{ vendor.commission_rate }}%</p>
+                <p class="mb-0"><strong>Contact:</strong> {{ vendor.contact_email }}</p>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Store Categories</h5>
+            </div>
+            <div class="card-body">
+                {% for category in vendor_categories %}
+                <a href="{% url 'category_detail' category.slug %}" class="list-group-item list-group-item-action">
+                    {{ category.name }}
+                </a>
+                {% empty %}
+                <p class="text-muted mb-0">No categories</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <h2 class="mb-4">Products by {{ vendor.store_name }}</h2>
+        
+        <div class="row">
+            {% for product in products %}
+            <div class="col-md-4 col-sm-6 mb-4">
+                <div class="card card-product h-100">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <i class="fas fa-image fa-3x text-muted"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <a href="{% url 'product_detail' product.slug %}" class="text-decoration-none text-dark">
+                                {{ product.name|truncatewords:10 }}
+                            </a>
+                        </h6>
+                        <div class="mb-2">
+                            {% if product.sale_price and product.sale_price < product.price %}
+                            <span class="price-original">${{ product.price }}</span>
+                            <span class="price-sale">${{ product.sale_price }}</span>
+                            {% else %}
+                            <span class="fw-bold">${{ product.price }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="star-rating mb-2">
+                            {% for i in "12345" %}
+                            <i class="fas fa-star{% if forloop.counter <= product.rating %}{% else %}-o{% endif %}"></i>
+                            {% endfor %}
+                            <small class="text-muted">({{ product.review_count }})</small>
+                        </div>
+                        <p class="card-text text-muted small mb-2">
+                            <span class="badge {% if product.is_in_stock %}bg-success{% else %}bg-danger{% endif %}">
+                                {% if product.is_in_stock %}In Stock ({% endif %}{{ product.stock_quantity }}{% if product.is_in_stock %}){% endif %}
+                            </span>
+                        </p>
+                         <div class="d-grid gap-2">
+                            <button class="btn btn-outline-danger btn-sm" onclick="addToWishlist({{ product.id }})">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="addToCart({{ product.id }})">
+                                <i class="fas fa-cart-plus"></i> Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p class="text-muted">No products yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addToCart(productId) {
+    fetch(`/cart/add/${productId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Added to cart!');
+            location.reload();
+        }
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

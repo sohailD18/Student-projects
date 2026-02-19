@@ -1,0 +1,41 @@
+{% extends 'campaigns/base.html' %}
+
+{% block title %}Delete Subscriber - Email Marketing Platform{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Delete Subscriber</h1>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <i class="bi bi-exclamation-triangle"></i> Confirm Deletion
+            </div>
+            <div class="card-body">
+                <p>Are you sure you want to delete the subscriber:</p>
+
+                <div class="alert alert-warning">
+                    <strong>{{ subscriber.email }}</strong><br>
+                    {{ subscriber.full_name }}
+                </div>
+
+                <p>This action cannot be undone.</p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'campaigns:subscriber_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Delete Subscriber
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

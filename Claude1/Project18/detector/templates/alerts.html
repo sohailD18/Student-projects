@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-1"><i class="bi bi-exclamation-triangle-fill"></i> Security Alerts</h1>
+        <p class="text-muted mb-0">Monitor and respond to suspicious activity</p>
+    </div>
+    <span class="badge bg-danger fs-6">{{ stats.total }} Total Alerts</span>
+</div>
+
+<!-- Alert Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1">Total</h5>
+                    <h2>{{ stats.total }}</h2>
+                </div>
+                <i class="bi bi-bell" style="font-size: 2.5rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card warning">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1">Open</h5>
+                    <h2>{{ stats.open }}</h2>
+                </div>
+                <i class="bi bi-envelope-open" style="font-size: 2.5rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card danger">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1">Critical</h5>
+                    <h2>{{ stats.critical }}</h2>
+                </div>
+                <i class="bi bi-exclamation-octagon-fill" style="font-size: 2.5rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1">High</h5>
+                    <h2>{{ stats.high }}</h2>
+                </div>
+                <i class="bi bi-exclamation-circle-fill" style="font-size: 2.5rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="status" class="form-label"><i class="bi bi-funnel"></i> Status</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="all">All Status</option>
+                    <option value="open" {% if status_filter == 'open' %}selected{% endif %}>Open</option>
+                    <option value="acknowledged" {% if status_filter == 'acknowledged' %}selected{% endif %}>Acknowledged</option>
+                    <option value="investigating" {% if status_filter == 'investigating' %}selected{% endif %}>Investigating</option>
+                    <option value="resolved" {% if status_filter == 'resolved' %}selected{% endif %}>Resolved</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="severity" class="form-label"><i class="bi bi-lightning"></i> Severity</label>
+                <select name="severity" id="severity" class="form-select">
+                    <option value="all">All Severities</option>
+                    <option value="critical" {% if severity_filter == 'critical' %}selected{% endif %}>Critical</option>
+                    <option value="high" {% if severity_filter == 'high' %}selected{% endif %}>High</option>
+                    <option value="medium" {% if severity_filter == 'medium' %}selected{% endif %}>Medium</option>
+                    <option value="low" {% if severity_filter == 'low' %}selected{% endif %}>Low</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-funnel-fill"></i> Filter
+                </button>
+                <a href="{% url 'alerts' %}" class="btn btn-secondary ms-2">
+                    <i class="bi bi-x-circle"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Alerts Table -->
+<div class="card">
+    <div class="card-header" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white;">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-bell-fill"></i> Alert List</h5>
+            <span class="badge bg-light text-dark">{{ alerts|length }} alerts</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Severity</th>
+                        <th>Risk Score</th>
+                        <th>Rule Triggered</th>
+                        <th>Transaction</th>
+                        <th>User</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alert in alerts %}
+                    <tr>
+                        <td>
+                            <span class="badge severity-{{ alert.severity }} fs-6">
+                                <i class="bi bi-{% if alert.severity == 'critical' %}exclamation-octagon-fill{% elif alert.severity == 'high' %}exclamation-triangle-fill{% elif alert.severity == 'medium' %}exclamation-circle{% else %}info-circle-fill{% endif %}"></i>
+                                {{ alert.severity|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ alert.risk_score }}/100</span>
+                        </td>
+                        <td>{{ alert.rule_triggered|truncatewords:8 }}</td>
+                        <td><strong>#{{ alert.transaction.id }}</strong></td>
+                        <td>
+                            <i class="bi bi-person-circle text-secondary"></i>
+                            {{ alert.transaction.user }}
+                        </td>
+                        <td><strong>${{ alert.transaction.amount }}</strong></td>
+                        <td>
+                            {% if alert.status == 'open' %}
+                            <span class="badge bg-danger"><i class="bi bi-envelope"></i> Open</span>
+                            {% elif alert.status == 'acknowledged' %}
+                            <span class="badge bg-info"><i class="bi bi-envelope-check"></i> Acknowledged</span>
+                            {% elif alert.status == 'investigating' %}
+                            <span class="badge bg-warning"><i class="bi bi-search"></i> Investigating</span>
+                            {% else %}
+                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> {{ alert.status|title }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ alert.created_at|date:"M d, Y" }}</small><br>
+                            <small class="text-muted">{{ alert.created_at|date:"H:i" }}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'alert_detail' alert.id %}" class="btn btn-info" title="View Details">
+                                    <i class="bi bi-eye-fill"></i>
+                                </a>
+                                {% if alert.status == 'open' %}
+                                <form method="post" action="{% url 'acknowledge_alert' alert.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-warning" title="Acknowledge">
+                                        <i class="bi bi-check2"></i>
+                                    </button>
+                                </form>
+                                <a href="{% url 'create_case_from_alert' alert.id %}" class="btn btn-success" title="Create Case">
+                                    <i class="bi bi-folder-plus"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center">
+                            <i class="bi bi-bell-slash" style="font-size: 3rem; color: #dee2e6;"></i>
+                            <p class="text-muted mt-2">No alerts found</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

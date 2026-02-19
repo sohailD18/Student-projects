@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Intelligent Route Planner</title>
+
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .profile-header {
+            background: linear-gradient(135deg, #2563eb, #9333ea);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .profile-header h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .profile-stat-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .profile-stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .profile-stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .history-table th {
+            background: #f9fafb;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .history-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .history-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .route-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-fastest { background: #dbeafe; color: #1d4ed8; }
+        .badge-shortest { background: #dcfce7; color: #15803d; }
+        .badge-scenic { background: #f3e8ff; color: #7c3aed; }
+        .badge-eco { background: #d1fae5; color: #047857; }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #9ca3af;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .btn-logout:hover {
+            background: white;
+            color: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto; padding: 0 1rem;">
+            <div>
+                <h1 style="margin: 0;">🚗 Intelligent Route Planner</h1>
+                <p style="margin: 0.25rem 0 0 0; opacity: 0.95;">Welcome back, {{ user.first_name|default:user.username }}!</p>
+            </div>
+            <a href="/" style="color: white; text-decoration: none; font-weight: 600;">
+                ← Back to Planner
+            </a>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <h2>👤 Your Profile</h2>
+            <p>{{ user.email }}</p>
+
+            <div class="profile-stats">
+                <div class="profile-stat-card">
+                    <div class="profile-stat-value">{{ total_routes }}</div>
+                    <div class="profile-stat-label">Routes Planned</div>
+                </div>
+                <div class="profile-stat-card">
+                    <div class="profile-stat-value">{{ total_distance|floatformat:0 }} km</div>
+                    <div class="profile-stat-label">Total Distance</div>
+                </div>
+                <div class="profile-stat-card">
+                    <div class="profile-stat-value">${{ total_cost_saved|floatformat:2 }}</div>
+                    <div class="profile-stat-label">Estimated Savings</div>
+                </div>
+            </div>
+
+            <button class="btn-logout" id="logout-btn">Log Out</button>
+        </div>
+
+        <!-- Route History -->
+        <div class="card">
+            <h2>📜 Your Route History</h2>
+
+            {% if user_history %}
+                <div style="overflow-x: auto;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Origin</th>
+                                <th>Destination</th>
+                                <th>Route Type</th>
+                                <th>Distance</th>
+                                <th>Time</th>
+                                <th>Cost</th>
+                                <th>Optimization Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for route in user_history %}
+                            <tr>
+                                <td>{{ route.created_at|date:"M d, Y H:i" }}</td>
+                                <td>{{ route.origin_name }}</td>
+                                <td>{{ route.destination_name }}</td>
+                                <td>
+                                    <span class="route-badge badge-{{ route.selected_route_type }}">
+                                        {{ route.selected_route_type|title }}
+                                    </span>
+                                </td>
+                                <td>{{ route.distance_km }} km</td>
+                                <td>{{ route.estimated_time_minutes }} min</td>
+                                <td>${{ route.fuel_cost }}</td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <div style="flex: 1; height: 6px; background: #e5e7eb; border-radius: 3px;">
+                                            <div style="width: {{ route.optimization_score }}%; height: 100%; background: linear-gradient(90deg, #2563eb, #9333ea); border-radius: 3px;"></div>
+                                        </div>
+                                        <span style="font-weight: 600; font-size: 0.9rem;">{{ route.optimization_score|floatformat:0 }}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🗺️</div>
+                    <h3>No routes planned yet</h3>
+                    <p style="margin-top: 0.5rem;">Start planning your first intelligent route!</p>
+                    <a href="/" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #2563eb, #9333ea); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                        Go to Route Planner
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <footer style="text-align: center; margin-top: 3rem; padding: 2rem; color: #6b7280; border-top: 2px solid #e5e7eb;">
+            <p><strong>Intelligent Route Planning System</strong> - Powered by AI & Django</p>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('logout-btn').addEventListener('click', async function() {
+            if (confirm('Are you sure you want to log out?')) {
+                try {
+                    const response = await fetch('/api/auth/logout/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        window.location.href = '/login/';
+                    }
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    window.location.href = '/login/';
+                }
+            }
+        });
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

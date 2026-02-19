@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>AI-Powered Market Trend Analysis</h1>
+            <p class="subtitle">Advanced Stock Movement Prediction System</p>
+        </header>
+
+        <!-- Stock Selection Panel -->
+        <section class="stock-selection">
+            <h2>Select Stock</h2>
+            <div class="stock-controls">
+                <select id="stockSelect" class="stock-select">
+                    <option value="">-- Select a Stock --</option>
+                    {% for stock in stocks %}
+                    <option value="{{ stock.id }}">{{ stock.symbol }} - {{ stock.company_name }}</option>
+                    {% endfor %}
+                </select>
+                <button id="addStockBtn" class="btn btn-secondary">Add New Stock</button>
+            </div>
+
+            <!-- Add Stock Form (Hidden by default) -->
+            <div id="addStockForm" class="add-stock-form hidden">
+                <input type="text" id="newStockSymbol" placeholder="Enter stock symbol (e.g., AAPL)" class="stock-input">
+                <button id="fetchDataBtn" class="btn btn-primary">Fetch Data</button>
+                <button id="cancelAddBtn" class="btn btn-secondary">Cancel</button>
+            </div>
+        </section>
+
+        <!-- Main Dashboard Content -->
+        <main id="dashboardContent" class="dashboard-content hidden">
+            <!-- Stock Info Header -->
+            <section class="stock-info">
+                <div class="stock-header">
+                    <h2 id="stockSymbol">-</h2>
+                    <p id="stockName">-</p>
+                </div>
+                <div class="stock-price">
+                    <span id="currentPrice" class="price">$0.00</span>
+                    <span id="priceChange" class="price-change">0.00%</span>
+                </div>
+            </section>
+
+            <!-- Action Buttons -->
+            <section class="actions">
+                <button id="trainPredictBtn" class="btn btn-primary">Train & Predict</button>
+                <button id="analyzeVolatilityBtn" class="btn btn-info">Analyze Volatility</button>
+                <button id="generateReportBtn" class="btn btn-success">Generate Report</button>
+                <select id="modelSelect" class="model-select">
+                    <option value="RandomForest">Random Forest</option>
+                    <option value="LinearRegression">Linear Regression</option>
+                </select>
+            </section>
+
+            <!-- Charts Grid -->
+            <section class="charts-grid">
+                <!-- Price Chart -->
+                <div class="chart-container">
+                    <h3>Historical Price Chart</h3>
+                    <canvas id="priceChart"></canvas>
+                </div>
+
+                <!-- Prediction Chart -->
+                <div class="chart-container">
+                    <h3>Predicted vs Actual</h3>
+                    <canvas id="predictionChart"></canvas>
+                </div>
+
+                <!-- Volatility Chart -->
+                <div class="chart-container">
+                    <h3>Volatility Analysis</h3>
+                    <canvas id="volatilityChart"></canvas>
+                </div>
+
+                <!-- Volume Chart -->
+                <div class="chart-container">
+                    <h3>Trading Volume</h3>
+                    <canvas id="volumeChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Metrics Grid -->
+            <section class="metrics-grid">
+                <!-- Prediction Metrics -->
+                <div class="metric-card">
+                    <h3>Prediction Metrics</h3>
+                    <div id="predictionMetrics" class="metrics-content">
+                        <p class="no-data">Train model to see metrics</p>
+                    </div>
+                </div>
+
+                <!-- Signal Card -->
+                <div class="metric-card signal-card">
+                    <h3>Trading Signal</h3>
+                    <div id="signalContent" class="signal-content">
+                        <span class="no-signal">No signal generated</span>
+                    </div>
+                </div>
+
+                <!-- Volatility Metrics -->
+                <div class="metric-card">
+                    <h3>Risk Analysis</h3>
+                    <div id="volatilityMetrics" class="metrics-content">
+                        <p class="no-data">Analyze volatility to see metrics</p>
+                    </div>
+                </div>
+
+                <!-- Model Accuracy -->
+                <div class="metric-card">
+                    <h3>Model Accuracy</h3>
+                    <div id="accuracyMetrics" class="metrics-content">
+                        <p class="no-data">Train model to see accuracy</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Report Section -->
+            <section class="report-section">
+                <h3>Market Analysis Report</h3>
+                <div id="reportContent" class="report-content">
+                    <p class="no-data">Generate report to see insights</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <p id="loadingText">Processing...</p>
+        </div>
+
+        <!-- Notification -->
+        <div id="notification" class="notification hidden"></div>
+    </div>
+
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

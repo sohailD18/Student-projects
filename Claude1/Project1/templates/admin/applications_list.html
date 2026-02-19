@@ -1,0 +1,208 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applications | Admin Panel</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
+        .admin-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem 0; }
+        .content-card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .application-row:hover { background-color: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-0"><i class="fas fa-users me-2"></i>Job Applications</h1>
+                    <p class="mb-0">Review and manage all job applications</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <a href="/admin-panel/" class="btn btn-light btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Admin
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="content-card p-4">
+            <!-- Filters -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <form method="GET" class="row g-2">
+                        <div class="col-md-3">
+                            <input type="text" name="search" class="form-control" placeholder="Search applications..." value="{{ search }}">
+                        </div>
+                        <div class="col-md-2">
+                            <select name="status" class="form-select">
+                                <option value="">All Statuses</option>
+                                {% for value, label in statuses %}
+                                <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="job" class="form-select">
+                                <option value="">All Jobs</option>
+                                {% for job in jobs %}
+                                <option value="{{ job.id }}" {% if job_id == job.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ job.title }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="company" class="form-select">
+                                <option value="">All Companies</option>
+                                {% for comp in companies %}
+                                <option value="{{ comp }}" {% if company == comp %}selected{% endif %}>
+                                    {{ comp }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="category" class="form-select">
+                                <option value="">All Categories</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}" {% if category_id == cat.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ cat.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-1"></i>Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Applicant</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Job</th>
+                            <th>Company</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Applied Date</th>
+                            <th>Resume</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in page_obj %}
+                        <tr class="application-row">
+                            <td><strong>{{ app.applicant_name }}</strong></td>
+                            <td>{{ app.email }}</td>
+                            <td>{{ app.phone }}</td>
+                            <td>{{ app.job.title }}</td>
+                            <td>{{ app.job.company|default:'N/A' }}</td>
+                            <td>{{ app.job.category.name|default:'N/A' }}</td>
+                            <td>
+                                <span class="badge
+                                {% if app.status == 'pending' %}bg-warning
+                                {% elif app.status == 'reviewed' %}bg-info
+                                {% elif app.status == 'shortlisted' %}bg-primary
+                                {% elif app.status == 'interviewed' %}bg-secondary
+                                {% elif app.status == 'offered' %}bg-success
+                                {% elif app.status == 'hired' %}bg-success
+                                {% elif app.status == 'rejected' %}bg-danger
+                                {% endif %}">
+                                    {{ app.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ app.applied_at|date:"M d, Y" }}</td>
+                            <td>
+                                {% if app.resume %}
+                                <a href="/applications/{{ app.id }}/resume/" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                                {% else %}
+                                <span class="text-muted">No resume</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="/admin-panel/applications/{{ app.id }}/" class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button onclick="deleteApplication({{ app.id }})" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="11" class="text-center py-4">
+                                <i class="fas fa-inbox text-muted mb-2" style="font-size: 2rem;"></i>
+                                <p class="text-muted">No applications found</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if job_id %}&job={{ job_id }}{% endif %}{% if company %}&company={{ company }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if job_id %}&job={{ job_id }}{% endif %}{% if company %}&company={{ company }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}">Previous</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if job_id %}&job={{ job_id }}{% endif %}{% if company %}&company={{ company }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if job_id %}&job={{ job_id }}{% endif %}{% if company %}&company={{ company }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}">Last</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white mt-5 py-3">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2025 JobPortal Admin Panel</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function deleteApplication(appId) {
+            if (confirm('Are you sure you want to delete this application?')) {
+                window.location.href = `/admin-panel/applications/${appId}/delete/`;
+            }
+        }
+    </script>
+</body>
+</html>

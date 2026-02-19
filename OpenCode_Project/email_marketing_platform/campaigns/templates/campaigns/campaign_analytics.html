@@ -1,0 +1,306 @@
+{% extends 'campaigns/base.html' %}
+
+{% block title %}Analytics - {{ campaign.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Campaign Analytics</h1>
+            <p class="text-muted mb-0">{{ campaign.name }}</p>
+        </div>
+        <a href="{% url 'campaigns:campaign_detail' campaign.pk %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Campaign
+        </a>
+    </div>
+</div>
+
+<!-- Main Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value text-primary">{{ total_sent }}</div>
+            <div class="stat-label">
+                <i class="bi bi-envelope"></i> Emails Sent
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-success">
+            <div class="stat-value text-success">{{ total_opens }}</div>
+            <div class="stat-label">
+                <i class="bi bi-eye"></i> Total Opens
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-info">
+            <div class="stat-value text-info">{{ open_rate }}%</div>
+            <div class="stat-label">
+                <i class="bi bi-graph-up"></i> Open Rate
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-warning">
+            <div class="stat-value text-warning">{{ click_rate }}%</div>
+            <div class="stat-label">
+                <i class="bi bi-mouse"></i> Click Rate
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-pie-chart"></i> Engagement Overview
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="engagementChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-bar-chart"></i> Performance Metrics
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- A/B Test Results -->
+{% if campaign.is_ab_test and variant_stats %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-gem"></i> A/B Test Results
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="variant-card variant-a">
+                            <h5>Variant A</h5>
+                            <p class="text-muted mb-2">{{ campaign.ab_test_variant_a.name }}</p>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="stat-value text-info">{{ variant_stats.A.sent }}</div>
+                                    <small>Sent</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="stat-value text-success">{{ variant_stats.A.opens }}</div>
+                                    <small>Opens</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="stat-value text-warning">{{ variant_stats.A.clicks }}</div>
+                                    <small>Clicks</small>
+                                </div>
+                            </div>
+                            {% if variant_stats.A.sent > 0 %}
+                            <hr>
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <strong>Open Rate:</strong>
+                                    <div class="text-info">
+                                        {% widthratio variant_stats.A.opens variant_stats.A.sent 100 %}%
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Click Rate:</strong>
+                                    <div class="text-warning">
+                                        {% widthratio variant_stats.A.clicks variant_stats.A.sent 100 %}%
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="variant-card variant-b">
+                            <h5>Variant B</h5>
+                            <p class="text-muted mb-2">{{ campaign.ab_test_variant_b.name }}</p>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="stat-value text-info">{{ variant_stats.B.sent }}</div>
+                                    <small>Sent</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="stat-value text-success">{{ variant_stats.B.opens }}</div>
+                                    <small>Opens</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="stat-value text-warning">{{ variant_stats.B.clicks }}</div>
+                                    <small>Clicks</small>
+                                </div>
+                            </div>
+                            {% if variant_stats.B.sent > 0 %}
+                            <hr>
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <strong>Open Rate:</strong>
+                                    <div class="text-info">
+                                        {% widthratio variant_stats.B.opens variant_stats.B.sent 100 %}%
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Click Rate:</strong>
+                                    <div class="text-warning">
+                                        {% widthratio variant_stats.B.clicks variant_stats.B.sent 100 %}%
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if not campaign.ab_test_winner %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'campaigns:ab_test_winner' campaign.pk %}" class="btn btn-primary">
+                        <i class="bi bi-trophy"></i> Select Winner
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Email Logs with Analytics -->
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-list-ul"></i> Recipient Activity
+    </div>
+    <div class="card-body">
+        {% if email_logs %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Subscriber</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Opened</th>
+                            <th>Clicked</th>
+                            {% if campaign.is_ab_test %}
+                            <th>Variant</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in email_logs %}
+                            <tr>
+                                <td>{{ log.subscriber.full_name }}</td>
+                                <td>{{ log.subscriber.email }}</td>
+                                <td>
+                                    <span class="badge bg-{% if log.status == 'sent' %}success{% elif log.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                        {{ log.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if log.analytics.opened_at %}
+                                        <span class="badge bg-success"><i class="bi bi-check"></i> {{ log.analytics.opened_at|date:"M d, H:i" }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Not opened</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.analytics.clicked_at %}
+                                        <span class="badge bg-info"><i class="bi bi-check"></i> {{ log.analytics.click_count }}</span>
+                                    {% else %}
+                                        <span class="text-muted">No clicks</span>
+                                    {% endif %}
+                                </td>
+                                {% if campaign.is_ab_test %}
+                                <td>
+                                    {% if log.variant %}
+                                        <span class="badge bg-{{ log.variant|yesno:'info,success' }}">{{ log.variant }}</span>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">No activity data available yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Engagement Chart
+    const engagementCtx = document.getElementById('engagementChart').getContext('2d');
+    new Chart(engagementCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Opened', 'Not Opened'],
+            datasets: [{
+                data: [{{ total_opens }}, {{ total_sent|add:total_opens }}],
+                backgroundColor: ['#10b981', '#e5e7eb'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                title: {
+                    display: true,
+                    text: 'Email Opens'
+                }
+            }
+        }
+    });
+
+    // Performance Chart
+    const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+    new Chart(performanceCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Open Rate', 'Click Rate'],
+            datasets: [{
+                label: 'Percentage',
+                data: [{{ open_rate }}, {{ click_rate }}],
+                backgroundColor: ['#3b82f6', '#f59e0b'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

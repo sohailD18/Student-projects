@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Run AI Predictions - Inventory Management{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <div class="card-header">
+        <h3 class="card-title">🤖 Run AI Predictions</h3>
+        <p class="card-subtitle">Generate demand forecasts for all products</p>
+    </div>
+
+    <div style="margin-bottom: 24px;">
+        <h4 style="margin-bottom: 12px;">What does this do?</h4>
+        <ul style="margin-left: 20px; color: var(--text-secondary); line-height: 1.8;">
+            <li>Analyzes historical sales data for each product</li>
+            <li>Uses Machine Learning (Linear Regression + Random Forest) to predict demand</li>
+            <li>Calculates recommended stock levels with safety margins</li>
+            <li>Identifies products at risk of stockouts or overstock</li>
+        </ul>
+    </div>
+
+    <div style="padding: 16px; background-color: #f0fdf4; border-radius: var(--radius-md); margin-bottom: 24px;">
+        <strong>✅ Prediction Features:</strong>
+        <ul style="margin: 12px 0 0 20px; font-size: 0.875rem;">
+            <li>Ensemble ML models for accuracy</li>
+            <li>Seasonal pattern detection</li>
+            <li>Day-of-week analysis</li>
+            <li>20% safety margin for buffer stock</li>
+            <li>Confidence scoring</li>
+        </ul>
+    </div>
+
+    <form method="post" style="margin-bottom: 24px;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 1.125rem;">
+            🚀 Generate Predictions
+        </button>
+    </form>
+
+    <div style="padding: 16px; background-color: #fef3c7; border-radius: var(--radius-md); margin-bottom: 24px;">
+        <strong>⏱️ Processing Time:</strong>
+        <p style="margin: 8px 0 0 0; font-size: 0.875rem; color: var(--text-secondary);">
+            This may take a few seconds depending on the amount of historical data.
+            The system analyzes each product individually and creates ML forecasts.
+        </p>
+    </div>
+
+    <div style="display: flex; gap: 12px;">
+        <a href="{% url 'inventory_system:dashboard' %}" class="btn btn-secondary">
+            ← Back to Dashboard
+        </a>
+        <a href="{% url 'inventory_system:reports' %}" class="btn btn-secondary">
+            View Reports
+        </a>
+    </div>
+</div>
+
+<div class="card" style="max-width: 600px; margin: 24px auto 0;">
+    <div class="card-header">
+        <h3 class="card-title">📊 Quick Stats</h3>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+        <div style="text-align: center; padding: 16px;">
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">Total Products</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);">{{ total_products }}</div>
+        </div>
+        <div style="text-align: center; padding: 16px;">
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">Predictions Generated</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--success-color);">{{ total_predictions }}</div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

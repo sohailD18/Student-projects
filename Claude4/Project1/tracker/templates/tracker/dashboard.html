@@ -1,0 +1,365 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}Dashboard - Cash Curve{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+    <p class="text-muted">Welcome back, {{ user.username }}! Here's your financial overview.</p>
+</div>
+
+<!-- Summary Cards -->
+<div class="row summary-cards">
+    <div class="col-md-4">
+        <div class="card balance-card">
+            <div class="card-body">
+                <div class="card-icon">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div>
+                    <h6 class="card-label">Current Balance</h6>
+                    <h2 class="card-value {% if current_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        ${{ current_balance|floatformat:2 }}
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card income-card">
+            <div class="card-body">
+                <div class="card-icon">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
+                <div>
+                    <h6 class="card-label">Total Income</h6>
+                    <h2 class="card-value text-success">${{ total_income|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card expense-card">
+            <div class="card-body">
+                <div class="card-icon">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+                <div>
+                    <h6 class="card-label">Total Expenses</h6>
+                    <h2 class="card-value text-danger">${{ total_expense|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row charts-row">
+    <div class="col-lg-6">
+        <div class="card chart-card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-pie"></i> Expenses by Category</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card chart-card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-bar"></i> Income vs Expense (Last 6 Months)</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Transactions -->
+<div class="transactions-section">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-list"></i> Recent Transactions</h5>
+            {% if transaction_count > 0 %}
+                <a href="{% url 'tracker:add_transaction' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i> Add New
+                </a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if transaction_count > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in recent_transactions %}
+                            <tr>
+                                <td>{{ transaction.date|date:"M d, Y" }}</td>
+                                <td>{{ transaction.category.name }}</td>
+                                <td>
+                                    {% if transaction.description %}
+                                        {{ transaction.description|truncatewords:5 }}
+                                    {% else %}
+                                        <span class="text-muted">No description</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if transaction.category.type == 'INCOME' %}
+                                        <span class="badge bg-success">Income</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Expense</span>
+                                    {% endif %}
+                                </td>
+                                <td class="{% if transaction.category.type == 'INCOME' %}text-success{% else %}text-danger{% endif %}">
+                                    {% if transaction.category.type == 'INCOME' %}+{% else %}-{% endif %}
+                                    ${{ transaction.amount }}
+                                </td>
+                                <td>
+                                    <form method="post" action="{% url 'tracker:delete_transaction' transaction.id %}"
+                                          class="d-inline delete-form">
+                                        {% csrf_token %}
+                                        <button type="button" class="btn btn-sm btn-outline-danger delete-btn"
+                                                data-amount="${{ transaction.amount }}"
+                                                data-category="{{ transaction.category.name }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state text-center py-5">
+                    <i class="fas fa-receipt fa-4x text-muted mb-3"></i>
+                    <h4>No transactions yet</h4>
+                    <p class="text-muted">Start tracking your finances by adding your first transaction!</p>
+                    <a href="{% url 'tracker:add_transaction' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add First Transaction
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Sidebar Toggle
+    document.getElementById('menu-toggle').addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('wrapper').classList.toggle('toggled');
+    });
+
+    // Check for query parameters and show popups
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // Login success
+    if (urlParams.get('login') === 'success') {
+        const username = urlParams.get('username') || 'User';
+        Swal.fire({
+            icon: 'success',
+            title: 'Welcome Back!',
+            text: `Hi ${username}, welcome back to Cash Curve!`,
+            timer: 3000,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            confirmButtonColor: '#28a745'
+        });
+    }
+    // Transaction added
+    else if (urlParams.get('added') === 'success') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Transaction Added!',
+            text: 'Your transaction has been recorded successfully.',
+            timer: 3000,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            confirmButtonColor: '#28a745'
+        });
+    }
+    // Transaction deleted
+    else if (urlParams.get('deleted') === 'success') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Deleted!',
+            text: 'Transaction has been removed successfully.',
+            timer: 2500,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            confirmButtonColor: '#28a745'
+        });
+    }
+
+    // Clean URL if any parameter was shown
+    if (urlParams.get('login') || urlParams.get('added') || urlParams.get('deleted')) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    // Delete Transaction with SweetAlert2
+    document.querySelectorAll('.delete-btn').forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = this.closest('form');
+            const amount = this.getAttribute('data-amount');
+            const category = this.getAttribute('data-category');
+
+            Swal.fire({
+                title: 'Delete Transaction?',
+                text: `Are you sure you want to delete ${category} - ${amount}?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-trash"></i> Yes, Delete',
+                cancelButtonText: '<i class="fas fa-times"></i> Cancel',
+                showClass: {
+                    popup: 'swal2-show',
+                    backdrop: 'swal2-backdrop-show',
+                    icon: 'swal2-icon-show'
+                },
+                hideClass: {
+                    popup: 'swal2-hide',
+                    backdrop: 'swal2-backdrop-hide',
+                    icon: 'swal2-icon-hide'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
+
+    // Category Doughnut Chart
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+
+    // Category labels and amounts from Django context
+    const categoryLabels = {{ category_labels|safe }};
+    const categoryAmounts = {{ category_amounts|safe }};
+    const categoryColors = {{ category_colors|safe }};
+
+    if (categoryLabels.length > 0) {
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    data: categoryAmounts,
+                    backgroundColor: categoryColors.slice(0, categoryLabels.length),
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: $${value.toFixed(2)} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        // Show empty state for category chart
+        const categoryCanvas = document.getElementById('categoryChart');
+        categoryCanvas.parentNode.innerHTML = '<div class="empty-chart"><i class="fas fa-chart-pie fa-3x text-muted"></i><p class="mt-2">No expense data yet</p></div>';
+    }
+
+    // Monthly Income vs Expense Bar Chart
+    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+
+    const monthNames = {{ month_names|safe }};
+    const monthlyIncome = {{ monthly_income|safe }};
+    const monthlyExpense = {{ monthly_expense|safe }};
+
+    new Chart(monthlyCtx, {
+        type: 'bar',
+        data: {
+            labels: monthNames,
+            datasets: [
+                {
+                    label: 'Income',
+                    data: monthlyIncome,
+                    backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    borderWidth: 2
+                },
+                {
+                    label: 'Expense',
+                    data: monthlyExpense,
+                    backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                    borderColor: 'rgba(220, 53, 69, 1)',
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.dataset.label || '';
+                            const value = context.parsed.y || 0;
+                            return `${label}: $${value.toFixed(2)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value;
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

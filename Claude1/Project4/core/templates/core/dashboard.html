@@ -1,0 +1,798 @@
+{% extends "core/base.html" %}
+
+{% block title %}Dashboard - EcoTrack{% endblock %}
+
+{% block content %}
+<!-- Welcome Banner -->
+<div class="welcome-banner">
+    <div class="welcome-content">
+        <h1>
+            <span class="welcome-emoji">🌱</span>
+            Welcome back, {{ user.username }}!
+        </h1>
+        <p class="welcome-subtitle">Track your environmental impact and earn rewards</p>
+    </div>
+    <div class="welcome-actions">
+        <a href="{% url 'log_activity' %}" class="btn">
+            <i class="fas fa-plus"></i> Log Activity
+        </a>
+    </div>
+</div>
+
+<!-- Stats Overview -->
+<div class="stats-grid">
+    <div class="stat-card stat-card-primary">
+        <div class="stat-icon">
+            <i class="fas fa-star"></i>
+        </div>
+        <h3>Total Points</h3>
+        <div class="value">{{ total_points }}</div>
+        <p class="subtitle">Lifetime eco-points</p>
+        <div class="stat-trend">
+            <i class="fas fa-arrow-up"></i> Keep it up!
+        </div>
+    </div>
+
+    <div class="stat-card stat-card-success">
+        <div class="stat-icon">
+            <i class="fas fa-leaf"></i>
+        </div>
+        <h3>Carbon Footprint</h3>
+        <div class="value">{{ total_carbon|floatformat:1 }}</div>
+        <p class="subtitle">kg CO₂ tracked</p>
+        <div class="stat-trend">
+            <i class="fas fa-chart-line"></i> Being tracked
+        </div>
+    </div>
+
+    <div class="stat-card stat-card-info">
+        <div class="stat-icon">
+            <i class="fas fa-clipboard-list"></i>
+        </div>
+        <h3>Activities Logged</h3>
+        <div class="value">{{ total_activities }}</div>
+        <p class="subtitle">Total entries</p>
+        <div class="stat-trend">
+            <i class="fas fa-fire"></i> On fire!
+        </div>
+    </div>
+
+    <div class="stat-card stat-card-warning">
+        <div class="stat-icon">
+            <i class="fas fa-medal"></i>
+        </div>
+        <h3>Badges Earned</h3>
+        <div class="value">{{ earned_badges.count }}</div>
+        <p class="subtitle">Achievements</p>
+        <div class="stat-trend">
+            <i class="fas fa-trophy"></i> {{ earned_badges.count }} won
+        </div>
+    </div>
+</div>
+
+<!-- Carbon Emissions Chart -->
+<div class="card chart-card">
+    <div class="card-header">
+        <h2>
+            <i class="fas fa-chart-area"></i>
+            Carbon Emissions Trend
+        </h2>
+        <span class="badge badge-info">Last 7 Days</span>
+    </div>
+    <div class="chart-container">
+        <canvas id="carbonChart"></canvas>
+    </div>
+    <p class="chart-caption">
+        <i class="fas fa-info-circle"></i> Daily carbon footprint in kg CO₂
+    </p>
+</div>
+
+<div class="two-column-grid">
+    <!-- Activity Breakdown -->
+    <div class="card">
+        <h2>
+            <i class="fas fa-chart-pie"></i>
+            Activity Breakdown
+        </h2>
+        <div class="activity-breakdown">
+            {% for type, stats in activity_stats.items %}
+                <div class="activity-breakdown-item activity-{{ type|lower }}">
+                    <div class="activity-icon-large">
+                        {% if type == 'Travel' %}<i class="fas fa-car"></i>
+                        {% elif type == 'Energy' %}<i class="fas fa-bolt"></i>
+                        {% elif type == 'Diet' %}<i class="fas fa-utensils"></i>
+                        {% endif %}
+                    </div>
+                    <div class="activity-details">
+                        <h4>{{ type }}</h4>
+                        <p class="activity-count">{{ stats.count }} activities</p>
+                        <p class="activity-carbon">{{ stats.carbon|floatformat:1 }} kg CO₂</p>
+                    </div>
+                    <div class="activity-percentage">
+                        {% if activity_stats.items|length > 0 and total_carbon > 0 %}
+                            {% widthratio stats.carbon total_carbon 100 as percentage %}
+                        {% else %}
+                            {% widthratio 0 1 0 as percentage %}
+                        {% endif %}
+                        <span class="percentage-badge">{{ percentage }}%</span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Streak Information -->
+    <div class="card streak-card">
+        <h2>
+            <i class="fas fa-fire-alt"></i>
+            Your Streak
+        </h2>
+        <div class="streak-display">
+            <div class="streak-icon">
+                <i class="fas fa-fire"></i>
+            </div>
+            <div class="streak-info">
+                <div class="streak-count">{{ user.profile.streak_days }}</div>
+                <div class="streak-label">Day Streak</div>
+            </div>
+        </div>
+        <div class="streak-details">
+            <p>
+                <i class="fas fa-trophy"></i>
+                Longest streak: <strong>{{ user.profile.longest_streak }} days</strong>
+            </p>
+            <p class="streak-tip">
+                <i class="fas fa-lightbulb"></i>
+                Log activities daily to maintain your streak!
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Badges Showcase -->
+<div class="card badges-card">
+    <div class="card-header">
+        <h2>
+            <i class="fas fa-award"></i>
+            Your Badges
+        </h2>
+        <span class="badge">{{ earned_badges.count }} Earned</span>
+    </div>
+    {% if earned_badges %}
+        <div class="badge-grid">
+            {% for user_badge in earned_badges %}
+                <div class="badge-item badge-{{ user_badge.badge.rarity }}">
+                    <div class="badge-icon">{{ user_badge.badge.icon }}</div>
+                    <h4>{{ user_badge.badge.name }}</h4>
+                    <p class="badge-description">{{ user_badge.badge.description }}</p>
+                    <div class="badge-meta">
+                        <span class="badge-points">{{ user_badge.badge.points_required }} pts</span>
+                        <span class="badge-date">
+                            <i class="fas fa-calendar"></i>
+                            {{ user_badge.date_earned|date:"M d, Y" }}
+                        </span>
+                    </div>
+                    <span class="badge-rarity">{{ user_badge.badge.get_rarity_display }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🏆</div>
+            <h3>No badges yet!</h3>
+            <p>Start logging activities to earn your first badge. Keep going!</p>
+            <a href="{% url 'log_activity' %}" class="btn btn-secondary" style="margin-top: 1rem;">
+                <i class="fas fa-plus"></i> Log First Activity
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Recent Activities -->
+<div class="card activities-card">
+    <div class="card-header">
+        <h2>
+            <i class="fas fa-history"></i>
+            Recent Activities
+        </h2>
+        <a href="{% url 'log_activity' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-plus"></i> Add New
+        </a>
+    </div>
+
+    {% if recent_activities %}
+        <ul class="activity-list">
+            {% for activity in recent_activities %}
+                <li class="activity-item activity-{{ activity.activity_type|lower }}">
+                    <div class="activity-main">
+                        <div class="activity-type-icon">
+                            {% if activity.activity_type == 'Travel' %}<i class="fas fa-car"></i>
+                            {% elif activity.activity_type == 'Energy' %}<i class="fas fa-bolt"></i>
+                            {% elif activity.activity_type == 'Diet' %}<i class="fas fa-utensils"></i>
+                            {% endif %}
+                        </div>
+                        <div class="activity-info">
+                            <h4>{{ activity.activity_type }}</h4>
+                            <p class="activity-meta">
+                                Value: {{ activity.value }}
+                                {% if activity.activity_subtype %}
+                                    ({{ activity.get_activity_subtype_display }})
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="activity-stats">
+                        <span class="carbon-badge">
+                            <i class="fas fa-leaf"></i>
+                            {{ activity.calculated_carbon|floatformat:1 }} kg CO₂
+                        </span>
+                        <span class="points-badge">
+                            <i class="fas fa-star"></i>
+                            +{{ activity.calculated_carbon|floatformat:0 }} pts
+                        </span>
+                    </div>
+                    <div class="activity-date">
+                        <p class="date-main">{{ activity.date|date:"M d, Y" }}</p>
+                        <p class="time-secondary">{{ activity.created_at|date:"H:i" }}</p>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <h3>No activities logged yet</h3>
+            <p>Start tracking your eco-friendly activities today!</p>
+            <a href="{% url 'log_activity' %}" class="btn btn-secondary" style="margin-top: 1rem;">
+                <i class="fas fa-plus"></i> Log Your First Activity
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Quick Actions -->
+<div class="card quick-actions-card">
+    <h2>
+        <i class="fas fa-bolt"></i>
+        Quick Actions
+    </h2>
+    <div class="quick-actions-grid">
+        <a href="{% url 'log_activity' %}" class="quick-action-btn">
+            <i class="fas fa-plus-circle"></i>
+            <span>Log Activity</span>
+        </a>
+        <a href="{% url 'profile' %}" class="quick-action-btn">
+            <i class="fas fa-user-edit"></i>
+            <span>Edit Profile</span>
+        </a>
+        <a href="{% url 'leaderboard' %}" class="quick-action-btn">
+            <i class="fas fa-trophy"></i>
+            <span>Leaderboard</span>
+        </a>
+        <button onclick="location.reload()" class="quick-action-btn">
+            <i class="fas fa-sync-alt"></i>
+            <span>Refresh</span>
+        </button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .welcome-banner {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 249, 232, 0.95) 100%);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: var(--shadow-lg);
+        flex-wrap: wrap;
+        gap: var(--spacing-md);
+    }
+
+    .welcome-content h1 {
+        color: var(--primary);
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: var(--spacing-xs);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .welcome-emoji {
+        font-size: 3rem;
+        animation: bounce 2s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .welcome-subtitle {
+        color: var(--gray);
+        font-size: 1.1rem;
+    }
+
+    .stat-card {
+        position: relative;
+    }
+
+    .stat-card-primary { border-top-color: var(--primary); }
+    .stat-card-success { border-top-color: var(--success); }
+    .stat-card-info { border-top-color: var(--info); }
+    .stat-card-warning { border-top-color: var(--warning); }
+
+    .stat-icon {
+        font-size: 2rem;
+        color: var(--primary-light);
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .stat-trend {
+        margin-top: var(--spacing-sm);
+        font-size: 0.85rem;
+        color: var(--accent-green);
+        font-weight: 600;
+    }
+
+    .two-column-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .chart-card .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .badge {
+        background: var(--primary-light);
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .badge-info { background: var(--info); }
+
+    .chart-container {
+        position: relative;
+        height: 350px;
+        margin: var(--spacing-md) 0;
+    }
+
+    .chart-caption {
+        text-align: center;
+        color: var(--gray);
+        margin-top: var(--spacing-sm);
+        font-size: 0.9rem;
+    }
+
+    .activity-breakdown {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .activity-breakdown-item {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        background: var(--off-white);
+        transition: all var(--transition-normal);
+    }
+
+    .activity-breakdown-item:hover {
+        transform: translateX(5px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .activity-travel { background: var(--travel-bg); border-left: 4px solid var(--travel-color); }
+    .activity-energy { background: var(--energy-bg); border-left: 4px solid var(--energy-color); }
+    .activity-diet { background: var(--diet-bg); border-left: 4px solid var(--diet-color); }
+
+    .activity-icon-large {
+        font-size: 2rem;
+        width: 50px;
+        text-align: center;
+    }
+
+    .activity-travel .activity-icon-large { color: var(--travel-color); }
+    .activity-energy .activity-icon-large { color: var(--energy-color); }
+    .activity-diet .activity-icon-large { color: var(--diet-color); }
+
+    .activity-details {
+        flex: 1;
+    }
+
+    .activity-details h4 {
+        margin-bottom: 0.25rem;
+        color: var(--primary);
+    }
+
+    .activity-count {
+        font-size: 0.85rem;
+        color: var(--gray);
+        margin: 0;
+    }
+
+    .activity-carbon {
+        font-size: 0.9rem;
+        color: var(--primary-light);
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .activity-percentage .percentage-badge {
+        background: var(--primary);
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .streak-card {
+        background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
+    }
+
+    .streak-display {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .streak-icon {
+        font-size: 4rem;
+        color: #e74c3c;
+        animation: flame 0.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes flame {
+        from { transform: scale(1) rotate(-5deg); }
+        to { transform: scale(1.1) rotate(5deg); }
+    }
+
+    .streak-count {
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: #e74c3c;
+        line-height: 1;
+    }
+
+    .streak-label {
+        font-size: 1rem;
+        color: var(--gray);
+        font-weight: 600;
+    }
+
+    .streak-details p {
+        margin: var(--spacing-xs) 0;
+        font-size: 0.95rem;
+    }
+
+    .streak-tip {
+        background: rgba(231, 76, 60, 0.1);
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        margin-top: var(--spacing-sm);
+    }
+
+    .activity-main {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        flex: 1;
+    }
+
+    .activity-type-icon {
+        font-size: 2rem;
+        width: 50px;
+        text-align: center;
+    }
+
+    .activity-travel .activity-type-icon { color: var(--travel-color); }
+    .activity-energy .activity-type-icon { color: var(--energy-color); }
+    .activity-diet .activity-type-icon { color: var(--diet-color); }
+
+    .activity-info h4 {
+        margin-bottom: 0.25rem;
+        color: var(--primary);
+    }
+
+    .activity-meta {
+        font-size: 0.85rem;
+        color: var(--gray);
+        margin: 0;
+    }
+
+    .activity-stats {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-xs);
+        min-width: 140px;
+    }
+
+    .carbon-badge {
+        background: var(--primary-lighter);
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .points-badge {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .activity-date {
+        text-align: right;
+        min-width: 100px;
+    }
+
+    .date-main {
+        color: var(--dark-gray);
+        margin: 0;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .time-secondary {
+        color: var(--gray);
+        margin: 0;
+        font-size: 0.85rem;
+    }
+
+    .badge-item {
+        position: relative;
+    }
+
+    .badge-description {
+        font-size: 0.85rem;
+        color: var(--gray);
+        margin: var(--spacing-xs) 0;
+    }
+
+    .badge-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: var(--spacing-sm);
+        font-size: 0.85rem;
+    }
+
+    .badge-points {
+        background: var(--accent-teal);
+        color: white;
+        padding: 0.3rem 0.6rem;
+        border-radius: 15px;
+        font-weight: 600;
+    }
+
+    .badge-date {
+        color: var(--gray);
+    }
+
+    .badge-rarity {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .badge-common { border-color: #95a5a6; }
+    .badge-rare { border-color: #3498db; }
+    .badge-epic { border-color: #9b59b6; }
+    .badge-legendary { border-color: #f39c12; }
+
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: var(--spacing-sm);
+    }
+
+    .quick-action-btn {
+        background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-lighter) 100%);
+        color: white;
+        padding: var(--spacing-md);
+        border: none;
+        border-radius: var(--radius-sm);
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--spacing-xs);
+        cursor: pointer;
+        transition: all var(--transition-normal);
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .quick-action-btn:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    }
+
+    .quick-action-btn i {
+        font-size: 1.8rem;
+    }
+
+    @media (max-width: 768px) {
+        .welcome-content h1 {
+            font-size: 1.8rem;
+        }
+
+        .two-column-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .activity-item {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+
+        .activity-stats {
+            flex-direction: row;
+            width: 100%;
+        }
+
+        .activity-date {
+            text-align: left;
+            margin-top: var(--spacing-xs);
+        }
+
+        .streak-count {
+            font-size: 2.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('carbonChart').getContext('2d');
+
+        const chartLabels = {{ chart_labels|safe }};
+        const chartData = {{ chart_data|safe }};
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Carbon Emissions (kg CO₂)',
+                    data: chartData,
+                    borderColor: '#4a7c23',
+                    backgroundColor: 'rgba(74, 124, 35, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#4a7c23',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    pointHoverBackgroundColor: '#2d5016',
+                    pointHoverBorderColor: '#ffffff',
+                    pointHoverBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 14,
+                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            },
+                            color: '#2d5016',
+                            padding: 15,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(45, 80, 22, 0.95)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: '#4a7c23',
+                        borderWidth: 2,
+                        padding: 12,
+                        displayColors: true,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + ' kg CO₂';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(74, 124, 35, 0.1)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#666',
+                            font: {
+                                size: 12
+                            },
+                            callback: function(value) {
+                                return value + ' kg';
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Carbon Emissions (kg CO₂)',
+                            color: '#2d5016',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#666',
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

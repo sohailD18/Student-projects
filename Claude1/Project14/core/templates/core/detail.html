@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ document.title }} - Analysis{% endblock %}
+
+{% block content %}
+<!-- Back Button -->
+<a href="{% url 'core:dashboard' %}" class="btn btn-secondary mb-3">
+    &larr; Back to Dashboard
+</a>
+
+<!-- Document Header -->
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2>{{ document.title }}</h2>
+                <p class="text-muted mb-0">Document Analysis Report</p>
+            </div>
+            {% if analysis %}
+                {% if analysis.risk_level == 'HIGH' %}
+                    <span class="badge badge-high" style="font-size: 1.25rem; padding: 0.5rem 1.5rem;">HIGH RISK</span>
+                {% elif analysis.risk_level == 'MEDIUM' %}
+                    <span class="badge badge-medium" style="font-size: 1.25rem; padding: 0.5rem 1.5rem;">MEDIUM RISK</span>
+                {% else %}
+                    <span class="badge badge-low" style="font-size: 1.25rem; padding: 0.5rem 1.5rem;">LOW RISK</span>
+                {% endif %}
+            {% else %}
+                <span class="badge badge-medium">PENDING ANALYSIS</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- File Metadata -->
+<div class="card">
+    <h3>File Information</h3>
+    <table class="table" style="margin-top: 0;">
+        <tbody>
+            <tr>
+                <td><strong>Document Title:</strong></td>
+                <td>{{ document.title }}</td>
+            </tr>
+            <tr>
+                <td><strong>File Name:</strong></td>
+                <td>{{ document.filename }}</td>
+            </tr>
+            <tr>
+                <td><strong>Upload Date:</strong></td>
+                <td>{{ document.created_at|date:"F d, Y" }} at {{ document.created_at|date:"H:i" }}</td>
+            </tr>
+            <tr>
+                <td><strong>Analysis Status:</strong></td>
+                <td>
+                    {% if has_existing_report %}
+                        <span class="badge badge-low">Completed</span>
+                    {% else %}
+                        <span class="badge badge-medium">In Progress</span>
+                    {% endif %}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+{% if analysis %}
+<!-- Risk Assessment -->
+<div class="card" style="border-left: 5px solid {% if analysis.risk_level == 'HIGH' %}#dc3545{% elif analysis.risk_level == 'MEDIUM' %}#ffc107{% else %}#28a745{% endif %};">
+    <h3>Risk Assessment</h3>
+    <div style="display: flex; align-items: center; gap: 2rem; margin-top: 1rem;">
+        <div style="flex: 1;">
+            <p style="font-size: 1.1rem; margin-bottom: 1rem;">
+                <strong>Risk Level:</strong>
+                {% if analysis.risk_level == 'HIGH' %}
+                    <span style="color: #dc3545; font-weight: 600; font-size: 1.25rem;">HIGH</span>
+                {% elif analysis.risk_level == 'MEDIUM' %}
+                    <span style="color: #ffc107; font-weight: 600; font-size: 1.25rem;">MEDIUM</span>
+                {% else %}
+                    <span style="color: #28a745; font-weight: 600; font-size: 1.25rem;">LOW</span>
+                {% endif %}
+            </p>
+            <p class="text-muted mb-0">
+                {% if analysis.risk_level == 'HIGH' %}
+                    This document contains multiple risk factors or missing critical clauses. Immediate legal review is strongly recommended.
+                {% elif analysis.risk_level == 'MEDIUM' %}
+                    This document has some areas of concern that should be reviewed by a legal professional.
+                {% else %}
+                    This document appears to have standard legal provisions with minimal risk indicators.
+                {% endif %}
+            </p>
+        </div>
+        <div style="text-align: center; min-width: 150px;">
+            <div style="
+                width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                background: {% if analysis.risk_level == 'HIGH' %}#dc3545{% elif analysis.risk_level == 'MEDIUM' %}#ffc107{% else %}#28a745{% endif %};
+                color: white; font-size: 2rem; font-weight: bold; margin: 0 auto;
+            ">
+                {{ analysis.risk_level|slice:":1" }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Compliance Status -->
+<div class="card">
+    <h3>Compliance Status</h3>
+    <div style="margin-top: 1rem;">
+        {% if analysis.risk_level == 'LOW' %}
+            <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background-color: #d4edda; border-left: 4px solid #28a745; border-radius: 4px;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#28a745" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <div>
+                    <h4 style="color: #155724; margin-bottom: 0.25rem;">Compliant</h4>
+                    <p style="color: #155724; margin: 0;">This document meets most standard compliance requirements.</p>
+                </div>
+            </div>
+        {% else %}
+            <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background-color: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc3545" stroke-width="3">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                <div>
+                    <h4 style="color: #721c24; margin-bottom: 0.25rem;">Not Fully Compliant</h4>
+                    <p style="color: #721c24; margin: 0;">This document has compliance issues that require attention.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Executive Summary -->
+<div class="card">
+    <h3>Executive Summary</h3>
+    <p style="line-height: 1.8; margin-top: 1rem;">{{ analysis.summary }}</p>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+    <!-- Found Clauses -->
+    <div class="card">
+        <h3 style="color: #28a745;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-right: 0.5rem;">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Found Clauses
+        </h3>
+        <p class="text-muted mb-2">{{ analysis.key_clauses|length }} standard clauses identified</p>
+        {% if analysis.key_clauses %}
+        <ul style="list-style: none; padding: 0; margin-top: 1rem;">
+            {% for clause in analysis.key_clauses %}
+            <li style="padding: 0.5rem; margin-bottom: 0.5rem; background-color: #d4edda; border-left: 3px solid #28a745; border-radius: 4px;">
+                {{ clause }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">No standard clauses were identified in this document.</p>
+        {% endif %}
+    </div>
+
+    <!-- Missing Clauses -->
+    <div class="card">
+        <h3 style="color: #dc3545;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-right: 0.5rem;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            Missing Clauses
+        </h3>
+        <p class="text-muted mb-2">{{ analysis.missing_clauses|length }} clauses not found</p>
+        {% if analysis.missing_clauses %}
+        <ul style="list-style: none; padding: 0; margin-top: 1rem;">
+            {% for clause in analysis.missing_clauses %}
+            <li style="padding: 0.5rem; margin-bottom: 0.5rem; background-color: #f8d7da; border-left: 3px solid #dc3545; border-radius: 4px;">
+                {{ clause }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted" style="color: #28a745;">All standard clauses are present!</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recommendations -->
+<div class="card" style="background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%); color: white;">
+    <h3 style="color: white; border-bottom: 2px solid rgba(255,255,255,0.3);">
+        Recommendations
+    </h3>
+    <ul style="margin-top: 1rem; padding-left: 1.5rem;">
+        {% if analysis.risk_level == 'HIGH' %}
+            <li style="margin-bottom: 0.75rem;">Consult with a legal professional immediately before signing this document.</li>
+            <li style="margin-bottom: 0.75rem;">Review all missing clauses and consider adding them to protect your interests.</li>
+            <li style="margin-bottom: 0.75rem;">Pay special attention to high-risk terms identified in this analysis.</li>
+            <li>Request amendments to address unfavorable terms.</li>
+        {% elif analysis.risk_level == 'MEDIUM' %}
+            <li style="margin-bottom: 0.75rem;">Have a legal professional review the missing clauses.</li>
+            <li style="margin-bottom: 0.75rem;">Consider negotiating terms for the clauses that were not found.</li>
+            <li style="margin-bottom: 0.75rem;">Review the document carefully for any ambiguous language.</li>
+            <li>Ensure you understand all obligations and liabilities outlined.</li>
+        {% else %}
+            <li style="margin-bottom: 0.75rem;">While this document appears comprehensive, legal consultation is still recommended.</li>
+            <li style="margin-bottom: 0.75rem;">Review all terms to ensure they align with your expectations.</li>
+            <li style="margin-bottom: 0.75rem;">Keep this document for your records and reference.</li>
+            <li>Consider scheduling periodic reviews of your legal documents.</li>
+        {% endif %}
+    </ul>
+</div>
+{% else %}
+<!-- Analysis Pending -->
+<div class="card text-center">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ffc107" stroke-width="2" style="margin-bottom: 1rem;">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+    </svg>
+    <h4 style="color: #6c757d; margin-bottom: 0.5rem;">Analysis Pending</h4>
+    <p class="text-muted">This document is currently being analyzed. Please refresh the page to see the results.</p>
+    <a href="{% url 'core:detail' document.id %}" class="btn btn-primary mt-3">Refresh Analysis</a>
+</div>
+{% endif %}
+
+<style>
+/* Custom risk indicator animation */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.card[style*="border-left"] div div[style*="border-radius"] {
+    animation: pulse 2s infinite;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Claims - InfraGuard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Claims Management</h1>
+        <p>Review and process compensation claims</p>
+        <a href="{% url 'reports:admin_dashboard' %}" class="btn btn-secondary">← Back to Dashboard</a>
+    </div>
+
+    <!-- Claims Table -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">All Claims</h3>
+            <span class="badge">{{ claims.count }} Total</span>
+        </div>
+
+        {% if claims %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Claim ID</th>
+                            <th>Victim</th>
+                            <th>Incident</th>
+                            <th>Claim Amount</th>
+                            <th>Approved</th>
+                            <th>Status</th>
+                            <th>Filed Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for claim in claims %}
+                            <tr>
+                                <td>#{{ claim.id }}</td>
+                                <td>
+                                    <strong>{{ claim.victim_name }}</strong>
+                                    {% if claim.reviewed_by %}
+                                        <br><small class="text-muted">Reviewed by: {{ claim.reviewed_by.username }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ claim.incident.get_incident_type_display }}
+                                    <br><small class="text-muted">{{ claim.incident.location }}</small>
+                                </td>
+                                <td><strong>${{ claim.claim_amount }}</strong></td>
+                                <td>
+                                    {% if claim.approved_amount %}
+                                        <span class="approved-amount">${{ claim.approved_amount }}</span>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="status-badge {{ claim.get_status_color }}">
+                                        {{ claim.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ claim.filed_date|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if claim.status == 'filed' or claim.status == 'under_review' %}
+                                        <a href="{% url 'reports:update_claim_status' claim.id %}"
+                                           class="btn btn-sm btn-primary">Review</a>
+                                    {% else %}
+                                        <span class="reviewed-badge">{{ claim.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📋</div>
+                <h3>No claims filed yet</h3>
+                <p>Claims will appear here once citizens submit them.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

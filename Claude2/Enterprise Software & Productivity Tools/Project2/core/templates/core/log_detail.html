@@ -1,0 +1,93 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Log Detail - {{ log.run_id }} - OptiFlow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-journal-text"></i> Log Entry Details</h1>
+            <a href="{% url 'core:log_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Logs
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ log.run_id }}</h5>
+                <hr>
+                <dl class="row">
+                    <dt class="col-sm-4">Process:</dt>
+                    <dd class="col-sm-8"><a href="{% url 'core:process_detail' log.process.id %}">{{ log.process.name }}</a></dd>
+
+                    <dt class="col-sm-4">Step:</dt>
+                    <dd class="col-sm-8">{{ log.step.name|default:"Process Level" }}</dd>
+
+                    <dt class="col-sm-4">Status:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-{{ log.status|yesno:'success,info,warning,danger,secondary' }}">
+                            {{ log.get_status_display }}
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-4">Priority:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge priority-{{ log.priority }}">
+                            {{ log.get_priority_display }}
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-4">Execution Time:</dt>
+                    <dd class="col-sm-8">
+                        {% if log.execution_time %}
+                            {{ log.execution_time|floatformat:2 }} minutes
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-4">Start Time:</dt>
+                    <dd class="col-sm-8">{{ log.start_time|date:"Y-m-d H:i:s"|default:"-" }}</dd>
+
+                    <dt class="col-sm-4">End Time:</dt>
+                    <dd class="col-sm-8">{{ log.end_time|date:"Y-m-d H:i:s"|default:"-" }}</dd>
+
+                    <dt class="col-sm-4">Assigned To:</dt>
+                    <dd class="col-sm-8">{{ log.assigned_to|default:"-" }}</dd>
+
+                    <dt class="col-sm-4">Created:</dt>
+                    <dd class="col-sm-8">{{ log.created_at|date:"Y-m-d H:i:s" }}</dd>
+
+                    {% if log.notes %}
+                    <dt class="col-sm-4">Notes:</dt>
+                    <dd class="col-sm-8">{{ log.notes }}</dd>
+                    {% endif %}
+
+                    {% if log.error_message %}
+                    <dt class="col-sm-4">Error Message:</dt>
+                    <dd class="col-sm-8 text-danger">{{ log.error_message }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Metadata</h5>
+            </div>
+            <div class="card-body">
+                {% if log.metadata %}
+                    <pre>{{ log.metadata|pprint }}</pre>
+                {% else %}
+                    <p class="text-muted">No additional metadata.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

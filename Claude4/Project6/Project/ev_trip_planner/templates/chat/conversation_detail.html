@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Conversation - EV Trip Planner{% endblock %}
+
+{% block content %}
+<section class="chat-section">
+    <div class="container">
+        <div class="section-header">
+            <h1>Conversation Details</h1>
+            <div class="header-actions">
+                <span>{{ conversation.started_at|date:"F d, Y" }} at {{ conversation.started_at|time:"g:i A" }}</span>
+                <a href="{% url 'chat:start_new_chat' %}" class="btn btn-primary">New Chat</a>
+            </div>
+        </div>
+
+        <div class="conversation-detail-container">
+            <div class="conversation-messages">
+                {% for message in messages %}
+                    <div class="chat-message {% if message.is_user_message %}chat-message-user{% else %}chat-message-ai{% endif %}">
+                        <div class="message-avatar">
+                            {% if message.is_user_message %}
+                                👤
+                            {% else %}
+                                ⚡
+                            {% endif %}
+                        </div>
+                        <div class="message-content">
+                            <div class="message-text">{{ message.message|linebreaks }}</div>
+                            <div class="message-time">{{ message.created_at|time:"g:i A" }}</div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="conversation-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Started:</span>
+                    <span class="meta-value">{{ conversation.started_at|date:"F d, Y • g:i A" }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Messages:</span>
+                    <span class="meta-value">{{ messages.count }}</span>
+                </div>
+                {% if conversation.ended_at %}
+                    <div class="meta-item">
+                        <span class="meta-label">Ended:</span>
+                        <span class="meta-value">{{ conversation.ended_at|date:"F d, Y • g:i A" }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

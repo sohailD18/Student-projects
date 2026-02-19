@@ -1,0 +1,438 @@
+{% extends 'base.html' %}
+
+{% block title %}Performance Report{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1><i class="fas fa-chart-line text-primary me-2"></i>Performance Analysis Report</h1>
+            <div>
+                {% if subjects %}
+                <form class="d-inline" method="get" action="{% url 'examination_app:performance_report' %}">
+                    <select name="subject" class="form-select d-inline-block w-auto me-2" onchange="this.form.submit()">
+                        <option value="">All Subjects</option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.id }}" {% if selected_subject.id == subject.id %}selected{% endif %}>
+                            {{ subject.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </form>
+                {% endif %}
+                <a href="{% url 'examination_app:trigger_analysis' %}" class="btn btn-primary">
+                    <i class="fas fa-sync-alt me-2"></i>Refresh Analysis
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if analyses %}
+    {% for analysis in analyses %}
+    {% if analysis %}
+<div class="row mb-5">
+    <!-- Subject Header -->
+    <div class="col-12 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body py-2">
+                <h3 class="mb-0"><i class="fas fa-book me-2"></i>{{ analysis.subject.name }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overall Statistics -->
+    <div class="col-md-3 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Overall Accuracy</h6>
+                <h1 class="display-4
+                    {% if analysis.overall_accuracy >= 70 %}text-success
+                    {% elif analysis.overall_accuracy >= 50 %}text-warning
+                    {% else %}text-danger{% endif %}">
+                    {{ analysis.overall_accuracy|floatformat:1 }}%
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Questions Attempted</h6>
+                <h2 class="text-primary">{{ analysis.total_attempts }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Avg. Time/Question</h6>
+                <h2 class="text-info">
+                    {% if analysis.avg_time_per_question %}
+                        {{ analysis.avg_time_per_question|floatformat:0 }}s
+                    {% else %}
+                        --
+                    {% endif %}
+                </h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Last Updated</h6>
+                <h5>{{ analysis.last_updated|date:"M d, Y" }}</h5>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Topic-wise Performance</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="topicChart{{ forloop.counter }}" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2 text-danger"></i>Weak Topics</h5>
+            </div>
+            <div class="card-body">
+                {% if analysis.weak_topics %}
+                    <canvas id="weakTopicsChart{{ forloop.counter }}" height="250"></canvas>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <p class="mb-0">Great! No weak topics detected.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-star me-2 text-warning"></i>Strong Topics</h5>
+            </div>
+            <div class="card-body">
+                {% if analysis.strong_topics %}
+                    <canvas id="strongTopicsChart{{ forloop.counter }}" height="250"></canvas>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-lightbulb fa-3x mb-3"></i>
+                        <p class="mb-0">Keep practicing to build strong topics!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Topic Breakdown -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list-alt me-2"></i>Detailed Topic Breakdown</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Topic</th>
+                                <th>Attempts</th>
+                                <th>Correct</th>
+                                <th>Accuracy</th>
+                                <th>Performance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for topic, stats in analysis.detailed_insights.topic_breakdown.items %}
+                            <tr>
+                                <td><strong>{{ topic }}</strong></td>
+                                <td>{{ stats.attempts }}</td>
+                                <td>{{ stats.correct }}</td>
+                                <td>{{ stats.accuracy }}%</td>
+                                <td>
+                                    {% if stats.accuracy >= 70 %}
+                                        <span class="badge bg-success">Excellent</span>
+                                    {% elif stats.accuracy >= 50 %}
+                                        <span class="badge bg-warning">Average</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Needs Improvement</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Suggestions Card -->
+    <div class="col-12 mb-4">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-brain me-2"></i>AI-Generated Insights & Suggestions</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-light">
+                    <pre class="mb-0" style="white-space: pre-wrap; font-family: inherit;">{{ analysis.suggestions }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Improvement Trends -->
+    {% if analysis.detailed_insights.improvement_trends %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Improvement Trends</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Trend</h6>
+                        <h3>
+                            {% if analysis.detailed_insights.improvement_trends.trend == 'improving' %}
+                                <span class="text-success"><i class="fas fa-arrow-up"></i> Improving</span>
+                            {% elif analysis.detailed_insights.improvement_trends.trend == 'declining' %}
+                                <span class="text-danger"><i class="fas fa-arrow-down"></i> Declining</span>
+                            {% else %}
+                                <span class="text-info"><i class="fas fa-minus"></i> Stable</span>
+                            {% endif %}
+                        </h3>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Improvement</h6>
+                        <h3 class="{% if analysis.detailed_insights.improvement_trends.improvement_percentage > 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ analysis.detailed_insights.improvement_trends.improvement_percentage }}%
+                        </h3>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Recent Average</h6>
+                        <h3>{{ analysis.detailed_insights.improvement_trends.recent_average }}%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+    {% endif %}
+    {% endfor %}
+
+<!-- Overall Performance Line Chart -->
+{% if chart_data.line_chart.labels %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Performance Over Time</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="performanceLineChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-chart-pie fa-5x text-muted mb-4"></i>
+            <h2 class="text-muted">No Performance Data Available</h2>
+            <p class="text-muted">Complete some exams to see AI-powered performance insights!</p>
+            <a href="{% url 'examination_app:student_dashboard' %}" class="btn btn-primary">
+                <i class="fas fa-file-alt me-2"></i>View Available Exams
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Chart.js visualizations
+document.addEventListener('DOMContentLoaded', function() {
+    const chartColors = {
+        primary: 'rgba(13, 110, 253, 0.7)',
+        success: 'rgba(25, 135, 84, 0.7)',
+        danger: 'rgba(220, 53, 69, 0.7)',
+        warning: 'rgba(255, 193, 7, 0.7)',
+        info: 'rgba(13, 202, 240, 0.7)',
+        primaryBorder: 'rgba(13, 110, 253, 1)',
+        successBorder: 'rgba(25, 135, 84, 1)',
+        dangerBorder: 'rgba(220, 53, 69, 1)',
+    };
+
+    {% for analysis in analyses %}
+    {% if analysis %}
+    // Topic-wise Chart
+    {% if forloop.counter == 1 %}
+    const topicCtx{{ forloop.counter }} = document.getElementById('topicChart{{ forloop.counter }}');
+    if (topicCtx{{ forloop.counter }}) {
+        const topicData{{ forloop.counter }} = {
+            {% for topic, stats in analysis.detailed_insights.topic_breakdown.items %}
+            "{{ topic }}": { "accuracy": {{ stats.accuracy }} },
+            {% endfor %}
+        };
+        new Chart(topicCtx{{ forloop.counter }}, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(topicData{{ forloop.counter }}),
+                datasets: [{
+                    label: 'Accuracy (%)',
+                    data: Object.values(topicData{{ forloop.counter }}).map(d => d.accuracy),
+                    backgroundColor: Object.values(topicData{{ forloop.counter }}).map(d =>
+                        d.accuracy >= 70 ? chartColors.success :
+                        d.accuracy >= 50 ? chartColors.warning : chartColors.danger
+                    ),
+                    borderColor: Object.values(topicData{{ forloop.counter }}).map(d =>
+                        d.accuracy >= 70 ? chartColors.successBorder :
+                        d.accuracy >= 50 ? '#ffc107' : chartColors.dangerBorder
+                    ),
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) { return value + '%'; }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+
+    // Weak Topics Radar Chart
+    {% if analysis.weak_topics %}
+    const weakCtx{{ forloop.counter }} = document.getElementById('weakTopicsChart{{ forloop.counter }}');
+    if (weakCtx{{ forloop.counter }}) {
+        new Chart(weakCtx{{ forloop.counter }}, {
+            type: 'polarArea',
+            data: {
+                labels: [{% for topic in analysis.weak_topics.keys %}"{{ topic }}",{% endfor %}],
+                datasets: [{
+                    label: 'Weak Topics',
+                    data: [{% for accuracy in analysis.weak_topics.values %}{{ accuracy }},{% endfor %}],
+                    backgroundColor: [
+                        'rgba(220, 53, 69, 0.6)',
+                        'rgba(220, 53, 69, 0.5)',
+                        'rgba(220, 53, 69, 0.4)',
+                        'rgba(220, 53, 69, 0.3)',
+                        'rgba(220, 53, 69, 0.2)',
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { callback: function(value) { return value + '%'; } }
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+
+    // Strong Topics Chart
+    {% if analysis.strong_topics %}
+    const strongCtx{{ forloop.counter }} = document.getElementById('strongTopicsChart{{ forloop.counter }}');
+    if (strongCtx{{ forloop.counter }}) {
+        new Chart(strongCtx{{ forloop.counter }}, {
+            type: 'doughnut',
+            data: {
+                labels: [{% for topic in analysis.strong_topics.keys %}"{{ topic }}",{% endfor %}],
+                datasets: [{
+                    data: [{% for accuracy in analysis.strong_topics.values %}{{ accuracy }},{% endfor %}],
+                    backgroundColor: [
+                        'rgba(25, 135, 84, 0.8)',
+                        'rgba(25, 135, 84, 0.6)',
+                        'rgba(25, 135, 84, 0.4)',
+                        'rgba(25, 135, 84, 0.2)',
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+    {% endif %}
+    {% endif %}
+    {% endfor %}
+
+    // Performance Line Chart (Over Time)
+    {% if chart_data.line_chart.labels %}
+    const lineCtx = document.getElementById('performanceLineChart');
+    if (lineCtx) {
+        new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: [{% for label in chart_data.line_chart.labels %}"{{ label }}",{% endfor %}],
+                datasets: [{
+                    label: 'Exam Score (%)',
+                    data: [{% for score in chart_data.line_chart.accuracy %}{{ score }},{% endfor %}],
+                    borderColor: chartColors.primaryBorder,
+                    backgroundColor: chartColors.primary,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) { return value + '%'; }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+});
+</script>
+{% endblock %}

@@ -1,0 +1,559 @@
+{% extends 'shop/base.html' %}
+{% load static %}
+
+{% block title %}Analytics Dashboard - AI E-Commerce{% endblock %}
+
+{% block content %}
+<div class="analytics-header">
+    <div class="container">
+        <div class="header-content">
+            <div class="header-text">
+                <h1><span class="ai-icon">📊</span> Analytics Dashboard</h1>
+                <p class="subtitle">Track your store performance and customer insights</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'shop:export_csv' %}" class="btn-download">
+                    <span class="download-icon">⬇</span> Download Report
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<section class="stats-section">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon views-icon">👁</div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ total_views|default:0 }}</span>
+                    <span class="stat-label">Total Views</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purchases-icon">🛒</div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ total_purchases|default:0 }}</span>
+                    <span class="stat-label">Total Purchases</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon revenue-icon">💰</div>
+                <div class="stat-info">
+                    <span class="stat-value">${{ total_revenue|floatformat:2|default:"0.00" }}</span>
+                    <span class="stat-label">Total Revenue</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon users-icon">👥</div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ unique_users|default:0 }}</span>
+                    <span class="stat-label">Unique Users</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Weekly Stats -->
+<section class="weekly-stats">
+    <div class="container">
+        <h2 class="section-title">Last 7 Days</h2>
+        <div class="weekly-grid">
+            <div class="weekly-card">
+                <span class="weekly-value">{{ views_last_7_days|default:0 }}</span>
+                <span class="weekly-label">Views</span>
+            </div>
+            <div class="weekly-card">
+                <span class="weekly-value">{{ purchases_last_7_days|default:0 }}</span>
+                <span class="weekly-label">Purchases</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Top Products Grid -->
+<section class="top-products-section">
+    <div class="container">
+        <div class="top-products-grid">
+            <!-- Most Viewed -->
+            <div class="top-products-card">
+                <h2 class="card-title">
+                    <span class="badge-icon">🔥</span> Most Viewed Products
+                </h2>
+                {% if top_viewed_products %}
+                <div class="products-list">
+                    {% for item in top_viewed_products %}
+                    <div class="product-stat-item">
+                        <div class="product-info">
+                            <span class="rank">#{{ forloop.counter }}</span>
+                            <div class="product-details">
+                                <h4>{{ item.product__name }}</h4>
+                                <span class="product-category">{{ item.product__category__name }}</span>
+                            </div>
+                        </div>
+                        <div class="stat-metric">
+                            <span class="metric-value">{{ item.view_count }}</span>
+                            <span class="metric-label">views</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="empty-state">No view data yet</p>
+                {% endif %}
+            </div>
+
+            <!-- Most Purchased -->
+            <div class="top-products-card">
+                <h2 class="card-title">
+                    <span class="badge-icon">⭐</span> Most Purchased Products
+                </h2>
+                {% if top_purchased_products %}
+                <div class="products-list">
+                    {% for item in top_purchased_products %}
+                    <div class="product-stat-item">
+                        <div class="product-info">
+                            <span class="rank rank-purchase">#{{ forloop.counter }}</span>
+                            <div class="product-details">
+                                <h4>{{ item.product__name }}</h4>
+                                <span class="product-category">${{ item.product__price }} - {{ item.product__category__name }}</span>
+                            </div>
+                        </div>
+                        <div class="stat-metric">
+                            <span class="metric-value">{{ item.purchase_count }}</span>
+                            <span class="metric-label">sold</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="empty-state">No purchase data yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Category Breakdown -->
+{% if category_stats %}
+<section class="category-breakdown">
+    <div class="container">
+        <h2 class="section-title">Category Performance</h2>
+        <div class="category-stats-grid">
+            {% for cat in category_stats %}
+            <div class="category-stat-item">
+                <h4>{{ cat.product__category__name|default:"Uncategorized" }}</h4>
+                <div class="category-bar">
+                    <div class="bar-fill" style="width: {% widthratio cat.views total_views 100 %}%"></div>
+                </div>
+                <span class="category-count">{{ cat.views }} views</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Recent Activity -->
+<section class="recent-activity">
+    <div class="container">
+        <h2 class="section-title">Recent Activity</h2>
+        {% if recent_activity %}
+        <div class="activity-list">
+            {% for interaction in recent_activity %}
+            <div class="activity-item">
+                <span class="activity-icon">
+                    {% if interaction.interaction_type == 'view' %}👁
+                    {% elif interaction.interaction_type == 'purchase' %}🛒
+                    {% elif interaction.interaction_type == 'cart' %}🛍
+                    {% elif interaction.interaction_type == 'wishlist' %}♥
+                    {% endif %}
+                </span>
+                <div class="activity-details">
+                    <span class="activity-user">{{ interaction.user.username }}</span>
+                    <span class="action-text">{% if interaction.interaction_type == 'view' %}viewed{% elif interaction.interaction_type == 'purchase' %}purchased{% elif interaction.interaction_type == 'cart' %}added to cart{% elif interaction.interaction_type == 'wishlist' %}added to wishlist{% endif %}</span>
+                    <a href="{% url 'shop:product_detail' interaction.product.id %}" class="activity-product">{{ interaction.product.name }}</a>
+                </div>
+                <span class="activity-time">{{ interaction.timestamp|timesince }} ago</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state">No recent activity</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.analytics-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.analytics-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.ai-icon {
+    font-size: 1.5rem;
+}
+
+.subtitle {
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+.btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: white;
+    color: #667eea;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: transform 0.2s, box-shadow 0.2s;
+    white-space: nowrap;
+}
+
+.btn-download:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.download-icon {
+    font-size: 1.2rem;
+}
+
+/* Stats Section */
+.stats-section {
+    margin-bottom: 2rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+.views-icon { background: #e3f2fd; }
+.purchases-icon { background: #f3e5f5; }
+.revenue-icon { background: #e8f5e9; }
+.users-icon { background: #fff3e0; }
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+.stat-label {
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+/* Weekly Stats */
+.weekly-stats {
+    margin-bottom: 2rem;
+}
+
+.weekly-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.weekly-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.weekly-value {
+    display: block;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.weekly-label {
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+/* Top Products Section */
+.top-products-section {
+    margin-bottom: 2rem;
+}
+
+.top-products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+}
+
+.top-products-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+    color: #2d3748;
+}
+
+.badge-icon {
+    font-size: 1.5rem;
+}
+
+.products-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.product-stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f7fafc;
+    border-radius: 8px;
+}
+
+.product-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.rank {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #667eea;
+    width: 30px;
+}
+
+.rank-purchase {
+    color: #ed8936;
+}
+
+.product-details h4 {
+    font-size: 1rem;
+    color: #2d3748;
+    margin-bottom: 0.2rem;
+}
+
+.product-category {
+    font-size: 0.85rem;
+    color: #718096;
+}
+
+.stat-metric {
+    text-align: right;
+}
+
+.metric-value {
+    display: block;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+.metric-label {
+    font-size: 0.8rem;
+    color: #718096;
+}
+
+/* Category Breakdown */
+.category-breakdown {
+    margin-bottom: 2rem;
+}
+
+.category-stats-grid {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.category-stat-item {
+    margin-bottom: 1.5rem;
+}
+
+.category-stat-item:last-child {
+    margin-bottom: 0;
+}
+
+.category-stat-item h4 {
+    margin-bottom: 0.5rem;
+    color: #2d3748;
+}
+
+.category-bar {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.3rem;
+}
+
+.bar-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    transition: width 0.3s;
+}
+
+.category-count {
+    font-size: 0.85rem;
+    color: #718096;
+}
+
+/* Recent Activity */
+.recent-activity {
+    margin-bottom: 2rem;
+}
+
+.activity-list {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f7fafc;
+    border-radius: 50%;
+}
+
+.activity-details {
+    flex: 1;
+}
+
+.activity-user {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.action-text {
+    color: #718096;
+    margin: 0 0.3rem;
+}
+
+.activity-product {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.activity-product:hover {
+    text-decoration: underline;
+}
+
+.activity-time {
+    color: #a0aec0;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #a0aec0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .btn-download {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .top-products-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .product-stat-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+</style>
+{% endblock %}

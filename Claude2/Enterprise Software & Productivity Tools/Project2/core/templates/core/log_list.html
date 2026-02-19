@@ -1,0 +1,131 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Data Logs - OptiFlow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-journal-text"></i> Operational Data Logs</h1>
+            <a href="{% url 'core:log_entry' %}" class="btn btn-success">
+                <i class="bi bi-plus-lg"></i> New Log Entry
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <select name="process" class="form-select">
+                            <option value="">All Processes</option>
+                            {% for process in processes %}
+                            <option value="{{ process.id }}" {% if process_id == process.id|stringformat:"s" %}selected{% endif %}>
+                                {{ process.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="status" class="form-select">
+                            <option value="">All Statuses</option>
+                            <option value="completed" {% if status == 'completed' %}selected{% endif %}>Completed</option>
+                            <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="in_progress" {% if status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                            <option value="failed" {% if status == 'failed' %}selected{% endif %}>Failed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-funnel"></i> Apply Filters
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Run ID</th>
+                                <th>Process</th>
+                                <th>Step</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Execution Time</th>
+                                <th>Assigned To</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr>
+                                <td><strong>{{ log.run_id }}</strong></td>
+                                <td>{{ log.process.name }}</td>
+                                <td>{{ log.step.name|default:"-" }}</td>
+                                <td>
+                                    <span class="badge bg-{{ log.status|yesno:'success,info,warning,danger,secondary' }}">
+                                        {{ log.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge priority-{{ log.priority }}">
+                                        {{ log.get_priority_display }}
+                                    </span>
+                                </td>
+                                <td>{{ log.execution_time|floatformat:2|default:"-" }} min</td>
+                                <td>{{ log.assigned_to|default:"-" }}</td>
+                                <td>{{ log.created_at|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'core:log_detail' log.id %}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center py-5">
+                                    <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+                                    <h4>No logs found</h4>
+                                    <p class="text-muted">Start logging data for your processes.</p>
+                                    <a href="{% url 'core:log_entry' %}" class="btn btn-primary">
+                                        <i class="bi bi-plus-lg"></i> Log Data
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Get all processes for the filter
+function loadProcesses() {
+    fetch('/api/processes/')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.querySelector('select[name="process"]');
+            // Add options...
+        });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AI Trip Planner - Plan Your Journey{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center hero-content">
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="bi bi-geo-alt-fill text-primary"></i>
+                    AI Trip Planner
+                </h1>
+                <p class="lead mb-4">
+                    Plan your journey with intelligent route recommendations powered by Machine Learning
+                </p>
+            </div>
+        </div>
+
+        <!-- Trip Planning Form -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-gradient-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-route me-2"></i>
+                            Plan Your Trip
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="post" action="{% url 'core:plan_trip' %}" id="tripForm">
+                            {% csrf_token %}
+
+                            <!-- Source and Destination -->
+                            <div class="row mb-4">
+                                <div class="col-md-6 mb-3">
+                                    <label for="source_location" class="form-label fw-semibold">
+                                        <i class="bi bi-geo-alt me-1 text-success"></i>
+                                        Source Location
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-circle-fill text-success"></i>
+                                        </span>
+                                        <select class="form-select" id="source_location"
+                                                name="source_location" required>
+                                            <option value="" selected disabled>Select source...</option>
+                                            {% for location in locations %}
+                                                <option value="{{ location.id }}"
+                                                        {% if preferences.default_home_location.id == location.id %}selected{% endif %}>
+                                                    {{ location.name }}, {{ location.city }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="destination_location" class="form-label fw-semibold">
+                                        <i class="bi bi-geo-alt me-1 text-danger"></i>
+                                        Destination
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-pin-map-fill text-danger"></i>
+                                        </span>
+                                        <select class="form-select" id="destination_location"
+                                                name="destination_location" required>
+                                            <option value="" selected disabled>Select destination...</option>
+                                            {% for location in locations %}
+                                                <option value="{{ location.id }}"
+                                                        {% if preferences.default_work_location.id == location.id %}selected{% endif %}>
+                                                    {{ location.name }}, {{ location.city }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Transport Mode -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-car-front me-1 text-primary"></i>
+                                        Transport Mode
+                                    </label>
+                                    <div class="btn-group w-100" role="group">
+                                        {% for value, label in transport_modes %}
+                                            <input type="radio" class="btn-check" name="transport_mode"
+                                                   id="transport_{{ value }}" value="{{ value }}"
+                                                   {% if value == preferences.preferred_transport_mode %}checked{% endif %}>
+                                            <label class="btn btn-outline-primary" for="transport_{{ value }}">
+                                                {% if value == 'car' %}
+                                                    <i class="bi bi-car-front me-1"></i>
+                                                {% elif value == 'bike' %}
+                                                    <i class="bi bi-bicycle me-1"></i>
+                                                {% elif value == 'bus' %}
+                                                    <i class="bi bi-bus-front me-1"></i>
+                                                {% endif %}
+                                                {{ label }}
+                                            </label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Traffic Level -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label for="traffic_level" class="form-label fw-semibold">
+                                        <i class="bi bi-traffic-light me-1 text-warning"></i>
+                                        Traffic Condition
+                                    </label>
+                                    <select class="form-select" id="traffic_level" name="traffic_level">
+                                        <option value="1">1 - Very Low (Free Flow)</option>
+                                        <option value="2">2 - Low</option>
+                                        <option value="3">3 - Moderate-Low</option>
+                                        <option value="4" selected>4 - Moderate (Normal)</option>
+                                        <option value="5">5 - Moderate-High</option>
+                                        <option value="6">6 - High</option>
+                                        <option value="7">7 - Very High</option>
+                                        <option value="8">8 - Severe</option>
+                                        <option value="9">9 - Extreme</option>
+                                        <option value="10">10 - Gridlock</option>
+                                    </select>
+                                </div>
+
+                                <!-- Weather Condition -->
+                                <div class="col-md-6">
+                                    <label for="weather" class="form-label fw-semibold">
+                                        <i class="bi bi-cloud-sun me-1 text-info"></i>
+                                        Weather Condition
+                                    </label>
+                                    <select class="form-select" id="weather" name="weather">
+                                        {% for weather_opt in weather_options %}
+                                            <option value="{{ weather_opt }}">
+                                                {% if weather_opt == 'clear' %}Clear/Sunny
+                                                {% elif weather_opt == 'cloudy' %}Cloudy
+                                                {% elif weather_opt == 'rain' %}Light Rain
+                                                {% elif weather_opt == 'heavy_rain' %}Heavy Rain
+                                                {% elif weather_opt == 'fog' %}Foggy
+                                                {% endif %}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-magic me-2"></i>
+                                    Generate AI Routes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <h3 class="text-center mb-4">
+                    <i class="bi bi-stars text-warning"></i>
+                    Features of Our AI Trip Planner
+                </h3>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="card h-100 border-0 shadow-sm feature-card">
+                    <div class="card-body text-center">
+                        <div class="feature-icon bg-primary bg-gradient">
+                            <i class="bi bi-cpu text-white"></i>
+                        </div>
+                        <h5 class="card-title mt-3">AI-Powered</h5>
+                        <p class="card-text text-muted">
+                            Uses machine learning to predict accurate travel times based on historical data
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100 border-0 shadow-sm feature-card">
+                    <div class="card-body text-center">
+                        <div class="feature-icon bg-success bg-gradient">
+                            <i class="bi bi-signpost-split text-white"></i>
+                        </div>
+                        <h5 class="card-title mt-3">Multiple Routes</h5>
+                        <p class="card-text text-muted">
+                            Get fastest, shortest, and scenic route options for your journey
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100 border-0 shadow-sm feature-card">
+                    <div class="card-body text-center">
+                        <div class="feature-icon bg-warning bg-gradient">
+                            <i class="bi bi-graph-up-arrow text-white"></i>
+                        </div>
+                        <h5 class="card-title mt-3">Traffic Analysis</h5>
+                        <p class="card-text text-muted">
+                            Considers traffic conditions to suggest optimal departure times
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100 border-0 shadow-sm feature-card">
+                    <div class="card-body text-center">
+                        <div class="feature-icon bg-info bg-gradient">
+                            <i class="bi bi-currency-rupee text-white"></i>
+                        </div>
+                        <h5 class="card-title mt-3">Cost Estimation</h5>
+                        <p class="card-text text-muted">
+                            Estimates fuel costs to help you plan your travel budget
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Form validation
+document.getElementById('tripForm').addEventListener('submit', function(e) {
+    const source = document.getElementById('source_location').value;
+    const destination = document.getElementById('destination_location').value;
+
+    if (!source || !destination) {
+        e.preventDefault();
+        alert('Please select both source and destination locations.');
+        return false;
+    }
+
+    if (source === destination) {
+        e.preventDefault();
+        alert('Source and destination cannot be the same.');
+        return false;
+    }
+});
+</script>
+{% endblock %}

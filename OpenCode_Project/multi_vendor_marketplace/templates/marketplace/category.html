@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ category.name }} - Multi-Vendor Marketplace{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Products</a></li>
+        <li class="breadcrumb-item active">{{ category.name }}</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <div class="col-md-8">
+        <h2 class="mb-4">{{ category.name }}</h2>
+        <p class="text-muted mb-4">{{ category.description }}</p>
+        
+        <div class="row">
+            {% for product in products %}
+            <div class="col-md-4 col-sm-6 mb-4">
+                <div class="card card-product h-100">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <i class="fas fa-image fa-3x text-muted"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <a href="{% url 'product_detail' product.slug %}" class="text-decoration-none text-dark">
+                                {{ product.name|truncatewords:10 }}
+                            </a>
+                        </h6>
+                        <p class="card-text text-muted small">
+                            <a href="{% url 'vendor_store' product.vendor.store_slug %}">{{ product.vendor.store_name }}</a>
+                        </p>
+                        <div class="mb-2">
+                            {% if product.sale_price and product.sale_price < product.price %}
+                            <span class="price-original">${{ product.price }}</span>
+                            <span class="price-sale">${{ product.sale_price }}</span>
+                            {% else %}
+                            <span class="fw-bold">${{ product.price }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="star-rating mb-2">
+                            {% for i in "12345" %}
+                            <i class="fas fa-star{% if forloop.counter <= product.rating %}{% else %}-o{% endif %}"></i>
+                            {% endfor %}
+                            <small class="text-muted">({{ product.review_count }})</small>
+                         </div>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-danger btn-sm" onclick="addToWishlist({{ product.id }})">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="addToCart({{ product.id }})">
+                                <i class="fas fa-cart-plus"></i> Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p class="text-muted">No products in this category yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Subcategories</h5>
+            </div>
+            <div class="card-body">
+                {% if category.children.exists %}
+                <div class="list-group list-group-flush">
+                    {% for child in category.children.all %}
+                    <a href="{% url 'category_detail' child.slug %}" class="list-group-item list-group-item-action">
+                        {{ child.name }}
+                        <span class="badge bg-secondary float-end">{{ child.products.count }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No subcategories</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">Top Sellers</h5>
+            </div>
+            <div class="card-body">
+                {% for vendor in top_sellers %}
+                <div class="d-flex align-items-center mb-3">
+                    {% if vendor.logo %}
+                    <img src="{{ vendor.logo.url }}" alt="{{ vendor.store_name }}" style="width: 50px; height: 50px; object-fit: cover;" class="rounded-circle me-3">
+                    {% else %}
+                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white me-3" style="width: 50px; height: 50px;">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    {% endif %}
+                    <div class="flex-grow-1">
+                        <a href="{% url 'vendor_store' vendor.store_slug %}" class="text-decoration-none text-dark">
+                            <strong>{{ vendor.store_name }}</strong>
+                        </a>
+                        <p class="mb-0 text-muted small">{{ vendor.total_products }} products</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted mb-0">No sellers yet</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addToCart(productId) {
+    fetch(`/cart/add/${productId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+    })
+    .then(response => {
+        if (response.status === 401) {
+            showToast('warning', 'Please login to add items to cart');
+            setTimeout(() => {
+                window.location.href = '/accounts/login/?next=' + window.location.pathname;
+            }, 2000);
+            return null;
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data) {
+            if (data.success) {
+                showToast('success', data.message || 'Added to cart!');
+                updateCartBadge(data.cart_total_items);
+            } else {
+                showToast('error', data.message || 'Error adding to cart');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'An error occurred. Please try again.');
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Update Profile - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="bi bi-person-gear"></i> Update Profile</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="id_bio" class="form-label">Bio</label>
+                            <textarea name="bio" class="form-control" id="id_bio" rows="4" placeholder="Tell others about yourself...">{{ profile.bio }}</textarea>
+                            <div class="form-text">Share a bit about yourself and your learning goals</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_skills_to_teach" class="form-label">Skills to Teach</label>
+                            <textarea name="skills_to_teach" class="form-control" id="id_skills_to_teach" rows="3" placeholder="e.g., Python, Guitar, Cooking">{{ profile.skills_to_teach }}</textarea>
+                            <div class="form-text">List the skills you can teach (comma-separated)</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_skills_to_learn" class="form-label">Skills to Learn</label>
+                            <textarea name="skills_to_learn" class="form-control" id="id_skills_to_learn" rows="3" placeholder="e.g., Spanish, Photography, Data Science">{{ profile.skills_to_learn }}</textarea>
+                            <div class="form-text">List the skills you want to learn (comma-separated)</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Save Changes
+                            </button>
+                            <a href="{% url 'users:dashboard' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5><i class="bi bi-info-circle"></i> Profile Tips</h5>
+                    <ul class="mb-0">
+                        <li>Be specific about your skills to attract the right learners</li>
+                        <li>Include your experience level and teaching style</li>
+                        <li>List skills you're passionate about learning</li>
+                        <li>A complete profile helps build trust with the community</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

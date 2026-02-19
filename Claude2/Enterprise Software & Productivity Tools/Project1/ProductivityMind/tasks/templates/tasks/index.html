@@ -1,0 +1,75 @@
+{% extends "tasks/base.html" %}
+
+{% block page_title %}Welcome{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 4rem 2rem;">
+    <svg width="80" height="80" viewBox="0 0 80 80" fill="none" style="margin: 0 auto 2rem;">
+        <rect width="80" height="80" rx="20" fill="url(#gradient)"/>
+        <path d="M40 20L56 36H48V52H32V36H24L40 20Z" fill="white" opacity="0.9"/>
+        <path d="M24 56H56V64H24V56Z" fill="white" opacity="0.7"/>
+        <defs>
+            <linearGradient id="gradient" x1="0" y1="0" x2="80" y2="80">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#8b5cf6"/>
+            </linearGradient>
+        </defs>
+    </svg>
+
+    <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--gray-900);">
+        Welcome to ProductivityMind
+    </h1>
+
+    <p style="font-size: 1.125rem; color: var(--gray-600); max-width: 600px; margin: 0 auto 2rem;">
+        AI-powered task management and productivity tracking. Prioritize intelligently, work efficiently, and achieve more.
+    </p>
+
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="{% url 'tasks:dashboard' %}" class="btn btn-primary btn-lg">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                <path d="M3 9h14M9 3v14" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Go to Dashboard
+        </a>
+        <a href="{% url 'tasks:tasks' %}" class="btn btn-secondary btn-lg">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V9a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            View Tasks
+        </a>
+    </div>
+
+    <div style="margin-top: 4rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; max-width: 1000px; margin-left: auto; margin-right: auto;">
+        <div class="card" style="padding: 2rem; text-align: left;">
+            <div style="width: 48px; height: 48px; background: var(--primary-50); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; color: var(--primary-500);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">AI-Powered Prioritization</h3>
+            <p style="color: var(--gray-600); font-size: 0.875rem;">Smart scoring algorithm prioritizes tasks based on deadlines, dependencies, and impact.</p>
+        </div>
+
+        <div class="card" style="padding: 2rem; text-align: left;">
+            <div style="width: 48px; height: 48px; background: var(--warning-50); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; color: var(--warning-500);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">Risk Prediction</h3>
+            <p style="color: var(--gray-600); font-size: 0.875rem;">Automatically detect tasks at risk of missing deadlines with predictive alerts.</p>
+        </div>
+
+        <div class="card" style="padding: 2rem; text-align: left;">
+            <div style="width: 48px; height: 48px; background: var(--success-50); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; color: var(--success-500);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">Productivity Analytics</h3>
+            <p style="color: var(--gray-600); font-size: 0.875rem;">Track team performance with comprehensive reports and actionable insights.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,605 @@
+{% extends "core/base.html" %}
+
+{% block title %}Log Activity - EcoTrack{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <h1>
+            <i class="fas fa-plus-circle"></i>
+            Log Activity
+        </h1>
+        <p>Track your sustainable activities and earn points</p>
+    </div>
+</div>
+
+<div class="log-activity-container">
+    <div class="activity-form-card">
+        <form method="post" id="activityForm">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="errorlist">
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Activity Type Selection -->
+            <div class="form-section">
+                <h2>
+                    <i class="fas fa-list"></i>
+                    Activity Details
+                </h2>
+
+                <div class="form-group">
+                    <label for="{{ form.activity_type.id_for_label }}">
+                        <i class="fas fa-tag"></i>
+                        Activity Type
+                    </label>
+                    {{ form.activity_type }}
+                    {% if form.activity_type.help_text %}
+                        <small class="form-text">{{ form.activity_type.help_text }}</small>
+                    {% endif %}
+                    {% for error in form.activity_type.errors %}
+                        <div class="error-message">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group" id="subtype-group" style="display: none;">
+                    <label for="{{ form.activity_subtype.id_for_label }}">
+                        <i class="fas fa-filter"></i>
+                        Subtype
+                    </label>
+                    {{ form.activity_subtype }}
+                    {% if form.activity_subtype.help_text %}
+                        <small class="form-text">{{ form.activity_subtype.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.value.id_for_label }}">
+                        <i class="fas fa-calculator"></i>
+                        Value
+                    </label>
+                    <div class="value-input-container">
+                        {{ form.value }}
+                        <span class="value-unit" id="valueUnit">km</span>
+                    </div>
+                    {% if form.value.help_text %}
+                        <small class="form-text">{{ form.value.help_text }}</small>
+                    {% endif %}
+                    {% for error in form.value.errors %}
+                        <div class="error-message">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.date.id_for_label }}">
+                        <i class="fas fa-calendar"></i>
+                        Date
+                    </label>
+                    {{ form.date }}
+                    {% if form.date.help_text %}
+                        <small class="form-text">{{ form.date.help_text }}</small>
+                    {% endif %}
+                    {% for error in form.date.errors %}
+                        <div class="error-message">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.notes.id_for_label }}">
+                        <i class="fas fa-sticky-note"></i>
+                        Notes (Optional)
+                    </label>
+                    {{ form.notes }}
+                    {% if form.notes.help_text %}
+                        <small class="form-text">{{ form.notes.help_text }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Carbon Preview -->
+            <div class="carbon-preview-card">
+                <h3>
+                    <i class="fas fa-chart-line"></i>
+                    Estimated Impact
+                </h3>
+                <div class="impact-grid">
+                    <div class="impact-item">
+                        <div class="impact-label">Carbon Footprint</div>
+                        <div class="impact-value" id="carbonPreview">0.00</div>
+                        <div class="impact-unit">kg CO₂</div>
+                    </div>
+                    <div class="impact-item">
+                        <div class="impact-label">Points Earned</div>
+                        <div class="impact-value" id="pointsPreview">0</div>
+                        <div class="impact-unit">eco-points</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-lg btn-success">
+                    <i class="fas fa-check-circle"></i>
+                    Log Activity
+                </button>
+                <a href="{% url 'dashboard' %}" class="btn btn-lg btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Activity Guide -->
+    <div class="activity-guide-card">
+        <h3>
+            <i class="fas fa-info-circle"></i>
+            Activity Guide
+        </h3>
+
+        <div class="guide-section">
+            <h4>
+                <i class="fas fa-car"></i>
+                Travel
+            </h4>
+            <p>Log your travel distance in kilometers. Different transport types have different carbon impacts:</p>
+            <ul>
+                <li><i class="fas fa-bicycle"></i> <strong>Bike/Walking:</strong> 0.00 kg CO₂/km</li>
+                <li><i class="fas fa-train"></i> <strong>Train:</strong> 0.041 kg CO₂/km</li>
+                <li><i class="fas fa-bus"></i> <strong>Bus:</strong> 0.089 kg CO₂/km</li>
+                <li><i class="fas fa-car"></i> <strong>Car:</strong> 0.21 kg CO₂/km</li>
+                <li><i class="fas fa-plane"></i> <strong>Flight:</strong> 0.255 kg CO₂/km</li>
+            </ul>
+        </div>
+
+        <div class="guide-section">
+            <h4>
+                <i class="fas fa-bolt"></i>
+                Energy
+            </h4>
+            <p>Log your energy consumption in kilowatt-hours (kWh). This helps track your electricity usage and its environmental impact.</p>
+            <p><strong>Rate:</strong> 0.5 kg CO₂ per kWh</p>
+        </div>
+
+        <div class="guide-section">
+            <h4>
+                <i class="fas fa-utensils"></i>
+                Diet
+            </h4>
+            <p>Log your meals to track the carbon footprint of your food choices:</p>
+            <ul>
+                <li><i class="fas fa-seedling"></i> <strong>Vegan:</strong> 1.5 kg CO₂ per meal</li>
+                <li><i class="fas fa-cheese"></i> <strong>Vegetarian:</strong> 1.7 kg CO₂ per meal</li>
+                <li><i class="fas fa-drumstick-bite"></i> <strong>Meat-Based:</strong> 2.5 kg CO₂ per meal</li>
+            </ul>
+        </div>
+
+        <div class="tips-box">
+            <h4>
+                <i class="fas fa-lightbulb"></i>
+                Pro Tips
+            </h4>
+            <ul>
+                <li>Log activities daily to maintain your streak!</li>
+                <li>More specific subtypes = more accurate calculations</li>
+                <li>Points are based on kg of CO₂ tracked</li>
+                <li>Earn badges as you accumulate points</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 249, 232, 0.95) 100%);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .header-content h1 {
+        color: var(--primary);
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: var(--spacing-xs);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .header-content p {
+        color: var(--gray);
+        font-size: 1.1rem;
+    }
+
+    .log-activity-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: var(--spacing-lg);
+        align-items: start;
+    }
+
+    .activity-form-card,
+    .activity-guide-card {
+        background: white;
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .form-section {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .form-section h2 {
+        color: var(--primary);
+        margin-bottom: var(--spacing-md);
+        padding-bottom: var(--spacing-sm);
+        border-bottom: 2px solid var(--primary-lighter);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+    }
+
+    .form-group label {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        margin-bottom: var(--spacing-xs);
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+    .form-group select,
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 2px solid var(--light-gray);
+        border-radius: var(--radius-sm);
+        font-size: 1rem;
+        transition: all var(--transition-normal);
+        background: var(--white);
+        font-family: inherit;
+    }
+
+    .form-group select:focus,
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary-light);
+        box-shadow: 0 0 0 3px rgba(74, 124, 35, 0.1);
+        background: var(--off-white);
+    }
+
+    .value-input-container {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .value-input-container input {
+        flex: 1;
+    }
+
+    .value-unit {
+        background: var(--primary-light);
+        color: white;
+        padding: 0.8rem 1.2rem;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        min-width: 80px;
+        text-align: center;
+    }
+
+    .form-text {
+        display: block;
+        margin-top: var(--spacing-xs);
+        color: var(--gray);
+        font-size: 0.9rem;
+    }
+
+    .error-message {
+        background: var(--danger-bg);
+        color: var(--danger);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        margin-top: var(--spacing-xs);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+    }
+
+    .error-message::before {
+        content: '⚠';
+    }
+
+    .carbon-preview-card {
+        background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-lighter) 100%);
+        color: white;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .carbon-preview-card h3 {
+        margin-bottom: var(--spacing-md);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+    }
+
+    .impact-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-md);
+    }
+
+    .impact-item {
+        background: rgba(255, 255, 255, 0.2);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-sm);
+        text-align: center;
+        backdrop-filter: blur(10px);
+    }
+
+    .impact-label {
+        font-size: 0.9rem;
+        margin-bottom: var(--spacing-xs);
+        opacity: 0.9;
+    }
+
+    .impact-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .impact-unit {
+        font-size: 0.85rem;
+        opacity: 0.8;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+        justify-content: center;
+    }
+
+    .btn-lg {
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+    }
+
+    .activity-guide-card h3 {
+        color: var(--primary);
+        margin-bottom: var(--spacing-md);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+    }
+
+    .guide-section {
+        margin-bottom: var(--spacing-md);
+        padding-bottom: var(--spacing-md);
+        border-bottom: 1px solid var(--light-gray);
+    }
+
+    .guide-section:last-child {
+        border-bottom: none;
+    }
+
+    .guide-section h4 {
+        color: var(--primary-light);
+        margin-bottom: var(--spacing-sm);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+    }
+
+    .guide-section p,
+    .guide-section ul {
+        font-size: 0.95rem;
+        color: var(--dark-gray);
+        line-height: 1.6;
+    }
+
+    .guide-section ul {
+        list-style: none;
+        padding-left: 0;
+    }
+
+    .guide-section li {
+        padding: var(--spacing-xs) 0;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+    }
+
+    .tips-box {
+        background: linear-gradient(135deg, #fff9e6 0%, #fff3d1 100%);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-sm);
+        border-left: 4px solid #f39c12;
+    }
+
+    .tips-box h4 {
+        color: #f39c12;
+        margin-bottom: var(--spacing-sm);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+    }
+
+    .tips-box ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .tips-box li {
+        padding: var(--spacing-xs) 0;
+        font-size: 0.9rem;
+        color: var(--dark-gray);
+        display: flex;
+        align-items: flex-start;
+        gap: var(--spacing-xs);
+    }
+
+    .tips-box li i {
+        color: #f39c12;
+        margin-top: 3px;
+    }
+
+    @media (max-width: 1024px) {
+        .log-activity-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .header-content h1 {
+            font-size: 1.8rem;
+        }
+
+        .impact-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .form-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const activityTypeSelect = document.getElementById('{{ form.activity_type.id_for_label }}');
+    const activitySubtypeGroup = document.getElementById('subtype-group');
+    const activitySubtypeSelect = document.getElementById('{{ form.activity_subtype.id_for_label }}');
+    const valueInput = document.getElementById('{{ form.value.id_for_label }}');
+    const valueUnit = document.getElementById('valueUnit');
+    const carbonPreview = document.getElementById('carbonPreview');
+    const pointsPreview = document.getElementById('pointsPreview');
+
+    // Activity type configurations
+    const activityConfig = {
+        'Travel': {
+            unit: 'km',
+            subtypes: [
+                { value: 'car', label: 'Car', factor: 0.21 },
+                { value: 'bus', label: 'Bus', factor: 0.089 },
+                { value: 'train', label: 'Train', factor: 0.041 },
+                { value: 'bike', label: 'Bicycle', factor: 0.0 },
+                { value: 'walking', label: 'Walking', factor: 0.0 },
+                { value: 'flight', label: 'Flight', factor: 0.255 }
+            ],
+            defaultFactor: 0.2
+        },
+        'Energy': {
+            unit: 'kWh',
+            subtypes: [],
+            defaultFactor: 0.5
+        },
+        'Diet': {
+            unit: 'meals',
+            subtypes: [
+                { value: 'vegan', label: 'Vegan', factor: 1.5 },
+                { value: 'vegetarian', label: 'Vegetarian', factor: 1.7 },
+                { value: 'meat', label: 'Meat-Based', factor: 2.5 }
+            ],
+            defaultFactor: 2.0
+        }
+    };
+
+    let currentFactor = 0;
+
+    function updateActivitySubtypes(activityType) {
+        const config = activityConfig[activityType];
+
+        // Clear existing options
+        activitySubtypeSelect.innerHTML = '<option value="">Select subtype (optional)</option>';
+
+        if (config.subtypes.length > 0) {
+            config.subtypes.forEach(subtype => {
+                const option = document.createElement('option');
+                option.value = subtype.value;
+                option.textContent = subtype.label;
+                activitySubtypeSelect.appendChild(option);
+            });
+            activitySubtypeGroup.style.display = 'block';
+        } else {
+            activitySubtypeGroup.style.display = 'none';
+        }
+
+        // Update unit
+        valueUnit.textContent = config.unit;
+
+        // Reset to default factor
+        currentFactor = config.defaultFactor;
+
+        // Update preview
+        updatePreview();
+    }
+
+    function calculateCarbon() {
+        const value = parseFloat(valueInput.value) || 0;
+        return value * currentFactor;
+    }
+
+    function updatePreview() {
+        const carbon = calculateCarbon();
+        const points = Math.floor(carbon);
+
+        carbonPreview.textContent = carbon.toFixed(2);
+        pointsPreview.textContent = points;
+    }
+
+    // Event listeners
+    activityTypeSelect.addEventListener('change', function() {
+        updateActivitySubtypes(this.value);
+    });
+
+    activitySubtypeSelect.addEventListener('change', function() {
+        const activityType = activityTypeSelect.value;
+        const config = activityConfig[activityType];
+        const selectedSubtype = config.subtypes.find(s => s.value === this.value);
+
+        if (selectedSubtype) {
+            currentFactor = selectedSubtype.factor;
+        } else {
+            currentFactor = config.defaultFactor;
+        }
+
+        updatePreview();
+    });
+
+    valueInput.addEventListener('input', updatePreview);
+
+    // Initialize on page load
+    if (activityTypeSelect.value) {
+        updateActivitySubtypes(activityTypeSelect.value);
+    }
+
+    // Set default date to today
+    const dateInput = document.getElementById('{{ form.date.id_for_label }}');
+    if (!dateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent Document Classification & Retrieval System</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>📄 DocIntel</h1>
+                <p>AI-Powered Document System</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="nav-link active" data-page="dashboard">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="#documents" class="nav-link" data-page="documents">
+                    <span class="icon">📁</span> Documents
+                </a>
+                <a href="#search" class="nav-link" data-page="search">
+                    <span class="icon">🔍</span> Search
+                </a>
+                <a href="#analytics" class="nav-link" data-page="analytics">
+                    <span class="icon">📈</span> Analytics
+                </a>
+                <a href="#reports" class="nav-link" data-page="reports">
+                    <span class="icon">📉</span> Reports
+                </a>
+                <a href="#upload" class="nav-link" data-page="upload">
+                    <span class="icon">⬆️</span> Upload
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 id="page-title">Dashboard</h2>
+                </div>
+                <div class="header-right">
+                    <div class="search-box">
+                        <input type="text" id="quick-search" placeholder="Quick search...">
+                        <button onclick="quickSearch()">🔍</button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="content-wrapper">
+                <!-- Dashboard Page -->
+                <div id="dashboard-page" class="page active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">📄</div>
+                            <div class="stat-content">
+                                <h3 id="total-docs">0</h3>
+                                <p>Total Documents</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🔍</div>
+                            <div class="stat-content">
+                                <h3 id="total-searches">0</h3>
+                                <p>Total Searches</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📁</div>
+                            <div class="stat-content">
+                                <h3 id="total-categories">0</h3>
+                                <p>Categories</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">⬆️</div>
+                            <div class="stat-content">
+                                <h3 id="recent-uploads">0</h3>
+                                <p>Recent Uploads (7d)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-row">
+                        <div class="chart-card">
+                            <h3>Documents by Category</h3>
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Documents by Type</h3>
+                            <canvas id="typeChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="lists-row">
+                        <div class="list-card">
+                            <h3>Recent Uploads</h3>
+                            <div id="recent-uploads-list" class="document-list"></div>
+                        </div>
+                        <div class="list-card">
+                            <h3>Most Viewed</h3>
+                            <div id="top-viewed-list" class="document-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documents Page -->
+                <div id="documents-page" class="page">
+                    <div class="page-actions">
+                        <select id="filter-category" class="filter-select">
+                            <option value="">All Categories</option>
+                        </select>
+                        <select id="filter-type" class="filter-select">
+                            <option value="">All Types</option>
+                            <option value="pdf">PDF</option>
+                            <option value="docx">Word</option>
+                            <option value="txt">Text</option>
+                        </select>
+                        <select id="sort-by" class="filter-select">
+                            <option value="-upload_date">Newest First</option>
+                            <option value="upload_date">Oldest First</option>
+                            <option value="title">Title (A-Z)</option>
+                            <option value="-title">Title (Z-A)</option>
+                            <option value="-view_count">Most Viewed</option>
+                        </select>
+                        <button onclick="loadDocuments()" class="btn btn-primary">🔄 Refresh</button>
+                    </div>
+                    <div id="documents-list" class="documents-grid"></div>
+                    <div id="documents-pagination" class="pagination"></div>
+                </div>
+
+                <!-- Search Page -->
+                <div id="search-page" class="page">
+                    <div class="search-container">
+                        <div class="search-box-large">
+                            <input type="text" id="search-input" placeholder="Search documents by content...">
+                            <select id="search-category" class="filter-select">
+                                <option value="">All Categories</option>
+                            </select>
+                            <button onclick="performSearch()" class="btn btn-primary">🔍 Search</button>
+                        </div>
+                    </div>
+                    <div id="search-results" class="search-results"></div>
+                </div>
+
+                <!-- Analytics Page -->
+                <div id="analytics-page" class="page">
+                    <div class="analytics-filters">
+                        <label>Period: </label>
+                        <select id="analytics-period" class="filter-select" onchange="loadAnalytics()">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                        </select>
+                    </div>
+
+                    <div class="charts-row">
+                        <div class="chart-card full-width">
+                            <h3>Search Trends</h3>
+                            <canvas id="searchTrendsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="lists-row">
+                        <div class="list-card">
+                            <h3>Top Search Queries</h3>
+                            <div id="top-queries-list" class="query-list"></div>
+                        </div>
+                        <div class="list-card">
+                            <h3>Access Patterns</h3>
+                            <canvas id="accessPatternsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="list-card full-width">
+                        <h3>Most Accessed Documents</h3>
+                        <div id="most-accessed-list" class="document-list"></div>
+                    </div>
+                </div>
+
+                <!-- Reports Page -->
+                <div id="reports-page" class="page">
+                    <div class="charts-row">
+                        <div class="chart-card">
+                            <h3>Category Distribution</h3>
+                            <canvas id="reportCategoryChart"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Type Distribution</h3>
+                            <canvas id="reportTypeChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="charts-row">
+                        <div class="chart-card full-width">
+                            <h3>Upload Trends (30 days)</h3>
+                            <canvas id="uploadTrendsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="charts-row">
+                        <div class="chart-card full-width">
+                            <h3>View Trends (30 days)</h3>
+                            <canvas id="viewTrendsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Page -->
+                <div id="upload-page" class="page">
+                    <div class="upload-card">
+                        <h3>Upload New Document</h3>
+                        <form id="upload-form" onsubmit="uploadDocument(event)">
+                            <div class="form-group">
+                                <label for="upload-title">Title *</label>
+                                <input type="text" id="upload-title" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="upload-file">File *</label>
+                                <input type="file" id="upload-file" accept=".pdf,.docx,.txt" required>
+                                <small>Supported formats: PDF, DOCX, TXT (Max 50MB)</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="upload-description">Description</label>
+                                <textarea id="upload-description" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="upload-category">Category (Optional)</label>
+                                <select id="upload-category" class="filter-select">
+                                    <option value="">Auto-classify (Recommended)</option>
+                                </select>
+                            </div>
+                            <div class="upload-progress" id="upload-progress" style="display: none;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progress-fill"></div>
+                                </div>
+                                <p id="upload-status">Uploading...</p>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-large">⬆️ Upload Document</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Document Detail Modal -->
+        <div id="document-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title">Document Details</h3>
+                    <button class="close-btn" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="modal-body"></div>
+                <div class="modal-footer">
+                    <button onclick="closeModal()" class="btn btn-secondary">Close</button>
+                    <button onclick="downloadDocument()" class="btn btn-primary">📥 Download</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast"></div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

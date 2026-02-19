@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Assistant - EV Trip Planner{% endblock %}
+
+{% block content %}
+<section class="chat-section">
+    <div class="container">
+        <div class="section-header">
+            <h1>⚡ EV Charging Assistant</h1>
+            <p>Ask me anything about electric vehicles, charging, and trip planning</p>
+        </div>
+
+        <div class="chat-container">
+            <!-- Chat Sidebar -->
+            <div class="chat-sidebar">
+                <button class="btn btn-primary btn-block" onclick="startNewChat()">
+                    <span>+</span> New Conversation
+                </button>
+                <div class="chat-history-list">
+                    <h3>Recent Conversations</h3>
+                    {% if user.chat_conversations.all %}
+                        <div class="history-items">
+                            {% for conv in user.chat_conversations.all|slice:":10" %}
+                                <a href="{% url 'chat:conversation_detail' conv.pk %}" class="history-item {% if conv.id == conversation.id %}active{% endif %}">
+                                    <div class="history-date">{{ conv.started_at|date:"M d, Y" }}</div>
+                                    <div class="history-time">{{ conv.started_at|time:"g:i A" }}</div>
+                                    <div class="history-count">{{ conv.message_count }} messages</div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Chat Main -->
+            <div class="chat-main">
+                <div class="chat-messages" id="chatMessages">
+                    {% for message in messages %}
+                        <div class="chat-message {% if message.is_user_message %}chat-message-user{% else %}chat-message-ai{% endif %}">
+                            <div class="message-avatar">
+                                {% if message.is_user_message %}
+                                    👤
+                                {% else %}
+                                    ⚡
+                                {% endif %}
+                            </div>
+                            <div class="message-content">
+                                <div class="message-text">{{ message.message|linebreaks }}</div>
+                                <div class="message-time">{{ message.created_at|time:"g:i A" }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="chat-input-container">
+                    <form id="chatForm" class="chat-input-form">
+                        {% csrf_token %}
+                        <input type="text"
+                               id="chatInput"
+                               class="chat-input"
+                               placeholder="Ask about EVs, charging, batteries, trip planning..."
+                               autocomplete="off">
+                        <button type="submit" class="btn-send">
+                            <span>Send</span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
+                            </svg>
+                        </button>
+                    </form>
+                    <div class="chat-suggestions">
+                        <span>Try asking:</span>
+                        <button class="suggestion-btn" onclick="sendSuggestion('How do I maintain my EV battery?')">
+                            Battery maintenance
+                        </button>
+                        <button class="suggestion-btn" onclick="sendSuggestion('What affects my EV range?')">
+                            Range tips
+                        </button>
+                        <button class="suggestion-btn" onclick="sendSuggestion('How long does it take to charge?')">
+                            Charging time
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Global variables for chat elements
+    let chatMessages, chatForm, chatInput;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        chatMessages = document.getElementById('chatMessages');
+        chatForm = document.getElementById('chatForm');
+        chatInput = document.getElementById('chatInput');
+
+        if (!chatMessages || !chatForm || !chatInput) {
+            console.error('Chat elements not found');
+            return;
+        }
+
+        // Scroll to bottom on load
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Handle form submission
+        chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        // Add user message
+        addMessage(message, true);
+        chatInput.value = '';
+
+        // Show typing indicator
+        showTyping();
+
+        // Send to server
+        try {
+            const response = await fetch('{% url "chat:send_message" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ message })
+            });
+
+            const data = await response.json();
+            hideTyping();
+
+            if (data.success) {
+                addMessage(data.ai_response, false);
+            }
+        } catch (error) {
+            hideTyping();
+            addMessage('Sorry, something went wrong. Please try again.', false);
+        }
+    });
+
+    function addMessage(text, isUser) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message ${isUser ? 'chat-message-user' : 'chat-message-ai'}`;
+        messageDiv.innerHTML = `
+            <div class="message-avatar">${isUser ? '👤' : '⚡'}</div>
+            <div class="message-content">
+                <div class="message-text">${text.replace(/\n/g, '<br>')}</div>
+                <div class="message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+            </div>
+        `;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showTyping() {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'chat-message chat-message-ai typing-indicator';
+        typingDiv.id = 'typingIndicator';
+        typingDiv.innerHTML = `
+            <div class="message-avatar">⚡</div>
+            <div class="message-content">
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        `;
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function hideTyping() {
+        const typing = document.getElementById('typingIndicator');
+        if (typing) typing.remove();
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    });
+
+    // Global functions for onclick handlers
+    function sendSuggestion(text) {
+        if (chatInput) {
+            chatInput.value = text;
+            const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+            chatForm.dispatchEvent(submitEvent);
+        }
+    }
+
+    function startNewChat() {
+        window.location.href = '{% url "chat:start_new_chat" %}';
+    }
+</script>
+{% endblock %}

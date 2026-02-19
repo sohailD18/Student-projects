@@ -1,0 +1,29 @@
+{% extends 'videos/base.html' %}
+
+{% block title %}Upload Video - VideoStream{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <h2 class="mb-4">Upload New Video</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.media }}
+                {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field.errors }}
+                    {{ field }}
+                    {% if field.help_text %}
+                    <small class="text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary">Upload Video</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

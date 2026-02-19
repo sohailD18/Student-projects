@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Trip Data - Driver Behavior Analysis{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>📝 Add New Trip Data</h2>
+    <p style="color: #666; margin-bottom: 30px;">
+        Enter driving metrics below. Our AI will analyze the data and provide safety recommendations.
+    </p>
+
+    <form method="POST" id="tripForm" onsubmit="return validateForm()">
+        {% csrf_token %}
+
+        <!-- Driver Information -->
+        <div class="form-group">
+            <label for="driver_name">👤 Driver Name *</label>
+            <input
+                type="text"
+                id="driver_name"
+                name="driver_name"
+                required
+                placeholder="Enter driver name"
+                pattern="[A-Za-z\s]+"
+                title="Please enter a valid name (letters only)">
+        </div>
+
+        <div class="form-group">
+            <label for="trip_date">📅 Trip Date *</label>
+            <input
+                type="date"
+                id="trip_date"
+                name="trip_date"
+                required
+                max="{{ today|date:'Y-m-d' }}">
+        </div>
+
+        <!-- Speed Metrics -->
+        <h3 style="color: #667eea; margin: 30px 0 20px 0; font-size: 1.2em;">🏎️ Speed Metrics</h3>
+
+        <div class="form-group">
+            <label for="average_speed">📊 Average Speed (km/h) *</label>
+            <input
+                type="number"
+                id="average_speed"
+                name="average_speed"
+                required
+                min="0"
+                max="300"
+                step="0.1"
+                placeholder="e.g., 60.5"
+                oninput="calculateEstimatedRisk()">
+            <small style="color: #999; display: block; margin-top: 5px;">
+                Typical range: 30-120 km/h
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="max_speed">⚡ Maximum Speed (km/h) *</label>
+            <input
+                type="number"
+                id="max_speed"
+                name="max_speed"
+                required
+                min="0"
+                max="400"
+                step="0.1"
+                placeholder="e.g., 95.0"
+                oninput="calculateEstimatedRisk()">
+            <small style="color: #999; display: block; margin-top: 5px;">
+                Highest speed reached during the trip
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="cornering_speed">↪️ Average Cornering Speed (km/h)</label>
+            <input
+                type="number"
+                id="cornering_speed"
+                name="cornering_speed"
+                min="0"
+                max="200"
+                step="0.1"
+                placeholder="e.g., 40.0"
+                oninput="calculateEstimatedRisk()">
+            <small style="color: #999; display: block; margin-top: 5px;">
+                Average speed while turning
+            </small>
+        </div>
+
+        <!-- Event Counts -->
+        <h3 style="color: #667eea; margin: 30px 0 20px 0; font-size: 1.2em;">🚨 Event Counts</h3>
+
+        <div class="form-group">
+            <label for="harsh_braking_events">🛑 Harsh Braking Events *</label>
+            <input
+                type="number"
+                id="harsh_braking_events"
+                name="harsh_braking_events"
+                required
+                min="0"
+                max="50"
+                placeholder="e.g., 2"
+                oninput="calculateEstimatedRisk()">
+            <small style="color: #999; display: block; margin-top: 5px;">
+                Number of sudden/hard braking incidents
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="rapid_acceleration_events">🚀 Rapid Acceleration Events *</label>
+            <input
+                type="number"
+                id="rapid_acceleration_events"
+                name="rapid_acceleration_events"
+                required
+                min="0"
+                max="50"
+                placeholder="e.g., 1"
+                oninput="calculateEstimatedRisk()">
+            <small style="color: #999; display: block; margin-top: 5px;">
+                Number of sudden/fast accelerations
+            </small>
+        </div>
+
+        <!-- Estimated Risk Preview -->
+        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h3 style="color: white; margin-bottom: 15px;">🤖 AI Analysis Preview</h3>
+            <div id="riskPreview" style="display: none;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <div>
+                        <div style="font-size: 3em; font-weight: bold;" id="previewScore">0</div>
+                        <div style="opacity: 0.9;">Estimated Risk Score</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 2em; font-weight: bold;" id="previewClass">-</div>
+                        <div style="opacity: 0.9;">Classification</div>
+                    </div>
+                </div>
+                <div id="previewRecommendations" style="font-size: 0.9em; line-height: 1.6; opacity: 0.95;">
+                    Fill in the form to see AI recommendations
+                </div>
+            </div>
+            <div id="riskPlaceholder" style="text-align: center; padding: 30px; opacity: 0.9;">
+                Fill in the form fields above to see a live AI risk assessment
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div style="margin-top: 30px;">
+            <button type="submit" class="btn" style="font-size: 1.1em; padding: 15px 40px;">
+                ✅ Analyze & Save Trip Data
+            </button>
+            <a href="{% url 'driver_app:home' %}" style="margin-left: 20px; color: #667eea;">
+                ← Back to Dashboard
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Info Card -->
+<div class="card">
+    <h2>📖 How It Works</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+        <div>
+            <h3 style="color: #667eea;">1️⃣ Data Entry</h3>
+            <p style="color: #666;">Enter driving metrics from your trip including speeds and event counts.</p>
+        </div>
+        <div>
+            <h3 style="color: #667eea;">2️⃣ AI Analysis</h3>
+            <p style="color: #666;">Our AI engine calculates a risk score (0-100) and classifies behavior.</p>
+        </div>
+        <div>
+            <h3 style="color: #667eea;">3️⃣ Recommendations</h3>
+            <p style="color: #666;">Receive personalized safety suggestions based on your driving patterns.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set today's date as max for date picker
+    document.getElementById('trip_date').max = new Date().toISOString().split('T')[0];
+
+    // Form validation
+    function validateForm() {
+        const avgSpeed = parseFloat(document.getElementById('average_speed').value);
+        const maxSpeed = parseFloat(document.getElementById('max_speed').value);
+
+        if (maxSpeed < avgSpeed) {
+            alert('Maximum speed cannot be less than average speed!');
+            return false;
+        }
+
+        return true;
+    }
+
+    // Calculate estimated risk in real-time
+    function calculateEstimatedRisk() {
+        const avgSpeed = parseFloat(document.getElementById('average_speed').value) || 0;
+        const maxSpeed = parseFloat(document.getElementById('max_speed').value) || 0;
+        const braking = parseInt(document.getElementById('harsh_braking_events').value) || 0;
+        const accel = parseInt(document.getElementById('rapid_acceleration_events').value) || 0;
+        const cornering = parseFloat(document.getElementById('cornering_speed').value) || 0;
+
+        // Only calculate if we have some data
+        if (avgSpeed === 0 && maxSpeed === 0 && braking === 0 && accel === 0) {
+            document.getElementById('riskPreview').style.display = 'none';
+            document.getElementById('riskPlaceholder').style.display = 'block';
+            return;
+        }
+
+        // Calculate risk score (simplified version of the backend algorithm)
+        let riskScore = 0;
+
+        // Speed risk (0-35 points)
+        if (maxSpeed > 140) riskScore += 35;
+        else if (maxSpeed > 120) riskScore += 28;
+        else if (maxSpeed > 100) riskScore += 20;
+        else if (maxSpeed > 80) riskScore += 10;
+
+        if (avgSpeed > 100) riskScore += 10;
+        else if (avgSpeed > 80) riskScore += 5;
+
+        // Braking risk (0-25 points)
+        riskScore += Math.min(braking * 5, 25);
+
+        // Acceleration risk (0-25 points)
+        riskScore += Math.min(accel * 5, 25);
+
+        // Cornering risk (0-15 points)
+        if (cornering > 80) riskScore += 15;
+        else if (cornering > 60) riskScore += 10;
+        else if (cornering > 40) riskScore += 5;
+
+        riskScore = Math.min(Math.max(riskScore, 0), 100);
+
+        // Determine classification
+        let classification = 'Safe';
+        let color = '#4caf50';
+        if (riskScore >= 30) {
+            classification = 'Moderate';
+            color = '#ff9800';
+        }
+        if (riskScore >= 70) {
+            classification = 'Risky';
+            color = '#f44336';
+        }
+
+        // Generate basic recommendations
+        let recommendations = [];
+        if (maxSpeed > 120) recommendations.push('⚠️ Reduce maximum speed to improve safety');
+        if (braking >= 2) recommendations.push(`🛑 ${braking} harsh braking events - maintain longer following distance`);
+        if (accel >= 2) recommendations.push(`🚀 ${accel} rapid accelerations - accelerate more smoothly`);
+        if (cornering > 60) recommendations.push('↪️ Reduce cornering speed for better stability');
+
+        if (recommendations.length === 0) {
+            recommendations.push('✅ Good driving pattern detected! Keep up the safe driving habits.');
+        }
+
+        // Update the preview
+        document.getElementById('riskPreview').style.display = 'block';
+        document.getElementById('riskPlaceholder').style.display = 'none';
+        document.getElementById('previewScore').textContent = riskScore.toFixed(1);
+        document.getElementById('previewClass').textContent = classification;
+        document.getElementById('previewClass').style.color = color;
+        document.getElementById('previewRecommendations').innerHTML = recommendations.join('<br><br>');
+    }
+
+    // Initialize date picker with today's date
+    document.getElementById('trip_date').value = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %}

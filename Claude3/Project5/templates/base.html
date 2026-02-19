@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Inventory Management System{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>📦 InventoryAI</h1>
+                <p class="subtitle">Smart Demand Prediction</p>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="{% url 'inventory_system:dashboard' %}" class="nav-item {% if page_title == 'Dashboard' %}active{% endif %}">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'inventory_system:analytics' %}" class="nav-item {% if page_title == 'Analytics' %}active{% endif %}">
+                    <span class="icon">📈</span>
+                    <span>Analytics</span>
+                </a>
+                <a href="{% url 'inventory_system:reports' %}" class="nav-item {% if page_title == 'Reports' %}active{% endif %}">
+                    <span class="icon">📋</span>
+                    <span>Reports</span>
+                </a>
+                <a href="{% url 'inventory_system:run_predictions' %}" class="nav-item {% if page_title == 'Run Predictions' %}active{% endif %}">
+                    <span class="icon">🤖</span>
+                    <span>Run AI Predictions</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="/admin/" class="nav-item admin-link">
+                    <span class="icon">⚙️</span>
+                    <span>Admin Panel</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+                <div class="user-info">
+                    <span>AI-Powered Inventory System</span>
+                </div>
+            </header>
+
+            {% if messages %}
+                <div class="messages-container">
+                    {% for message in messages %}
+                        <div class="message {{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="content-wrapper">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    {% load static %}
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

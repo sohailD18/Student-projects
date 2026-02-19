@@ -1,0 +1,60 @@
+{% extends 'appointments/base.html' %}
+
+{% block title %}Home - Appointment System{% endblock %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold">Book Your Appointment</h1>
+        <p class="col-md-8 fs-4">Schedule appointments with our professional service providers quickly and easily.</p>
+        <a href="{% url 'service_list' %}" class="btn btn-primary btn-lg">Browse Services</a>
+    </div>
+</div>
+
+<h2 class="mb-3">Our Services</h2>
+<div class="row mb-4">
+    {% for service in services %}
+    <div class="col-md-4 mb-3">
+        <div class="card service-card h-100" onclick="location.href='{% url 'provider_list' %}'">
+            <div class="card-body">
+                <h5 class="card-title">{{ service.name }}</h5>
+                <p class="card-text">{{ service.description|truncatewords:20 }}</p>
+                <p class="card-text">
+                    <strong>Duration:</strong> {{ service.duration }} minutes<br>
+                    <strong>Price:</strong> ${{ service.price }}
+                </p>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <p class="text-center text-muted">No services available at the moment.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<h2 class="mb-3">Available Providers</h2>
+<div class="row">
+    {% for provider in providers %}
+    <div class="col-md-3 mb-3">
+        <div class="card provider-card h-100" onclick="location.href='{% url 'provider_detail' provider.id %}'">
+            <div class="card-body text-center">
+                {% if provider.profile_image %}
+                <img src="{{ provider.profile_image.url }}" class="rounded-circle mb-3" alt="{{ provider }}" style="width: 80px; height: 80px; object-fit: cover;">
+                {% else %}
+                <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <span class="text-white fs-4">{{ provider.user.username|first|upper }}</span>
+                </div>
+                {% endif %}
+                <h6 class="card-title">{{ provider }}</h6>
+                <p class="card-text small text-muted">{{ provider.bio|truncatewords:10 }}</p>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <p class="text-center text-muted">No providers available at the moment.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

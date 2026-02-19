@@ -1,0 +1,17 @@
+# Django
+Django>=4.2.0,<5.0.0
+
+# No additional packages required!
+# The application uses:
+# - Django (built-in) - Backend framework
+# - SQLite (built-in) - Database
+# - Leaflet.js (CDN) - Map integration (no API key needed)
+# - Chart.js (CDN) - Analytics charts
+# - OpenStreetMap (free) - Map tiles
+
+# Optional: For production deployment
+gunicorn>=21.0.0
+whitenoise>=6.5.0
+
+# Optional: For enhanced features (not required for basic functionality)
+django-cors-headers>=4.0.0

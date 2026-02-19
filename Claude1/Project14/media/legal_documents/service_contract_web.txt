@@ -1,0 +1,27 @@
+WEB DEVELOPMENT SERVICES CONTRACT
+
+This Services Agreement is made between TechSolutions Inc. and Client XYZ dated January 10, 2026.
+
+1. SCOPE OF SERVICES
+The Service Provider shall develop a custom e-commerce website including frontend, backend, and payment integration.
+
+2. PAYMENT TERMS
+Total project cost: $25,000. Payment schedule: 50% upfront, 50% upon completion.
+
+3. INDEMNIFICATION
+The Service Provider shall indemnify and hold harmless the Client from any claims arising from intellectual property infringement.
+
+4. TERMINATION
+Either party may terminate this agreement upon 15 days written notice.
+
+5. CONFIDENTIALITY
+Both parties agree to keep all project information confidential.
+
+6. GOVERNING LAW
+This contract is governed by the laws of New York.
+
+7. LIABILITY
+The Service Provider's liability shall not exceed the total amount paid under this agreement.
+
+8. ASSIGNMENT
+Neither party may assign this agreement without written consent.

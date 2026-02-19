@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}InfraGuard - Infrastructure Accident Reporting{% endblock %}</title>
+    <link rel="stylesheet" href="{% load static %}{% static 'css/style.css' %}">
+    <!-- SweetAlert2 CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="{% url 'reports:home' %}">InfraGuard</a>
+                <span class="tagline">Safe Infrastructure, Safer Communities</span>
+            </div>
+
+            <ul class="nav-menu">
+                {% if user.is_authenticated %}
+                    {% if user.profile.role == 'authority' %}
+                        <li><a href="{% url 'reports:admin_dashboard' %}" class="active">Dashboard</a></li>
+                        <li><a href="{% url 'reports:manage_claims' %}">Claims</a></li>
+                    {% else %}
+                        <li><a href="{% url 'reports:home' %}">Home</a></li>
+                        <li><a href="{% url 'reports:citizen_dashboard' %}">My Dashboard</a></li>
+                        <li><a href="{% url 'reports:report_incident' %}" class="btn-primary">Report Incident</a></li>
+                    {% endif %}
+                    <li class="dropdown">
+                        <a href="#" class="user-menu">
+                            {{ user.first_name|default:user.username }} <span class="arrow">▼</span>
+                        </a>
+                        <ul class="dropdown-content">
+                            <li><span class="role-badge role-{{ user.profile.role }}">{{ user.profile.role|title }}</span></li>
+                            {% if user.profile.role == 'authority' %}
+                            <li><a href="/admin/">Admin Panel</a></li>
+                            {% endif %}
+                            <li><a href="{% url 'reports:logout' %}">Logout</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li><a href="{% url 'reports:home' %}">Home</a></li>
+                    <li><a href="{% url 'reports:login' %}">Login</a></li>
+                    <li><a href="{% url 'reports:register' %}" class="btn-secondary">Register</a></li>
+                {% endif %}
+            </ul>
+
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+        </div>
+    </nav>
+
+    <!-- Flash Messages with SweetAlert2 -->
+    {% if messages %}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                {% for message in messages %}
+                    {% if message.tags == 'success' %}
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: '{{ message }}',
+                            confirmButtonColor: '#10b981',
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+                    {% elif message.tags == 'error' %}
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: '{{ message }}',
+                            confirmButtonColor: '#ef4444'
+                        });
+                    {% elif message.tags == 'warning' %}
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Warning!',
+                            text: '{{ message }}',
+                            confirmButtonColor: '#f59e0b'
+                        });
+                    {% elif message.tags == 'info' %}
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Info!',
+                            text: '{{ message }}',
+                            confirmButtonColor: '#3b82f6'
+                        });
+                    {% endif %}
+                {% endfor %}
+            });
+        </script>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>InfraGuard</h3>
+                <p>Empowering citizens to report infrastructure issues and build safer communities.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="{% url 'reports:home' %}">Home</a></li>
+                    <li><a href="{% url 'reports:report_incident' %}">Report Incident</a></li>
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'reports:citizen_dashboard' %}">Dashboard</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <p>Email: support@infraguard.org</p>
+                <p>Emergency: 911</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 InfraGuard. All rights reserved. Built with Django.</p>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

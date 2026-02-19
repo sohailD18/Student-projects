@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Exam Result - {{ exam.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h1><i class="fas fa-clipboard-check text-primary me-2"></i>Exam Result</h1>
+    </div>
+</div>
+
+<!-- Result Summary Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header {% if result.status == 'passed' %}bg-success text-white{% else %}bg-danger text-white{% endif %}">
+                <h3 class="mb-0">
+                    <i class="fas {% if result.status == 'passed' %}fa-trophy{% else %}fa-exclamation-triangle{% endif %} me-2"></i>
+                    You {% if result.status == 'passed' %}Passed{% else %}Failed{% endif %}!
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <h6 class="text-muted">Exam Title</h6>
+                        <h5>{{ exam.title }}</h5>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <h6 class="text-muted">Subject</h6>
+                        <h5><span class="badge bg-secondary">{{ exam.subject.name }}</span></h5>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <h6 class="text-muted">Your Score</h6>
+                        <h2 class="{% if result.percentage >= 60 %}text-success{% elif result.percentage >= 40 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ result.score }}/{{ exam.total_marks }}
+                        </h2>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <h6 class="text-muted">Percentage</h6>
+                        <h2 class="{% if result.percentage >= 60 %}text-success{% elif result.percentage >= 40 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ result.percentage|floatformat:1 }}%
+                        </h2>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h6 class="text-muted">Correct</h6>
+                        <h3 class="text-success">{{ result.correct_answers }}</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted">Wrong</h6>
+                        <h3 class="text-danger">{{ result.wrong_answers }}</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted">Total Questions</h6>
+                        <h3>{{ result.total_questions }}</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted">Time Taken</h6>
+                        <h3>{{ result.time_taken_minutes }} min</h3>
+                    </div>
+                </div>
+
+                <div class="progress mt-4" style="height: 30px;">
+                    <div class="progress-bar
+                        {% if result.percentage >= 60 %}bg-success
+                        {% elif result.percentage >= 40 %}bg-warning
+                        {% else %}bg-danger{% endif %}"
+                         role="progressbar"
+                         style="width: {{ result.percentage }}%"
+                         aria-valuenow="{{ result.percentage }}"
+                         aria-valuemin="0"
+                         aria-valuemax="100">
+                        {{ result.percentage|floatformat:1 }}%
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Answer Review -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-list-alt me-2"></i>Detailed Answer Review</h4>
+            </div>
+            <div class="card-body">
+                {% for answer in answers %}
+                <div class="card mb-3 {% if answer.is_correct %}border-success{% else %}border-danger{% endif %}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">
+                                <span class="badge bg-primary">Q{{ answer.question.question_number }}</span>
+                                {% if answer.question.topic %}
+                                    <span class="badge bg-secondary ms-2">{{ answer.question.topic.name }}</span>
+                                {% endif %}
+                            </h5>
+                            <span class="badge {% if answer.is_correct %}bg-success{% else %}bg-danger{% endif %}">
+                                {% if answer.is_correct %}<i class="fas fa-check me-1"></i>Correct (+{{ answer.marks_obtained }} marks){% else %}<i class="fas fa-times me-1"></i>Wrong{% endif %}
+                            </span>
+                        </div>
+
+                        <p class="card-text">{{ answer.question.text }}</p>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Your Answer:</h6>
+                                <p class="mb-0 {% if not answer.is_correct %}text-danger fw-bold{% endif %}">
+                                    <strong>{{ answer.selected_answer }})</strong>
+                                    {% if answer.selected_answer == 'A' %}{{ answer.question.option_a }}
+                                    {% elif answer.selected_answer == 'B' %}{{ answer.question.option_b }}
+                                    {% elif answer.selected_answer == 'C' %}{{ answer.question.option_c }}
+                                    {% elif answer.selected_answer == 'D' %}{{ answer.question.option_d }}
+                                    {% elif answer.selected_answer == 'True' %}True
+                                    {% elif answer.selected_answer == 'False' %}False{% endif %}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Correct Answer:</h6>
+                                <p class="mb-0 text-success fw-bold">
+                                    <strong>{{ answer.question.correct_answer }})</strong>
+                                    {% if answer.question.correct_answer == 'A' %}{{ answer.question.option_a }}
+                                    {% elif answer.question.correct_answer == 'B' %}{{ answer.question.option_b }}
+                                    {% elif answer.question.correct_answer == 'C' %}{{ answer.question.option_c }}
+                                    {% elif answer.question.correct_answer == 'D' %}{{ answer.question.option_d }}
+                                    {% elif answer.question.correct_answer == 'True' %}True
+                                    {% elif answer.question.correct_answer == 'False' %}False{% endif %}
+                                </p>
+                            </div>
+                        </div>
+
+                        {% if answer.question.explanation %}
+                        <div class="mt-3">
+                            <h6 class="text-info"><i class="fas fa-lightbulb me-1"></i>Explanation:</h6>
+                            <p class="text-muted">{{ answer.question.explanation }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Subject Performance Summary -->
+{% if subject_performance %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="fas fa-brain me-2"></i>AI Performance Insights - {{ exam.subject.name }}</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <h6 class="text-muted">Overall Accuracy</h6>
+                        <h3 class="{% if subject_performance.overall_accuracy >= 70 %}text-success{% elif subject_performance.overall_accuracy >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ subject_performance.overall_accuracy|floatformat:1 }}%
+                        </h3>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <h6 class="text-muted">Weak Topics</h6>
+                        <h3 class="text-danger">{{ subject_performance.weak_topics|length }}</h3>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <h6 class="text-muted">Strong Topics</h6>
+                        <h3 class="text-success">{{ subject_performance.strong_topics|length }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Action Buttons -->
+<div class="row">
+    <div class="col-12 text-center">
+        <a href="{% url 'examination_app:student_dashboard' %}" class="btn btn-primary btn-lg me-2">
+            <i class="fas fa-home me-2"></i>Back to Dashboard
+        </a>
+        <a href="{% url 'examination_app:performance_report_subject' exam.subject.id %}" class="btn btn-info btn-lg">
+            <i class="fas fa-chart-line me-2"></i>View Performance Report
+        </a>
+    </div>
+</div>
+{% endblock %}

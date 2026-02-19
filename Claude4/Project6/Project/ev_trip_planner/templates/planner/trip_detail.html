@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Trip Details - EV Trip Planner{% endblock %}
+
+{% block content %}
+<section class="trip-detail-section">
+    <div class="container">
+        <div class="section-header">
+            <div>
+                <h1>Trip Details</h1>
+                <p>{{ trip.start_location }} → {{ trip.destination }}</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'planner:trip_update' trip.pk %}" class="btn btn-secondary">Edit</a>
+                <a href="{% url 'planner:trip_history' %}" class="btn btn-secondary">Back to History</a>
+            </div>
+        </div>
+
+        <!-- Trip Overview -->
+        <div class="trip-overview">
+            <div class="overview-card">
+                <h3>Trip Overview</h3>
+                <div class="overview-stats">
+                    <div class="overview-stat">
+                        <span class="stat-label">Distance</span>
+                        <span class="stat-value">{{ trip.estimated_distance }} km</span>
+                    </div>
+                    <div class="overview-stat">
+                        <span class="stat-label">Duration</span>
+                        <span class="stat-value">{{ trip.formatted_duration }}</span>
+                    </div>
+                    <div class="overview-stat">
+                        <span class="stat-label">Battery Used</span>
+                        <span class="stat-value">{{ trip.battery_consumption }} kWh</span>
+                    </div>
+                    <div class="overview-stat">
+                        <span class="stat-label">Start Battery</span>
+                        <span class="stat-value">{{ trip.initial_battery_percent }}%</span>
+                    </div>
+                    <div class="overview-stat">
+                        <span class="stat-label">Final Battery</span>
+                        <span class="stat-value">{{ trip.final_battery_percent }}%</span>
+                    </div>
+                    <div class="overview-stat">
+                        <span class="stat-label">Status</span>
+                        <span class="stat-value status-{{ trip.status }}">{{ trip.get_status_display }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {% if trip.vehicle %}
+                <div class="overview-card">
+                    <h3>Vehicle</h3>
+                    <div class="vehicle-display">
+                        <div class="vehicle-icon">🚗</div>
+                        <div>
+                            <h4>{{ trip.vehicle.year }} {{ trip.vehicle.make }} {{ trip.vehicle.model }}</h4>
+                            <p>{{ trip.vehicle.battery_capacity }} kWh • {{ trip.vehicle.range_km }} km range</p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Charging Stops -->
+        {% if charging_stops %}
+            <div class="charging-stops-section">
+                <h2>Charging Stops</h2>
+                <div class="stops-timeline">
+                    {% for stop in charging_stops %}
+                        <div class="stop-item">
+                            <div class="stop-marker">
+                                <span class="stop-number">{{ stop.stop_order }}</span>
+                            </div>
+                            <div class="stop-content">
+                                <div class="stop-header">
+                                    <h4>{{ stop.station.name }}</h4>
+                                    <span class="stop-cost">₹{{ stop.estimated_cost }}</span>
+                                </div>
+                                <p class="stop-location">📍 {{ stop.station.location }}</p>
+                                <div class="stop-metrics">
+                                    <div class="stop-metric">
+                                        <span class="metric-label">Charge Time</span>
+                                        <span class="metric-value">{{ stop.estimated_charge_time }} min</span>
+                                    </div>
+                                    <div class="stop-metric">
+                                        <span class="metric-label">Battery</span>
+                                        <span class="metric-value">{{ stop.battery_before_charge }}% → {{ stop.battery_after_charge }}%</span>
+                                    </div>
+                                    <div class="stop-metric">
+                                        <span class="metric-label">Connector</span>
+                                        <span class="metric-value">{{ stop.station.get_connector_type_display }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Trip Notes -->
+        <div class="trip-notes-card">
+            <h3>Notes</h3>
+            {% if trip.notes %}
+                <p>{{ trip.notes }}</p>
+            {% else %}
+                <p class="no-notes">No notes added.</p>
+            {% endif %}
+
+            {% if trip.travel_date %}
+                <p class="travel-date"><strong>Travel Date:</strong> {{ trip.travel_date|date:"F d, Y" }}</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

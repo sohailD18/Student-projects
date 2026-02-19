@@ -1,0 +1,44 @@
+{% extends 'analytics/base.html' %}
+
+{% block title %}Metrics - Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Metrics</h1>
+        <a href="/metrics/create/" class="btn btn-primary">Add Metric</a>
+    </div>
+
+    {% if metrics %}
+    <div class="metrics-grid">
+        {% for metric in metrics %}
+        <div class="card metric-card">
+            <h2><a href="/metrics/{{ metric.id }}/">{{ metric.name }}</a></h2>
+            {% if metric.description %}
+            <p>{{ metric.description }}</p>
+            {% endif %}
+            <div class="metric-details">
+                <span class="badge">{{ metric.get_metric_type_display }}</span>
+                {% if metric.unit %}
+                <span>Unit: {{ metric.unit }}</span>
+                {% endif %}
+                <span>Period: {{ metric.aggregation_period }}</span>
+            </div>
+            <div class="metric-stats">
+                <span>{{ metric.data_points.count }} data points</span>
+                {% if metric.target_value %}
+                <span>Target: {{ metric.target_value }}</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h2>No metrics yet</h2>
+        <p>Create metrics to track your data.</p>
+        <a href="/metrics/create/" class="btn btn-primary">Add Metric</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

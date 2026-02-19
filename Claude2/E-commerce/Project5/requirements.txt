@@ -1,0 +1,9 @@
+# Django Framework
+Django>=6.0,<7.0
+
+# Optional: For CORS support in production
+# django-cors-headers>=4.0,<5.0
+
+# Optional: For real AI integration
+# openai>=1.0,<2.0
+# anthropic>=0.18.0

@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}Templates - CMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Page Templates</h1>
+    <a href="{% url 'templates:template_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> New Template
+    </a>
+</div>
+
+<div class="row mb-4">
+    {% for template in templates %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                {% if template.thumbnail %}
+                    <img src="{{ template.thumbnail.url }}" class="card-img-top" alt="{{ template.name }}" style="height: 150px; object-fit: cover;">
+                {% else %}
+                    <div class="bg-light text-center py-5">
+                        <i class="fas fa-file-alt fa-3x text-muted"></i>
+                    </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ template.name }}</h5>
+                    <p class="text-muted small mb-2">{{ template.description|truncatewords:15 }}</p>
+                    <span class="badge bg-info">{{ template.get_template_type_display }}</span>
+                    {% if template.is_default %}
+                        <span class="badge bg-primary">Default</span>
+                    {% endif %}
+                    <span class="badge bg-{% if template.is_active %}success{% else %}secondary{% endif %}">
+                        {% if template.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                    <p class="small text-muted mt-2">
+                        <i class="fas fa-puzzle-piece"></i> {{ template.structure_count }} sections
+                    </p>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="btn-group w-100" role="group">
+                        <a href="{% url 'templates:template_detail' template.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                        <a href="{% url 'templates:template_update' template.pk %}" class="btn btn-sm btn-outline-warning">Edit</a>
+                        <a href="{% url 'templates:template_delete' template.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No templates found. Create your first template!
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-tint"></i> Themes</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for theme in themes %}
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="color-preview me-3" style="width: 60px; height: 60px; background: {{ theme.primary_color }}; border-radius: 8px;"></div>
+                                <div>
+                                    <h5 class="mb-1">{{ theme.name }}</h5>
+                                    <span class="badge bg-{% if theme.is_active %}success{% else %}secondary{% endif %}">
+                                        {% if theme.is_active %}Active{% else %}Inactive{% endif %}
+                                    </span>
+                                    {% if theme.is_default %}
+                                        <span class="badge bg-primary">Default</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">Primary</small>
+                                    <div class="color-swatch" style="width: 30px; height: 30px; background: {{ theme.primary_color }}; border: 1px solid #dee2e6;"></div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Secondary</small>
+                                    <div class="color-swatch" style="width: 30px; height: 30px; background: {{ theme.secondary_color }}; border: 1px solid #dee2e6;"></div>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <small class="text-muted">Accent</small>
+                                    <div class="color-swatch" style="width: 30px; height: 30px; background: {{ theme.accent_color }}; border: 1px solid #dee2e6;"></div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Background</small>
+                                    <div class="color-swatch" style="width: 30px; height: 30px; background: {{ theme.background_color }}; border: 1px solid #dee2e6;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <p class="text-muted">No themes found.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="card-footer">
+        <a href="{% url 'templates:theme_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Theme
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .color-swatch {
+        border-radius: 4px;
+        display: inline-block;
+    }
+</style>
+{% endblock %}

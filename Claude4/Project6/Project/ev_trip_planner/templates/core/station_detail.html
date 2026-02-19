@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ station.name }} - EV Trip Planner{% endblock %}
+
+{% block content %}
+<section class="station-detail-section">
+    <div class="container">
+        <div class="station-detail-header">
+            <div class="station-title">
+                <h1>{{ station.name }}</h1>
+                <p class="station-location-text">📍 {{ station.location }}</p>
+            </div>
+            <div class="station-actions">
+                {% if station.is_available %}
+                    <span class="badge badge-success">Available</span>
+                {% else %}
+                    <span class="badge badge-unavailable">Unavailable</span>
+                {% endif %}
+                {% if station.fast_charging %}
+                    <span class="badge badge-fast">Fast Charging</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="station-detail-grid">
+            <!-- Station Info -->
+            <div class="station-info-card">
+                <h2>Station Information</h2>
+
+                <div class="info-group">
+                    <h3>Address</h3>
+                    <p>{{ station.address }}</p>
+                </div>
+
+                <div class="info-group">
+                    <h3>Charging Details</h3>
+                    <div class="charging-specs">
+                        <div class="spec-row">
+                            <span class="spec-label">Connector Type:</span>
+                            <span class="spec-value">{{ station.get_connector_type_display }}</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">Power Output:</span>
+                            <span class="spec-value">{{ station.power_kw }} kW</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">Price:</span>
+                            <span class="spec-value">₹{{ station.price_per_kwh }}/kWh</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">Total Ports:</span>
+                            <span class="spec-value">{{ station.total_ports }}</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">Available Ports:</span>
+                            <span class="spec-value">{{ station.available_ports }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {% if station.amenities %}
+                    <div class="info-group">
+                        <h3>Amenities</h3>
+                        <p>{{ station.amenities }}</p>
+                    </div>
+                {% endif %}
+
+                {% if station.description %}
+                    <div class="info-group">
+                        <h3>Description</h3>
+                        <p>{{ station.description }}</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Map -->
+            <div class="station-map-card">
+                <h2>Location</h2>
+                <div id="stationMap" class="station-map"></div>
+                <a href="https://www.google.com/maps/dir/?api=1&destination={{ station.latitude }},{{ station.longitude }}"
+                   target="_blank"
+                   class="btn btn-primary btn-block">
+                    Get Directions
+                </a>
+            </div>
+        </div>
+
+        <!-- Charging Cost Calculator -->
+        <div class="cost-calculator-card">
+            <h2>Charging Cost Calculator</h2>
+            <div class="calculator-form">
+                <div class="form-group">
+                    <label for="batterySize">Your Battery Size (kWh)</label>
+                    <input type="number" id="batterySize" class="form-control" value="60" min="10" max="200">
+                </div>
+                <div class="form-group">
+                    <label for="currentCharge">Current Battery (%)</label>
+                    <input type="number" id="currentCharge" class="form-control" value="20" min="0" max="100">
+                </div>
+                <div class="form-group">
+                    <label for="targetCharge">Target Charge (%)</label>
+                    <input type="number" id="targetCharge" class="form-control" value="80" min="0" max="100">
+                </div>
+                <button class="btn btn-secondary" onclick="calculateCost()">Calculate Cost</button>
+            </div>
+            <div id="costResult" class="cost-result"></div>
+        </div>
+
+        <!-- Back Link -->
+        <div class="back-link">
+            <a href="{% url 'core:stations_map' %}">← Back to Charging Stations</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    #stationMap {
+        height: 300px;
+        width: 100%;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize map
+    const map = L.map('stationMap').setView([{{ station.latitude }}, {{ station.longitude }}], 15);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    const marker = L.marker([{{ station.latitude }}, {{ station.longitude }}]).addTo(map);
+    marker.bindPopup('<b>{{ station.name }}</b><br>{{ station.location }}').openPopup();
+
+    function calculateCost() {
+        const batterySize = parseFloat(document.getElementById('batterySize').value);
+        const currentCharge = parseFloat(document.getElementById('currentCharge').value);
+        const targetCharge = parseFloat(document.getElementById('targetCharge').value);
+        const pricePerKwh = {{ station.price_per_kwh }};
+
+        const kwhNeeded = (batterySize * (targetCharge - currentCharge) / 100);
+        const cost = kwhNeeded * pricePerKwh;
+
+        document.getElementById('costResult').innerHTML = `
+            <h3>Estimated Cost: ₹${cost.toFixed(2)}</h3>
+            <p>Energy needed: ${kwhNeeded.toFixed(1)} kWh</p>
+        `;
+    }
+</script>
+{% endblock %}

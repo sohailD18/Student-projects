@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Error - Carbon Credit System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-danger">
+            <h1 class="alert-heading">Error</h1>
+            <p>{{ message }}</p>
+            <hr>
+            <a href="{% url 'home' %}" class="btn btn-primary">Return to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

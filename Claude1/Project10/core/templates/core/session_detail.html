@@ -1,0 +1,171 @@
+{% extends 'core/base.html' %}
+{% load core_filters %}
+
+{% block title %}Session Details - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="bi bi-calendar-check"></i> Session Details</h4>
+                    <span class="badge bg-{% if session.status == 'pending' %}warning{% elif session.status == 'accepted' %}success{% elif session.status == 'completed' %}info{% elif session.status == 'cancelled' %}danger{% endif %} fs-6">
+                        {{ session.get_status_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <h2>{{ session.skill.title }}</h2>
+                    <p class="text-muted">{{ session.skill.description }}</p>
+
+                    <hr>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-person"></i> Student:</strong>
+                            <a href="{% url 'users:profile_view' session.student.username %}">{{ session.student.username }}</a>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-person-video3"></i> Teacher:</strong>
+                            <a href="{% url 'users:profile_view' session.teacher.username %}">{{ session.teacher.username }}</a>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-calendar"></i> Scheduled Time:</strong><br>
+                            {% if session.scheduled_time %}
+                                {{ session.scheduled_time|date:"F d, Y" }} at {{ session.scheduled_time|date:"g:i A" }}
+                            {% else %}
+                                <span class="text-muted">Not scheduled yet</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-star"></i> Points:</strong>
+                            <span class="badge bg-primary">{{ session.skill.hourly_rate_points }} points</span>
+                        </div>
+                    </div>
+
+                    {% if session.review %}
+                        <hr>
+                        <h5><i class="bi bi-chat-left-quote"></i> Review</h5>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    {% for i in session.review.rating|range_filter %}
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                    {% endfor %}
+                                    {% for i in 5|sub:session.review.rating|range_filter %}
+                                        <i class="bi bi-star text-warning"></i>
+                                    {% endfor %}
+                                </div>
+                                {% if session.review.comment %}
+                                    <p class="mb-0">"{{ session.review.comment }}"</p>
+                                {% endif %}
+                                <small class="text-muted">by {{ session.review.reviewer.username }}</small>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if is_student and session.status == 'accepted' %}
+                        <hr>
+                        <form method="post" action="{% url 'core:complete_session' session.id %}">
+                            {% csrf_token %}
+                            <h5><i class="bi bi-check-circle"></i> Complete Session</h5>
+                            <p>Once the session is complete, mark it as done to award points to both you and the teacher.</p>
+
+                            <div class="mb-3">
+                                <label for="id_rating" class="form-label">Rating (required)</label>
+                                <select name="rating" class="form-select" id="id_rating" required>
+                                    <option value="">-- Select Rating --</option>
+                                    <option value="1">1 - Poor</option>
+                                    <option value="2">2 - Fair</option>
+                                    <option value="3">3 - Good</option>
+                                    <option value="4">4 - Very Good</option>
+                                    <option value="5">5 - Excellent</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_comment" class="form-label">Comment (optional)</label>
+                                <textarea name="comment" class="form-control" id="id_comment" rows="3" placeholder="Share your experience..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Complete Session
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {% if is_teacher %}
+                        <hr>
+                        <div class="d-flex gap-2">
+                            {% if session.status == 'pending' %}
+                                <form method="post" action="{% url 'core:accept_session' session.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="bi bi-check-circle"></i> Accept Session
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                            {% if session.status == 'accepted' %}
+                                <form method="post" action="{% url 'core:complete_session' session.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="bi bi-check-circle"></i> Mark as Completed
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                            {% if session.status in 'pending accepted' %}
+                                <form method="post" action="{% url 'core:cancel_session' session.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="cancelled">
+                                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this session?');">
+                                        <i class="bi bi-x-circle"></i> Cancel Session
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <a href="{% if is_teacher %}{% url 'core:teacher_sessions' %}{% else %}{% url 'core:student_sessions' %}{% endif %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to My Sessions
+            </a>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Session Info</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Created:</strong><br>{{ session.created_at|date:"F d, Y" }}</p>
+                    <p><strong>Last Updated:</strong><br>{{ session.updated_at|date:"F d, Y - g:i A" }}</p>
+
+                    {% if session.status == 'pending' %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-clock-history"></i> Waiting for teacher to accept this session.
+                        </div>
+                    {% elif session.status == 'accepted' %}
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i> Session accepted! Complete it when done.
+                        </div>
+                    {% elif session.status == 'completed' %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-trophy"></i> Session completed! Points have been awarded.
+                        </div>
+                    {% elif session.status == 'cancelled' %}
+                        <div class="alert alert-danger">
+                            <i class="bi bi-x-circle"></i> This session has been cancelled.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

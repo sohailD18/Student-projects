@@ -1,0 +1,402 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Admin Analytics - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold">
+                <i class="bi bi-graph-up-arrow text-primary"></i> Admin Analytics Dashboard
+            </h1>
+            <p class="text-muted">Monitor platform performance, engagement trends, and top contributors</p>
+        </div>
+        <div>
+            <a href="{% url 'admin:index' %}" class="btn btn-outline-primary">
+                <i class="bi bi-gear"></i> Django Admin
+            </a>
+        </div>
+    </div>
+
+    <!-- Overview Stats Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title mb-1">Total Users</h6>
+                            <h2 class="mb-0">{{ total_users }}</h2>
+                        </div>
+                        <i class="bi bi-people-fill fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title mb-1">Total Skills</h6>
+                            <h2 class="mb-0">{{ total_skills }}</h2>
+                        </div>
+                        <i class="bi bi-book-fill fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title mb-1">Total Sessions</h6>
+                            <h2 class="mb-0">{{ total_sessions }}</h2>
+                        </div>
+                        <i class="bi bi-calendar-check-fill fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title mb-1">Avg Rating</h6>
+                            <h2 class="mb-0">{{ avg_platform_rating }}/5</h2>
+                        </div>
+                        <i class="bi bi-star-fill fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session Status Breakdown -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Session Status Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded">
+                                <h4 class="text-warning">{{ pending_sessions }}</h4>
+                                <small class="text-muted">Pending</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded">
+                                <h4 class="text-info">{{ accepted_sessions }}</h4>
+                                <small class="text-muted">Accepted</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded">
+                                <h4 class="text-success">{{ completed_sessions }}</h4>
+                                <small class="text-muted">Completed</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded">
+                                <h4 class="text-danger">{{ cancelled_sessions }}</h4>
+                                <small class="text-muted">Cancelled</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Top Teachers by Sessions -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-trophy-fill text-warning"></i> Top Teachers by Completed Sessions</h5>
+                </div>
+                <div class="card-body">
+                    {% if top_teachers_by_sessions %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Teacher</th>
+                                    <th class="text-end">Sessions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for teacher in top_teachers_by_sessions %}
+                                <tr>
+                                    <td><span class="badge bg-secondary">#{{ forloop.counter }}</span></td>
+                                    <td>{{ teacher.user.username }}</td>
+                                    <td class="text-end"><strong>{{ teacher.completed_sessions_count }}</strong></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">No completed sessions yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Teachers by Points -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-star-fill text-primary"></i> Top Teachers by Points Earned</h5>
+                </div>
+                <div class="card-body">
+                    {% if top_teachers_by_points %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Teacher</th>
+                                    <th class="text-end">Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for teacher in top_teachers_by_points %}
+                                <tr>
+                                    <td><span class="badge bg-secondary">#{{ forloop.counter }}</span></td>
+                                    <td>{{ teacher.user.username }}</td>
+                                    <td class="text-end"><strong>{{ teacher.points_earned }}</strong></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">No points earned yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Most Active Skills -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-fire text-danger"></i> Most Booked Skills</h5>
+                </div>
+                <div class="card-body">
+                    {% if active_skills %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Skill</th>
+                                    <th>Teacher</th>
+                                    <th class="text-end">Bookings</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for skill in active_skills %}
+                                <tr>
+                                    <td>{{ skill.title }}</td>
+                                    <td class="text-muted small">{{ skill.teacher.username }}</td>
+                                    <td class="text-end"><strong>{{ skill.booking_count }}</strong></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">No skills booked yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Students -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-mortarboard-fill text-success"></i> Top Students by Learning Activity</h5>
+                </div>
+                <div class="card-body">
+                    {% if top_students %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Student</th>
+                                    <th class="text-end">Completed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in top_students %}
+                                <tr>
+                                    <td><span class="badge bg-secondary">#{{ forloop.counter }}</span></td>
+                                    <td>{{ student.user.username }}</td>
+                                    <td class="text-end"><strong>{{ student.completed_learning_sessions }}</strong></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">No learning activity yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Category Distribution -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-tags-fill"></i> Skills by Category</h5>
+                </div>
+                <div class="card-body">
+                    {% if category_stats %}
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th class="text-end">Count</th>
+                                <th class="text-end">Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in category_stats %}
+                            <tr>
+                                <td>{{ stat.get_category_display }}</td>
+                                <td class="text-end"><strong>{{ stat.count }}</strong></td>
+                                <td class="text-end">
+                                    {% widthratio stat.count total_skills 100 %}%
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p class="text-muted mb-0">No categories yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Badge Earners -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-award-fill text-warning"></i> Top Badge Earners</h5>
+                </div>
+                <div class="card-body">
+                    {% if top_badge_earners %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>User</th>
+                                    <th class="text-end">Badges</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for earner in top_badge_earners %}
+                                {% if earner.badge_count > 0 %}
+                                <tr>
+                                    <td><span class="badge bg-secondary">#{{ forloop.counter }}</span></td>
+                                    <td>{{ earner.user.username }}</td>
+                                    <td class="text-end"><strong>{{ earner.badge_count }}</strong></td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">No badges earned yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Engagement Trends -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Engagement Trends (Last 7 Days)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="p-4 bg-light rounded">
+                                <h4 class="text-primary">{{ new_users_last_30 }}</h4>
+                                <small class="text-muted">New Users (30 days)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-4 bg-light rounded">
+                                <h4 class="text-success">{{ recent_completions }}</h4>
+                                <small class="text-muted">Completions (7 days)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-4 bg-light rounded">
+                                <h4 class="text-warning">{{ pending_bookings }}</h4>
+                                <small class="text-muted">Pending Bookings (7 days)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Platform Health -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-activity"></i> Platform Health</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Skills with no bookings:</strong> {{ skills_no_bookings }}</p>
+                            <div class="progress" style="height: 25px;">
+                                {% if total_skills > 0 %}
+                                    {% widthratio skills_no_bookings total_skills 100 as percentage %}
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: {{ percentage }}%">{{ percentage }}%</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Session completion rate:</strong></p>
+                            {% if total_sessions > 0 %}
+                                {% widthratio completed_sessions total_sessions 100 as completion_rate %}
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ completion_rate }}%">{{ completion_rate }}%</div>
+                                </div>
+                            {% else %}
+                                <p class="text-muted">No sessions yet</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

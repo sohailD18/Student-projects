@@ -1,0 +1,126 @@
+{% extends 'campaigns/base.html' %}
+
+{% block title %}{{ action }} A/B Test Campaign - Email Marketing Platform{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{{ action }} A/B Test Campaign</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'campaigns:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'campaigns:campaign_list' %}">Campaigns</a></li>
+                <li class="breadcrumb-item active">A/B Test</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-gem"></i> {{ action }} A/B Test Campaign
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>A/B Testing:</strong> Create two different versions of your email to test which performs better. The system will split your subscribers and track metrics for each version.
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Campaign Name *</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="text-danger">{{ form.name.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.email_list.id_for_label }}" class="form-label">Email List *</label>
+                        {{ form.email_list }}
+                        {% if form.email_list.errors %}
+                            <div class="text-danger">{{ form.email_list.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.ab_test_variant_a.id_for_label }}" class="form-label">Variant A (Control) *</label>
+                            {{ form.ab_test_variant_a }}
+                            {% if form.ab_test_variant_a.errors %}
+                                <div class="text-danger">{{ form.ab_test_variant_a.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Your original email template</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.ab_test_variant_b.id_for_label }}" class="form-label">Variant B (Test) *</label>
+                            {{ form.ab_test_variant_b }}
+                            {% if form.ab_test_variant_b.errors %}
+                                <div class="text-danger">{{ form.ab_test_variant_b.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">The variation to test against</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.ab_test_split_percentage.id_for_label }}" class="form-label">Split Percentage *</label>
+                        {{ form.ab_test_split_percentage }}
+                        {% if form.ab_test_split_percentage.errors %}
+                            <div class="text-danger">{{ form.ab_test_split_percentage.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            {{ form.ab_test_split_percentage.value }}% for Variant A, {{ 100|add:form.ab_test_split_percentage.value }}% for Variant B
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.scheduled_at.id_for_label }}" class="form-label">Schedule (Optional)</label>
+                        {{ form.scheduled_at }}
+                        {% if form.scheduled_at.errors %}
+                            <div class="text-danger">{{ form.scheduled_at.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'campaigns:campaign_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-info">
+                            <i class="bi bi-gem"></i> {{ action }} A/B Test Campaign
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-lightbulb"></i> A/B Test Tips
+            </div>
+            <div class="card-body">
+                <h6>Best Practices</h6>
+                <ul class="small text-muted">
+                    <li>Test only ONE element at a time</li>
+                    <li>Common things to test: subject lines, CTAs, layout, images</li>
+                    <li>Wait for statistical significance before declaring a winner</li>
+                    <li>Minimum sample size: 1000 recipients per variant</li>
+                </ul>
+
+                <h6 class="mt-3">What to Test</h6>
+                <ul class="small text-muted">
+                    <li><strong>Subject Lines:</strong> Different wording, length, personalization</li>
+                    <li><strong>CTAs:</strong> Button color, text, placement</li>
+                    <li><strong>Content:</strong> Short vs long, different images</li>
+                    <li><strong>Sender:</strong> Different from names</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

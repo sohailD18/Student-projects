@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Multi-Vendor Marketplace{% endblock %}
+
+{% block content %}
+<div id="carouselExample" class="carousel slide mb-4" data-bs-ride="carousel">
+    <div class="carousel-inner">
+        <div class="carousel-item active" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="d-flex justify-content-center align-items-center text-white" style="height: 300px;">
+                <div class="text-center">
+                    <h1 class="display-4">Welcome to Marketplace</h1>
+                    <p class="lead">Discover products from multiple vendors</p>
+                    <a href="{% url 'product_list' %}" class="btn btn-light btn-lg">Shop Now</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2 class="mb-3">Categories</h2>
+<div class="row mb-4">
+    {% for category in categories %}
+    <div class="col-md-3 col-sm-6 mb-3">
+        <a href="{% url 'category_detail' category.slug %}" class="text-decoration-none">
+            <div class="card h-100 text-center">
+                {% if category.image %}
+                <img src="{{ category.image.url }}" class="card-img-top" alt="{{ category.name }}" style="height: 150px; object-fit: cover;">
+                {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                    <i class="fas fa-folder fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ category.name }}</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<h2 class="mb-3">Featured Products</h2>
+<div class="row">
+    {% for product in featured_products %}
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card card-product h-100">
+            {% if product.image %}
+            <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                <i class="fas fa-image fa-3x text-muted"></i>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <h6 class="card-title">
+                    <a href="{% url 'product_detail' product.slug %}" class="text-decoration-none text-dark">
+                        {{ product.name|truncatewords:10 }}
+                    </a>
+                </h6>
+                <p class="card-text text-muted small">{{ product.vendor.store_name }}</p>
+                <div class="mb-2">
+                    {% if product.sale_price and product.sale_price < product.price %}
+                    <span class="price-original">${{ product.price }}</span>
+                    <span class="price-sale">${{ product.sale_price }}</span>
+                    {% else %}
+                    <span class="fw-bold">${{ product.price }}</span>
+                    {% endif %}
+                </div>
+                <div class="star-rating mb-2">
+                    {% for i in "12345" %}
+                    <i class="fas fa-star{% if forloop.counter <= product.rating %}{% else %}-o{% endif %}"></i>
+                    {% endfor %}
+                    <small class="text-muted">({{ product.review_count }})</small>
+                </div>
+                <button class="btn btn-primary btn-sm w-100" onclick="addToCart({{ product.id }})">
+                    <i class="fas fa-cart-plus"></i> Add to Cart
+                </button>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center">
+        <p class="text-muted">No featured products yet.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<h2 class="mb-3 mt-4">New Arrivals</h2>
+<div class="row">
+    {% for product in new_arrivals %}
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card card-product h-100">
+            {% if product.image %}
+            <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                <i class="fas fa-image fa-3x text-muted"></i>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <h6 class="card-title">
+                    <a href="{% url 'product_detail' product.slug %}" class="text-decoration-none text-dark">
+                        {{ product.name|truncatewords:10 }}
+                    </a>
+                </h6>
+                <p class="card-text text-muted small">{{ product.vendor.store_name }}</p>
+                <div class="mb-2">
+                    {% if product.sale_price and product.sale_price < product.price %}
+                    <span class="price-original">${{ product.price }}</span>
+                    <span class="price-sale">${{ product.sale_price }}</span>
+                    {% else %}
+                    <span class="fw-bold">${{ product.price }}</span>
+                    {% endif %}
+                         </div>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-danger btn-sm" onclick="addToWishlist({{ product.id }})">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="addToCart({{ product.id }})">
+                                <i class="fas fa-cart-plus"></i> Add to Cart
+                            </button>
+                        </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center">
+        <p class="text-muted">No new arrivals yet.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

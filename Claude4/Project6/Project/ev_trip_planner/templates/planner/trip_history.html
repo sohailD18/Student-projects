@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Trip History - EV Trip Planner{% endblock %}
+
+{% block content %}
+<section class="trip-history-section">
+    <div class="container">
+        <div class="section-header">
+            <h1>Trip History</h1>
+            <a href="{% url 'planner:plan_trip' %}" class="btn btn-primary">Plan New Trip</a>
+        </div>
+
+        <div class="trips-table-container">
+            {% if trips %}
+                <table class="trips-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Route</th>
+                            <th>Distance</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trip in trips %}
+                            <tr>
+                                <td>{{ trip.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <div class="route-cell">
+                                        <span>{{ trip.start_location }}</span>
+                                        <span class="route-arrow">→</span>
+                                        <span>{{ trip.destination }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ trip.estimated_distance }} km</td>
+                                <td>{{ trip.formatted_duration }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ trip.status }}">
+                                        {{ trip.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="{% url 'planner:trip_detail' trip.pk %}" class="btn btn-sm btn-secondary">View</a>
+                                        <a href="{% url 'planner:trip_delete' trip.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="empty-state-large">
+                    <div class="empty-icon">🗺️</div>
+                    <h2>No Trips Yet</h2>
+                    <p>Start planning your first EV adventure!</p>
+                    <a href="{% url 'planner:plan_trip' %}" class="btn btn-primary btn-large">Plan Your First Trip</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

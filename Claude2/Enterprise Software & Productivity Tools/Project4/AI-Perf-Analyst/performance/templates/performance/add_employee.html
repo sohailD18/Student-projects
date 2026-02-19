@@ -1,0 +1,104 @@
+{% extends 'performance/base.html' %}
+
+{% block title %}Add Employee - AI Performance Analyst{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h1 class="card-title">➕ Add New Employee</h1>
+                <p class="card-subtitle">Enter employee information to get started</p>
+            </div>
+            <a href="{% url 'employee_list' %}" class="btn btn-outline">Cancel</a>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name" class="form-label">Full Name *</label>
+                        <input type="text"
+                               id="name"
+                               name="name"
+                               class="form-control"
+                               placeholder="John Doe"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email"
+                               id="email"
+                               name="email"
+                               class="form-control"
+                               placeholder="john.doe@company.com">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="department" class="form-label">Department *</label>
+                        <input type="text"
+                               id="department"
+                               name="department"
+                               class="form-control"
+                               placeholder="Engineering"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="role" class="form-label">Role/Position *</label>
+                        <input type="text"
+                               id="role"
+                               name="role"
+                               class="form-control"
+                               placeholder="Software Engineer"
+                               required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="join_date" class="form-label">Join Date *</label>
+                    <input type="date"
+                           id="join_date"
+                           name="join_date"
+                           class="form-control"
+                           required>
+                    <div class="form-hint">When did this employee join the company?</div>
+                </div>
+
+                <div class="btn-group" style="margin-top: 2rem;">
+                    <button type="submit" class="btn btn-success">
+                        <span>💾</span> Save Employee
+                    </button>
+                    <a href="{% url 'employee_list' %}" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick Help -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">💡 Tips</h2>
+        </div>
+        <div class="card-body">
+            <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                <li>Fill in all required fields marked with *</li>
+                <li>The join date helps calculate tenure and track progress over time</li>
+                <li>After adding an employee, you can start logging their performance records</li>
+                <li>Use descriptive department names for better analytics</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set default join date to today
+    document.getElementById('join_date').valueAsDate = new Date();
+</script>
+{% endblock %}

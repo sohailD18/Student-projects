@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-plus-circle"></i> Create Fraud Case</h1>
+    <a href="{% url 'fraud_cases' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back to Cases</a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">New Case Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Case Title</label>
+                        <input type="text" name="title" id="title" class="form-control" required placeholder="e.g., Suspicious Credit Card Fraud Pattern">
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea name="description" id="description" class="form-control" rows="4" required placeholder="Describe the suspicious activity..."></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="priority" class="form-label">Priority</label>
+                            <select name="priority" id="priority" class="form-select" required>
+                                <option value="p1">P1 - Critical</option>
+                                <option value="p2">P2 - High</option>
+                                <option value="p3" selected>P3 - Medium</option>
+                                <option value="p4">P4 - Low</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="assigned_to" class="form-label">Assigned To</label>
+                            <input type="text" name="assigned_to" id="assigned_to" class="form-control" placeholder="e.g., john.doe@company.com">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="transaction_id" class="form-label">Link Transaction (Optional)</label>
+                        <input type="number" name="transaction_id" id="transaction_id" class="form-control" placeholder="Enter transaction ID to link">
+                        <small class="form-text text-muted">You can link more transactions after creating the case</small>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Create Case</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Priority Guidelines</h5>
+            </div>
+            <div class="card-body">
+                <h6>P1 - Critical</h6>
+                <p class="small text-muted">Immediate action required. Large financial impact or active fraud.</p>
+                <h6>P2 - High</h6>
+                <p class="small text-muted">Urgent investigation needed. Significant risk indicators.</p>
+                <h6>P3 - Medium</h6>
+                <p class="small text-muted">Standard investigation. Moderate suspicious activity.</p>
+                <h6>P4 - Low</h6>
+                <p class="small text-muted">Low priority. Minor anomalies or routine review.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

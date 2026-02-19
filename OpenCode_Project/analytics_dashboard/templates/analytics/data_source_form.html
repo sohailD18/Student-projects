@@ -1,0 +1,30 @@
+{% extends 'analytics/base.html' %}
+
+{% block title %}Add Data Source - Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-container">
+        <h1>Add Data Source</h1>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="name">Data Source Name:</label>
+                <input type="text" name="name" id="name" required>
+            </div>
+            <div class="form-group">
+                <label for="source_type">Source Type:</label>
+                <select name="source_type" id="source_type" required>
+                    {% for value, label in source_types %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Add Data Source</button>
+                <a href="/data-sources/" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

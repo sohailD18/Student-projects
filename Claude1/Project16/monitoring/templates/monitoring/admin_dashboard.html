@@ -1,0 +1,196 @@
+{% extends 'monitoring/base.html' %}
+
+{% block title %}Admin Dashboard - EduProctor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="app-container wide">
+        <!-- Header -->
+        <div class="app-header">
+            <h1><i class="bi bi-shield-check me-2"></i>EduProctor Admin Dashboard</h1>
+            <p>Monitor exam sessions and review proctoring data</p>
+            <div class="mt-3">
+                <a href="{% url 'monitoring:create_exam' %}" class="btn btn-light btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i>Create New Exam
+                </a>
+                <a href="/admin/" class="btn btn-outline-light btn-sm ms-2">
+                    <i class="bi bi-gear me-1"></i>Django Admin
+                </a>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-file-earmark-text text-primary" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2">{{ total_exams }}</h3>
+                        <p class="text-muted mb-0">Total Exams</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-people text-success" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2">{{ total_students }}</h3>
+                        <p class="text-muted mb-0">Registered Students</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-clock-history text-info" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2">{{ total_sessions }}</h3>
+                        <p class="text-muted mb-0">Total Sessions</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-play-circle text-warning" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2">{{ active_sessions }}</h3>
+                        <p class="text-muted mb-0">Active Sessions</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Exam Sessions -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Recent Exam Sessions</h5>
+            </div>
+            <div class="card-body">
+                {% if sessions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Exam</th>
+                                <th>Start Time</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Violations</th>
+                                <th>Score</th>
+                                <th>Integrity</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in sessions %}
+                            <tr>
+                                <td>
+                                    <strong>{{ session.student.name }}</strong><br>
+                                    <small class="text-muted">{{ session.student.student_id }}</small>
+                                </td>
+                                <td>{{ session.exam.subject }}</td>
+                                <td>{{ session.start_time|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    {% if session.duration_minutes %}
+                                        {{ session.duration_minutes }} min
+                                    {% else %}
+                                        <span class="badge bg-warning">In Progress</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if session.status == 'submitted' %}
+                                        <span class="badge bg-success">Submitted</span>
+                                    {% elif session.status == 'in_progress' %}
+                                        <span class="badge bg-primary">Active</span>
+                                    {% elif session.status == 'terminated' %}
+                                        <span class="badge bg-danger">Terminated</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ session.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge {% if session.violation_count == 0 %}bg-success{% elif session.violation_count <= 3 %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ session.violation_count }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if session.result %}
+                                        <span class="badge {% if session.result.score >= session.exam.passing_score %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ session.result.score }}%
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if session.result %}
+                                        <span class="badge {% if session.result.integrity_score >= 80 %}bg-success{% elif session.result.integrity_score >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ session.result.integrity_score }}%
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if session.result %}
+                                        <a href="{% url 'monitoring:integrity_report' session.exam.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-file-earmark-text"></i> Report
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">Pending</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    No exam sessions found. Students need to take exams first.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-lightning me-2"></i>Quick Actions</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'monitoring:create_exam' %}" class="btn btn-primary-custom">
+                                <i class="bi bi-plus-circle me-2"></i>Create New Exam
+                            </a>
+                            <a href="/admin/monitoring/" class="btn btn-outline-secondary">
+                                <i class="bi bi-grid me-2"></i>Manage All Data
+                            </a>
+                            <a href="/admin/monitoring/student/" class="btn btn-outline-secondary">
+                                <i class="bi bi-person-plus me-2"></i>Add Students
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>System Info</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-1"><strong>Exam Session Recording:</strong> <span class="badge bg-success">Enabled</span></p>
+                        <p class="mb-1"><strong>Camera Monitoring:</strong> <span class="badge bg-success">Active</span></p>
+                        <p class="mb-1"><strong>Violation Detection:</strong> <span class="badge bg-success">Active</span></p>
+                        <p class="mb-1"><strong>Weighted Scoring:</strong> <span class="badge bg-success">Enabled</span></p>
+                        <p class="mb-0"><strong>Database:</strong> <span class="badge bg-info">SQLite</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Results - AgriSense{% endblock %}
+
+{% block content %}
+<section class="result-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>📊 Analysis Results</h1>
+            <p>Your soil health has been analyzed. Here are the recommendations.</p>
+        </div>
+
+        <div class="result-container">
+            <!-- Input Parameters Card -->
+            <div class="result-card parameters-card">
+                <div class="card-header">
+                    <h2>🔬 Soil Parameters Analyzed</h2>
+                    <span class="timestamp">{{ soil_data.timestamp|date:"F d, Y - g:i A" }}</span>
+                </div>
+                <div class="parameters-grid">
+                    <div class="param-item">
+                        <span class="param-label">Nitrogen (N)</span>
+                        <span class="param-value nitrogen">{{ soil_data.nitrogen }} <small>mg/kg</small></span>
+                    </div>
+                    <div class="param-item">
+                        <span class="param-label">Phosphorus (P)</span>
+                        <span class="param-value phosphorus">{{ soil_data.phosphorus }} <small>mg/kg</small></span>
+                    </div>
+                    <div class="param-item">
+                        <span class="param-label">Potassium (K)</span>
+                        <span class="param-value potassium">{{ soil_data.potassium }} <small>mg/kg</small></span>
+                    </div>
+                    <div class="param-item">
+                        <span class="param-label">pH Level</span>
+                        <span class="param-value ph">{{ soil_data.ph_level }}</span>
+                    </div>
+                    <div class="param-item">
+                        <span class="param-label">Moisture</span>
+                        <span class="param-value moisture">{{ soil_data.moisture }} <small>%</small></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Crop Recommendation Card -->
+            <div class="result-card recommendation-card highlight-card">
+                <div class="card-header">
+                    <h2>🌱 Recommended Crop</h2>
+                    {% if saved_to_history %}
+                    <span class="badge badge-success">
+                        <span>✓</span> Saved to History
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="recommendation-content">
+                    <div class="crop-recommendation">
+                        <span class="crop-emoji">🌾</span>
+                        <h3 class="crop-name">{{ soil_data.recommended_crop }}</h3>
+                        <p class="crop-description">
+                            Based on your soil parameters, <strong>{{ soil_data.recommended_crop }}</strong> is the most suitable crop for your field.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fertilizer Suggestions Card -->
+            <div class="result-card fertilizer-card">
+                <div class="card-header">
+                    <h2>💡 Fertilizer Advisory</h2>
+                </div>
+                <div class="fertilizer-content">
+                    <div class="fertilizer-text">
+                        {{ formatted_suggestion|linebreaks }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="result-actions">
+                <a href="{% url 'analyze' %}" class="btn btn-primary">
+                    <span>🔬</span> New Analysis
+                </a>
+                <a href="{% url 'history' %}" class="btn btn-secondary">
+                    <span>📋</span> View History
+                </a>
+                <button onclick="window.print()" class="btn btn-outline">
+                    <span>🖨️</span> Print Results
+                </button>
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+            <h3>📝 Note</h3>
+            <p>These recommendations are based on AI analysis of your soil parameters. For critical farming decisions, we recommend consulting with local agricultural experts who understand your specific climate, soil type, and regional conditions.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    .navbar, .footer, .result-actions {
+        display: none !important;
+    }
+    .result-card {
+        break-inside: avoid;
+    }
+}
+</style>
+{% endblock %}

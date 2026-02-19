@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container" style="max-width: 700px;">
+    <!-- Breadcrumb -->
+    <div style="margin-bottom: 1rem;">
+        <a href="{% url 'core:profile_detail' profile.pk %}" style="color: var(--color-accent); text-decoration: none;">
+            ← Back to Profile
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">{{ title }}</h1>
+            <p class="card-subtitle">Module 1: Financial Behavior Data Collection</p>
+        </div>
+
+        <form id="transactionForm" method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.transaction_type.id_for_label }}">Transaction Type</label>
+                {{ form.transaction_type }}
+                {% if form.transaction_type.errors %}
+                    <div class="error">{{ form.transaction_type.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.category.id_for_label }}">Category</label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                    <div class="error">{{ form.category.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.amount.id_for_label }}">Amount (USD)</label>
+                    {{ form.amount }}
+                    {% if form.amount.errors %}
+                        <div class="error">{{ form.amount.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.date.id_for_label }}">Date</label>
+                    {{ form.date }}
+                    {% if form.date.errors %}
+                        <div class="error">{{ form.date.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.description.id_for_label }}">Description (Optional)</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="error">{{ form.description.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="card-footer">
+                <a href="{% url 'core:profile_detail' profile.pk %}" class="btn btn-secondary">Cancel</a>
+                <button type="button" onclick="addTransaction({{ profile.pk }})" class="btn btn-success">Add Transaction</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Quick Add Tips -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Transaction Categories</h3>
+        </div>
+        <div class="card-body">
+            <div class="grid grid-2">
+                <div>
+                    <h4 style="color: var(--color-success); margin-bottom: 0.5rem;">Income Categories</h4>
+                    <ul style="padding-left: 1.25rem; color: var(--color-gray-600);">
+                        <li>Salary - Regular employment income</li>
+                        <li>Freelance - Self-employment income</li>
+                        <li>Investment - Dividends, interest, capital gains</li>
+                        <li>Business - Business revenue</li>
+                        <li>Other Income - Miscellaneous income</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="color: var(--color-aggressive); margin-bottom: 0.5rem;">Expense Categories</h4>
+                    <ul style="padding-left: 1.25rem; color: var(--color-gray-600);">
+                        <li>Housing - Rent or mortgage payments</li>
+                        <li>Food - Groceries and dining</li>
+                        <li>Utilities - Electricity, water, gas, internet</li>
+                        <li>Healthcare - Medical expenses and insurance</li>
+                        <li>Transportation - Vehicle and commute costs</li>
+                        <li>Entertainment - Leisure and entertainment</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

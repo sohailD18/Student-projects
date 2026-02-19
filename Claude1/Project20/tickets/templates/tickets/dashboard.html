@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - HelpDeskPro</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background: #f5f7fa;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            color: #495057;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: #667eea;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+        }
+
+        /* Stats Cards */
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            border: none;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .stat-icon-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .stat-icon-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .stat-icon-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #212529;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        /* Filters Card */
+        .filters-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            border: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .filters-card h5 {
+            color: #212529;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 0.625rem 1rem;
+        }
+
+        .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+        }
+
+        /* Table Card */
+        .table-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            border: none;
+            overflow: hidden;
+        }
+
+        .table-card .card-header {
+            background: white;
+            border-bottom: 2px solid #f0f0f0;
+            padding: 1.5rem;
+        }
+
+        .table-card .card-header h5 {
+            color: #212529;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            color: #495057;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 1rem 1.25rem;
+        }
+
+        .table tbody td {
+            padding: 1rem 1.25rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #f0f0f0;
+            color: #495057;
+        }
+
+        .table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Ticket ID Badge */
+        .ticket-id-badge {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 0.4rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-open {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-in_progress {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-closed {
+            background: #d6d8db;
+            color: #383d41;
+        }
+
+        .status-escalated {
+            background: #ffe3e3;
+            color: #dc3545;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Priority Badges */
+        .priority-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .priority-high {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .priority-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .priority-low {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        /* Action Buttons */
+        .btn-action {
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit {
+            background: var(--primary-gradient);
+            border: none;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+
+        .btn-escalate {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            border: none;
+            color: white;
+            margin-right: 0.25rem;
+        }
+
+        .btn-escalate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+            color: white;
+        }
+
+        /* Subject Text */
+        .subject-text {
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #495057;
+        }
+
+        /* Staff Badge */
+        .staff-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            background: #e7f1ff;
+            border-radius: 8px;
+            color: #0b5ed7;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .staff-unassigned {
+            background: #f8f9fa;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .table-responsive {
+                font-size: 0.85rem;
+            }
+
+            .stat-card {
+                margin-bottom: 1rem;
+            }
+
+            .subject-text {
+                max-width: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'tickets:home' %}">
+                <i class="bi bi-headset"></i> HelpDeskPro
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'tickets:home' %}">
+                            <i class="bi bi-house-door"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'tickets:submit' %}">
+                            <i class="bi bi-plus-circle"></i> Submit Ticket
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'tickets:dashboard' %}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'tickets:analytics' %}">
+                            <i class="bi bi-graph-up"></i> Analytics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/">
+                            <i class="bi bi-gear"></i> Admin
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container">
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2 class="fw-bold" style="color: #212529;">
+                        <i class="bi bi-speedometer2" style="color: #667eea;"></i> Staff Dashboard
+                    </h2>
+                    <p class="text-muted mb-0">Manage and monitor all support tickets</p>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-2-4 col-md-6" style="flex: 0 0 auto; width: 20%;">
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-primary">
+                            <i class="bi bi-ticket-perforated-fill"></i>
+                        </div>
+                        <div class="stat-value">{{ total_tickets }}</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                </div>
+                <div class="col-lg-2-4 col-md-6" style="flex: 0 0 auto; width: 20%;">
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-success">
+                            <i class="bi bi-envelope-open"></i>
+                        </div>
+                        <div class="stat-value">{{ open_tickets }}</div>
+                        <div class="stat-label">Open</div>
+                    </div>
+                </div>
+                <div class="col-lg-2-4 col-md-6" style="flex: 0 0 auto; width: 20%;">
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-warning">
+                            <i class="bi bi-arrow-repeat"></i>
+                        </div>
+                        <div class="stat-value">{{ in_progress_tickets }}</div>
+                        <div class="stat-label">In Progress</div>
+                    </div>
+                </div>
+                <div class="col-lg-2-4 col-md-6" style="flex: 0 0 auto; width: 20%;">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);">
+                        <div class="stat-icon" style="background: rgba(255, 255, 255, 0.2); color: white;">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                        </div>
+                        <div class="stat-value" style="color: white;">{{ escalated_tickets }}</div>
+                        <div class="stat-label" style="color: rgba(255, 255, 255, 0.9);">Escalated</div>
+                    </div>
+                </div>
+                <div class="col-lg-2-4 col-md-6" style="flex: 0 0 auto; width: 20%;">
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-info">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <div class="stat-value">{{ closed_tickets }}</div>
+                        <div class="stat-label">Closed</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-card">
+                <h5><i class="bi bi-funnel"></i> Filter Tickets</h5>
+                <form method="get" class="row g-3">
+                    <div class="col-md-5">
+                        <label for="statusFilter" class="form-label fw-semibold">Status</label>
+                        <select name="status" id="statusFilter" class="form-select">
+                            <option value="">All Statuses</option>
+                            {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label for="priorityFilter" class="form-label fw-semibold">Priority</label>
+                        <select name="priority" id="priorityFilter" class="form-select">
+                            <option value="">All Priorities</option>
+                            {% for value, label in priority_choices %}
+                                <option value="{{ value }}" {% if priority_filter == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100" style="background: var(--primary-gradient); border: none; border-radius: 10px; padding: 0.625rem;">
+                            <i class="bi bi-funnel-fill"></i> Filter
+                        </button>
+                    </div>
+                </form>
+                {% if status_filter or priority_filter %}
+                    <div class="mt-3">
+                        <a href="{% url 'tickets:dashboard' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-x-circle"></i> Clear Filters
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Tickets Table -->
+            <div class="table-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="bi bi-list-ul"></i> All Tickets</h5>
+                    <span class="badge bg-primary rounded-pill">{{ tickets.count }} tickets</span>
+                </div>
+                <div class="table-responsive">
+                    {% if tickets %}
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Ticket ID</th>
+                                    <th>Subject</th>
+                                    <th>Status</th>
+                                    <th>Priority</th>
+                                    <th>Assigned Staff</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ticket in tickets %}
+                                    <tr>
+                                        <td>
+                                            <span class="ticket-id-badge">{{ ticket.unique_ticket_id }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="subject-text" title="{{ ticket.complaint.description }}">
+                                                <strong>{{ ticket.complaint.name }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ ticket.complaint.get_category_display }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge status-{{ ticket.status }}">
+                                                <i class="bi bi-{% if ticket.status == 'open' %}envelope{% elif ticket.status == 'in_progress' %}arrow-repeat{% elif ticket.status == 'escalated' %}exclamation-triangle-fill{% else %}check-circle{% endif %}"></i>
+                                                {{ ticket.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="priority-badge priority-{{ ticket.complaint.priority }}">
+                                                <i class="bi bi-flag-fill"></i>
+                                                {{ ticket.complaint.get_priority_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if ticket.assigned_staff %}
+                                                <span class="staff-badge">
+                                                    <i class="bi bi-person-fill"></i>
+                                                    {{ ticket.assigned_staff }}
+                                                </span>
+                                            {% else %}
+                                                <span class="staff-badge staff-unassigned">
+                                                    <i class="bi bi-dash-circle"></i>
+                                                    Unassigned
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small>{{ ticket.created_at|date:"M d, Y" }}</small>
+                                            <br>
+                                            <small class="text-muted">{{ ticket.created_at|date:"H:i" }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                {% if ticket.status != 'escalated' and ticket.status != 'closed' %}
+                                                    <a href="{% url 'tickets:escalate_ticket' ticket_id=ticket.unique_ticket_id %}"
+                                                       class="btn btn-action btn-escalate"
+                                                       title="Escalate this ticket"
+                                                       onclick="return confirm('Are you sure you want to escalate ticket {{ ticket.unique_ticket_id }}?');">
+                                                        <i class="bi bi-exclamation-triangle-fill"></i> Escalate
+                                                    </a>
+                                                {% endif %}
+                                                <a href="{% url 'tickets:update_ticket' ticket_id=ticket.unique_ticket_id %}"
+                                                   class="btn btn-action btn-edit"
+                                                   title="Edit this ticket">
+                                                    <i class="bi bi-pencil-square"></i> Edit
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <h5>No tickets found</h5>
+                            <p>Try adjusting your filters or check back later.</p>
+                            <a href="{% url 'tickets:dashboard' %}" class="btn btn-primary" style="background: var(--primary-gradient); border: none;">
+                                <i class="bi bi-arrow-clockwise"></i> Clear Filters
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+{% extends 'videos/base.html' %}
+
+{% block title %}Watch History - VideoStream{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <h2 class="mb-4">Watch History</h2>
+    
+    <div class="row">
+        {% for item in history %}
+        <div class="col-md-3 mb-4">
+            <div class="card video-card h-100" onclick="location.href='{% url 'video_detail' item.video.slug %}'">
+                <div class="video-thumbnail">
+                    {% if item.video.thumbnail %}
+                    <img src="{{ item.video.thumbnail.url }}" class="card-img-top" alt="{{ item.video.title }}" style="height: 180px; object-fit: cover;">
+                    {% else %}
+                    <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 180px;">
+                        <span class="text-white">No Thumbnail</span>
+                    </div>
+                    {% endif %}
+                    <span class="duration-badge">{{ item.video.formatted_duration }}</span>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">{{ item.video.title|truncatewords:10 }}</h6>
+                    <p class="card-text text-muted small">{{ item.video.channel.name }}</p>
+                    <p class="card-text small">
+                        Watched {{ item.last_watched_at|timesince }} ago
+                        {% if item.completed %}
+                        <span class="badge bg-success">Completed</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="text-center text-muted">No watch history yet.</p>
+            <div class="text-center">
+                <a href="{% url 'video_list' %}" class="btn btn-primary">Browse Videos</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

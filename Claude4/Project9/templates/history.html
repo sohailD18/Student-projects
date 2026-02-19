@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}History - AgriSense{% endblock %}
+
+{% block content %}
+<section class="history-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>📋 Analysis History</h1>
+            <p>View your past soil analyses and recommendations.</p>
+        </div>
+
+        {% if analyses %}
+        <div class="history-container">
+            <div class="history-stats">
+                <div class="stat-card">
+                    <span class="stat-number">{{ total_count }}</span>
+                    <span class="stat-label">Total Analyses</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{{ analyses|length }}</span>
+                    <span class="stat-label">Displayed</span>
+                </div>
+            </div>
+
+            <div class="history-list">
+                {% for soil in analyses %}
+                <div class="history-item">
+                    <div class="history-header">
+                        <div class="history-id">#{{ soil.id }}</div>
+                        <div class="history-date">{{ soil.timestamp|date:"M d, Y - g:i A" }}</div>
+                    </div>
+                    <div class="history-body">
+                        <div class="history-params">
+                            <span class="param-tag nitrogen">N: {{ soil.nitrogen }}</span>
+                            <span class="param-tag phosphorus">P: {{ soil.phosphorus }}</span>
+                            <span class="param-tag potassium">K: {{ soil.potassium }}</span>
+                            <span class="param-tag ph">pH: {{ soil.ph_level }}</span>
+                            <span class="param-tag moisture">M: {{ soil.moisture }}%</span>
+                        </div>
+                        <div class="history-crop">
+                            <span class="crop-label">Recommended:</span>
+                            <span class="crop-name">{{ soil.recommended_crop }}</span>
+                        </div>
+                    </div>
+                    <div class="history-footer">
+                        <a href="{% url 'result' soil.id %}" class="btn btn-small btn-primary">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if analyses.has_other_pages %}
+            <div class="pagination">
+                {% if analyses.has_previous %}
+                <a href="?page={{ analyses.previous_page_number }}" class="btn btn-outline">← Previous</a>
+                {% endif %}
+
+                <span class="pagination-info">
+                    Page {{ analyses.number }} of {{ analyses.paginator.num_pages }}
+                </span>
+
+                {% if analyses.has_next %}
+                <a href="?page={{ analyses.next_page_number }}" class="btn btn-outline">Next →</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <h2>No Analyses Yet</h2>
+            <p>You haven't performed any soil analyses yet. Start by analyzing your soil!</p>
+            <a href="{% url 'analyze' %}" class="btn btn-primary btn-large">
+                <span>🔬</span> Start Analysis
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <h3>Quick Actions</h3>
+            <div class="action-buttons">
+                <a href="{% url 'analyze' %}" class="btn btn-secondary">
+                    <span>🔬</span> New Analysis
+                </a>
+                <a href="{% url 'home' %}" class="btn btn-outline">
+                    <span>🏠</span> Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

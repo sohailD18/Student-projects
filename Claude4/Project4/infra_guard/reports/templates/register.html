@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - InfraGuard{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card auth-card-large">
+        <div class="auth-header">
+            <h1>Create Account</h1>
+            <p>Join InfraGuard to report and track infrastructure issues</p>
+        </div>
+
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    <span class="alert-icon">✕</span>
+                    Please correct the errors below.
+                    <button class="alert-close" onclick="this.parentElement.remove()">×</button>
+                </div>
+            {% endif %}
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.username.id_for_label }}">Username</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <span class="error-text">{{ form.username.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}">Email</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <span class="error-text">{{ form.email.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.first_name.id_for_label }}">First Name</label>
+                    {{ form.first_name }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.last_name.id_for_label }}">Last Name</label>
+                    {{ form.last_name }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.password.id_for_label }}">Password</label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                    <span class="error-text">{{ form.password.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.confirm_password.id_for_label }}">Confirm Password</label>
+                {{ form.confirm_password }}
+                {% if form.confirm_password.errors %}
+                    <span class="error-text">{{ form.confirm_password.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.role.id_for_label }}">I am a</label>
+                    {{ form.role }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.phone.id_for_label }}">Phone (Optional)</label>
+                    {{ form.phone }}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-large btn-block">Create Account</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{% url 'reports:login' %}">Sign in here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

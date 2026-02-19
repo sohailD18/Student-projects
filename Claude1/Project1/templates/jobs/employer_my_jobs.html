@@ -1,0 +1,290 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Jobs - JobPortal Employer</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .employer-nav { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .employer-nav .navbar-brand { color: white !important; font-weight: 700; }
+        .employer-nav .nav-link { color: rgba(255,255,255,0.9) !important; }
+        .employer-nav .nav-link:hover { color: white !important; }
+        .job-card { border: none; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition: transform 0.2s; }
+        .job-card:hover { transform: translateY(-5px); }
+    </style>
+</head>
+<body>
+    <!-- Employer Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark employer-nav sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'accounts:employer_dashboard' %}">
+                <i class="fas fa-building me-2"></i>{{ user.profile.company|default:user.username }}
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#employerNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="employerNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:employer_dashboard' %}">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'jobs:my_posted_jobs' %}">
+                            <i class="fas fa-briefcase me-1"></i>My Jobs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'jobs:post_job' %}">
+                            <i class="fas fa-plus me-1"></i>Post New Job
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="employerDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>{{ user.first_name|default:user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'accounts:employer_profile' %}">
+                                <i class="fas fa-user me-2"></i>My Profile
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'accounts:logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Page Header -->
+    <div class="bg-primary text-white py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-2"><i class="fas fa-briefcase me-2"></i>My Posted Jobs</h1>
+                    <p class="mb-0 opacity-75">Manage all your job postings and track applications</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <a href="{% url 'jobs:post_job' %}" class="btn btn-light btn-lg">
+                        <i class="fas fa-plus me-2"></i>Post New Job
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="py-5">
+        <div class="container">
+            {% if jobs %}
+            <div class="row">
+                {% for job in jobs %}
+                <div class="col-lg-6 mb-4">
+                    <div class="card job-card h-100">
+                        <div class="card-header bg-white border-bottom">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">{{ job.title }}</h5>
+                                <span class="badge
+                                {% if job.status == 'active' %}bg-success
+                                {% elif job.status == 'draft' %}bg-warning
+                                {% elif job.status == 'closed' %}bg-danger
+                                {% else %}bg-secondary
+                                {% endif %}">{{ job.get_status_display }}</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-2"><i class="fas fa-building text-muted me-2"></i>{{ job.company }}</p>
+                            <p class="mb-2"><i class="fas fa-map-marker-alt text-muted me-2"></i>{{ job.location }}</p>
+                            <p class="mb-2"><i class="fas fa-briefcase text-muted me-2"></i>{{ job.get_job_type_display }}</p>
+                            <p class="mb-2"><i class="fas fa-users text-muted me-2"></i>{{ job.application_count }} Applications</p>
+                            <p class="mb-2"><i class="fas fa-eye text-muted me-2"></i>{{ job.views_count }} Views</p>
+                            <p class="mb-0"><i class="far fa-calendar text-muted me-2"></i>Posted on {{ job.created_at|date:"F d, Y" }}</p>
+
+                            <hr>
+
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'jobs:job_detail' job.id %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>View
+                                </a>
+                                <a href="{% url 'jobs:job_applicants' job.id %}" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-users me-1"></i>View Applicants
+                                </a>
+                                <button class="btn btn-outline-danger btn-sm delete-job-btn" data-job-id="{{ job.id }}" data-job-title="{{ job.title }}">
+                                    <i class="fas fa-trash me-1"></i>Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-briefcase text-muted mb-3" style="font-size: 3rem;"></i>
+                    <h4>No Jobs Posted Yet</h4>
+                    <p class="text-muted">You haven't posted any jobs yet. Start hiring talented candidates today!</p>
+                    <a href="{% url 'jobs:post_job' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Post Your First Job
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Employer Footer -->
+    <footer class="bg-dark text-white mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5><i class="fas fa-building me-2"></i>JobPortal Employer</h5>
+                    <p class="small text-muted">Find the best talent for your company. Post jobs and manage applications effortlessly.</p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h6>Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'accounts:employer_dashboard' %}" class="text-white text-decoration-none">Dashboard</a></li>
+                        <li><a href="{% url 'jobs:my_posted_jobs' %}" class="text-white text-decoration-none">My Jobs</a></li>
+                        <li><a href="{% url 'jobs:post_job' %}" class="text-white text-decoration-none">Post New Job</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h6>Contact</h6>
+                    <p class="small mb-1"><i class="fas fa-envelope me-2"></i>{{ user.email }}</p>
+                    <p class="small mb-1"><i class="fas fa-building me-2"></i>{{ user.profile.company }}</p>
+                </div>
+            </div>
+            <hr class="bg-secondary">
+            <div class="text-center small">
+                <p class="mb-0">&copy; 2025 JobPortal Employer Portal. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Helper function to get CSRF token
+        function getCSRFToken() {
+            return document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                   getCookie('csrftoken');
+        }
+
+        // Helper function to get cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const deleteBtns = document.querySelectorAll('.delete-job-btn');
+        deleteBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const jobId = this.dataset.jobId;
+                const jobTitle = this.dataset.jobTitle;
+
+                Swal.fire({
+                    title: 'Delete Job?',
+                    text: `Are you sure you want to delete "${jobTitle}"? This action cannot be undone.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const formData = new FormData();
+                        formData.append('csrfmiddlewaretoken', getCSRFToken());
+
+                        fetch(`/jobs/${jobId}/delete/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCSRFToken()
+                            },
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: data.message,
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: data.error || 'An error occurred'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An error occurred. Please try again.'
+                            });
+                        });
+                    }
+                });
+            });
+        });
+    });
+    </script>
+</body>
+</html>

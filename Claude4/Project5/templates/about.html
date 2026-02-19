@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}About - AI Trip Planner{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h1 class="mb-4">
+                <i class="bi bi-info-circle text-primary me-2"></i>
+                About AI Trip Planner
+            </h1>
+
+            <!-- Overview -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-bullseye text-primary me-2"></i>
+                        Project Overview
+                    </h5>
+                    <p class="card-text">
+                        The <strong>AI-Based Intelligent Trip Planning System</strong> is a final year BCA project
+                        designed to revolutionize travel planning by leveraging machine learning algorithms.
+                        The system analyzes historical trip data, current traffic conditions, and weather patterns
+                        to provide intelligent route recommendations.
+                    </p>
+                    <p class="card-text">
+                        Unlike basic navigation tools, our system learns from travel patterns and predicts
+                        optimal routes, reducing travel time, costs, and stress for users.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Problem Statement -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                        Problem Statement
+                    </h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <i class="bi bi-x-circle text-danger me-2"></i>
+                            Travel planning is time-consuming due to lack of proper route analysis
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-x-circle text-danger me-2"></i>
+                            Unpredictable travel times and traffic congestion
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-x-circle text-danger me-2"></i>
+                            Existing systems don't provide personalized recommendations
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-x-circle text-danger me-2"></i>
+                            No learning from historical travel patterns
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Objectives -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        Project Objectives
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><i class="bi bi-arrow-right-circle text-primary me-2"></i>Develop AI-based trip planning system</li>
+                                <li class="mb-2"><i class="bi bi-arrow-right-circle text-primary me-2"></i>Suggest optimal routes based on distance and time</li>
+                                <li class="mb-2"><i class="bi bi-arrow-right-circle text-primary me-2"></i>Analyze travel patterns for better recommendations</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><i class="bi bi-arrow-right-circle text-primary me-2"></i>Improve travel efficiency and user experience</li>
+                                <li class="mb-2"><i class="bi bi-arrow-right-circle text-primary me-2"></i>Reduce travel delays and route confusion</li>
+                                <li class="mb-2"><i class="bi bi-arrow-right-circle text-primary me-2"></i>Provide fuel cost estimation</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technology Stack -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-gear text-info me-2"></i>
+                        Technology Stack
+                    </h5>
+                    <div class="row text-center">
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="p-3 bg-light rounded">
+                                <i class="bi bi-code-slash fs-2 text-success"></i>
+                                <p class="mb-0 mt-2 fw-bold">Django 5.0</p>
+                                <small class="text-muted">Backend</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="p-3 bg-light rounded">
+                                <i class="bi bi-brain fs-2 text-primary"></i>
+                                <p class="mb-0 mt-2 fw-bold">scikit-learn</p>
+                                <small class="text-muted">ML Library</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="p-3 bg-light rounded">
+                                <i class="bi bi-palette fs-2 text-warning"></i>
+                                <p class="mb-0 mt-2 fw-bold">Bootstrap 5</p>
+                                <small class="text-muted">Frontend</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="p-3 bg-light rounded">
+                                <i class="bi bi-map fs-2 text-danger"></i>
+                                <p class="mb-0 mt-2 fw-bold">Leaflet.js</p>
+                                <small class="text-muted">Maps</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scope -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-diagram-3 text-purple me-2"></i>
+                        Project Scope
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success"><i class="bi bi-check-lg me-2"></i>In Scope</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">✓ Short and long-distance trip planning</li>
+                                <li class="mb-2">✓ Source-to-destination route analysis</li>
+                                <li class="mb-2">✓ AI-based route recommendations</li>
+                                <li class="mb-2">✓ Web-based application</li>
+                                <li class="mb-2">✓ Academic prototype with simulated data</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted"><i class="bi bi-dash-lg me-2"></i>Out of Scope</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">✗ Real-time GPS tracking</li>
+                                <li class="mb-2">✗ Voice navigation</li>
+                                <li class="mb-2">✗ Mobile application</li>
+                                <li class="mb-2">✗ Live traffic API integration</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div class="text-center mb-5">
+                <a href="{% url 'core:home' %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-house-door me-2"></i>
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

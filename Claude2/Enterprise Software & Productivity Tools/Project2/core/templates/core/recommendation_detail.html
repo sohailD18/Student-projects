@@ -1,0 +1,122 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ recommendation.title }} - Recommendation - OptiFlow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-lightbulb"></i> Recommendation Details</h1>
+            <a href="{% url 'core:recommendation_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Recommendations
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card border-start border-5 border-{{ recommendation.priority|yesno:'danger,warning,info,success' }}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h4 class="card-title">{{ recommendation.title }}</h4>
+                        <small class="text-muted">
+                            {{ recommendation.process.name }}{% if recommendation.step %} - {{ recommendation.step.name }}{% endif %}
+                        </small>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge priority-{{ recommendation.priority }} mb-1">
+                            {{ recommendation.get_priority_display }}
+                        </span>
+                        <br>
+                        <span class="badge bg-secondary">{{ recommendation.get_status_display }}</span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <small class="text-muted">Category</small>
+                        <h6>{{ recommendation.get_category_display }}</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">Impact Score</small>
+                        <h6>{{ recommendation.impact_score|floatformat:0 }}/100</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">Created</small>
+                        <h6>{{ recommendation.created_at|date:"M d, Y" }}</h6>
+                    </div>
+                </div>
+
+                <h5>Description</h5>
+                <p>{{ recommendation.description }}</p>
+
+                <h5>Recommended Actions</h5>
+                <div class="bg-light p-3 rounded">
+                    <pre class="mb-0">{{ recommendation.recommendation }}</pre>
+                </div>
+
+                {% if recommendation.current_value and recommendation.target_value %}
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="card bg-danger bg-opacity-10">
+                            <div class="card-body text-center">
+                                <h4>{{ recommendation.current_value|floatformat:1 }}</h4>
+                                <small class="text-muted">Current Value</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-success bg-opacity-10">
+                            <div class="card-body text-center">
+                                <h4>{{ recommendation.target_value|floatformat:1 }}</h4>
+                                <small class="text-muted">Target Value</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if recommendation.potential_savings %}
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-clock"></i>
+                    <strong>Potential Savings:</strong> {{ recommendation.potential_savings|floatformat:1 }} minutes
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Update Status</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'core:recommendation_update' recommendation.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">New Status</label>
+                        <select name="status" class="form-select">
+                            <option value="pending" {% if recommendation.status == 'pending' %}selected{% endif %}>Pending Review</option>
+                            <option value="approved" {% if recommendation.status == 'approved' %}selected{% endif %}>Approved</option>
+                            <option value="implemented" {% if recommendation.status == 'implemented' %}selected{% endif %}>Implemented</option>
+                            <option value="rejected" {% if recommendation.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Update Status</button>
+                </form>
+            </div>
+        </div>
+
+        {% if recommendation.implemented_at %}
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-title">Implementation Date</h6>
+                <p class="text-muted">{{ recommendation.implemented_at|date:"F d, Y H:i" }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Trip - EV Trip Planner{% endblock %}
+
+{% block content %}
+<section class="trip-detail-section">
+    <div class="container">
+        <div class="form-card">
+            <div class="form-header">
+                <h1>Delete Trip</h1>
+                <p>{{ trip.start_location }} → {{ trip.destination }}</p>
+            </div>
+
+            <div class="delete-confirmation">
+                <div class="warning-icon">⚠️</div>
+                <h2>Are you sure?</h2>
+                <p>This action cannot be undone. You will permanently delete this trip from your history.</p>
+
+                <div class="trip-details-summary">
+                    <p><strong>Route:</strong> {{ trip.start_location }} to {{ trip.destination }}</p>
+                    <p><strong>Distance:</strong> {{ trip.estimated_distance }} km</p>
+                    <p><strong>Planned:</strong> {{ trip.created_at|date:"F d, Y" }}</p>
+                    <p><strong>Status:</strong> {{ trip.get_status_display }}</p>
+                </div>
+
+                <form method="post" class="confirmation-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Yes, Delete This Trip</button>
+                    <a href="{% url 'planner:trip_detail' trip.pk %}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,277 @@
+{% extends 'agriSense/base.html' %}
+
+{% block title %}Analytics & Reports - AgriSense{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="text-center mb-5">
+    <h1 class="page-title">
+        <i class="bi bi-file-bar-graph me-2"></i>Analytics & Reports
+    </h1>
+    <p class="page-subtitle">View detailed agricultural analytics and insights</p>
+</div>
+
+<div class="row g-4">
+    <!-- Yield Analysis Section -->
+    <div class="col-lg-6">
+        <div class="agri-card">
+            <h5 class="mb-4">
+                <i class="bi bi-graph-up me-2"></i>Yield Analysis
+            </h5>
+
+            <form id="yieldAnalysisForm">
+                <div class="mb-3">
+                    <label for="crop_select" class="form-label">Select Crop for Analysis</label>
+                    <select id="crop_select" name="crop_name" class="form-select" required>
+                        <option value="">Choose crop...</option>
+                        {% for crop in crops %}
+                        <option value="{{ crop.name }}">{{ crop.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-agri">
+                    <i class="bi bi-search me-2"></i>Analyze Trends
+                </button>
+            </form>
+
+            <div id="yieldResult" class="result-box"></div>
+        </div>
+    </div>
+
+    <!-- Pest Risk Section -->
+    <div class="col-lg-6">
+        <div class="agri-card">
+            <h5 class="mb-4">
+                <i class="bi bi-shield-exclamation me-2"></i>Pest Risk Assessment
+            </h5>
+
+            <form id="pestRiskForm">
+                <div class="mb-3">
+                    <label for="season_select" class="form-label">Select Season</label>
+                    <select id="season_select" name="season" class="form-select" required>
+                        <option value="">Choose season...</option>
+                        {% for season in seasons %}
+                        <option value="{{ season.name }}">{{ season.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-agri">
+                    <i class="bi bi-shield-check me-2"></i>Assess Risk
+                </button>
+            </form>
+
+            <div id="pestResult" class="result-box"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Performing Crops Table -->
+<div class="agri-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="mb-0">
+            <i class="bi bi-trophy-fill me-2" style="color: #ffd54f;"></i>Top Performing Crops
+        </h5>
+        <span class="badge bg-success">{{ top_crops|length }} crops</span>
+    </div>
+
+    {% if top_crops %}
+    <div class="table-responsive">
+        <table class="table table-agri mb-0">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-hash me-1"></i>Rank</th>
+                    <th><i class="bi bi-basket me-1"></i>Crop</th>
+                    <th><i class="bi bi-tag me-1"></i>Type</th>
+                    <th class="text-end"><i class="bi bi-graph-up me-1"></i>Avg Yield</th>
+                    <th class="text-center"><i class="bi bi-database me-1"></i>Data Points</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for crop in top_crops %}
+                <tr>
+                    <td>
+                        <span class="badge {% if forloop.counter == 1 %}bg-warning text-dark{% elif forloop.counter == 2 %}bg-secondary{% elif forloop.counter == 3 %}bg-info text-dark{% else %}bg-light text-dark{% endif %} fs-6">
+                            #{{ forloop.counter }}
+                        </span>
+                    </td>
+                    <td><strong>{{ crop.name }}</strong></td>
+                    <td><span class="badge bg-light text-dark">{{ crop.type }}</span></td>
+                    <td class="text-end">
+                        <strong class="text-success">{{ crop.average_yield }}</strong>
+                        <small class="text-muted">tons/ha</small>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-success">{{ crop.records_count }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-4">
+        <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+        <p class="text-muted mb-0">No yield data available yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Yield Analysis
+document.getElementById('yieldAnalysisForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const cropName = document.getElementById('crop_select').value;
+    const resultDiv = document.getElementById('yieldResult');
+
+    try {
+        resultDiv.style.display = 'none';
+        resultDiv.classList.remove('show');
+
+        const response = await fetch(`/api/yield-analysis/?crop_name=${encodeURIComponent(cropName)}`);
+        const data = await response.json();
+
+        if (data.error) {
+            resultDiv.innerHTML = `<div class="error-box">${data.error}</div>`;
+        } else {
+            const trendColor = data.trend >= 0 ? 'text-success' : 'danger';
+            const trendIcon = data.trend >= 0 ? 'bi-arrow-up' : 'bi-arrow-down';
+
+            let html = `
+                <div class="mb-3">
+                    <h6 class="text-success"><i class="bi bi-check-circle me-2"></i>Yield Analysis: ${data.crop}</h6>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3 col-6">
+                        <div class="agri-card stat-card text-center mb-0">
+                            <h5 class="display-6 fw-bold mb-1" style="color: var(--primary-green);">${data.years_recorded}</h5>
+                            <p class="mb-0">Years</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="agri-card stat-card text-center mb-0">
+                            <h5 class="display-6 fw-bold mb-1" style="color: #4caf50;">${data.average_yield}</h5>
+                            <p class="mb-0">Avg t/ha</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="agri-card stat-card text-center mb-0">
+                            <h5 class="display-6 fw-bold mb-1" style="color: var(--secondary-green);">${data.max_yield}</h5>
+                            <p class="mb-0">Max t/ha</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="agri-card stat-card text-center mb-0">
+                            <h5 class="display-6 fw-bold mb-1 ${trendColor}">
+                                <i class="bi ${trendIcon} me-1"></i>
+                                ${data.trend >= 0 ? '+' : ''}${data.trend}
+                            </h5>
+                            <p class="mb-0">Trend</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="agri-card mb-0">
+                    <h6 class="mb-3"><i class="bi bi-calendar3 me-2"></i>Yearly Records</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Year</th>
+                                    <th class="text-end">Yield</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.records.map(r => `
+                                    <tr>
+                                        <td>${r.year}</td>
+                                        <td class="text-end"><strong>${r.quantity}</strong></td>
+                                        <td><small class="text-muted">${r.recorded_date}</small></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            resultDiv.innerHTML = html;
+            resultDiv.classList.add('show');
+        }
+    } catch (err) {
+        resultDiv.innerHTML = `<div class="error-box">Error fetching yield analysis. Please try again.</div>`;
+    }
+});
+
+// Pest Risk Assessment
+document.getElementById('pestRiskForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const season = document.getElementById('season_select').value;
+    const resultDiv = document.getElementById('pestResult');
+
+    try {
+        resultDiv.style.display = 'none';
+        resultDiv.classList.remove('show');
+
+        const response = await fetch(`/api/pest-risk/?season=${encodeURIComponent(season)}`);
+        const data = await response.json();
+
+        let riskBadgeClass = 'bg-success';
+        if (data.risk_level === 'High') riskBadgeClass = 'bg-danger';
+        else if (data.risk_level === 'Medium' || data.risk_level === 'Low to Medium') riskBadgeClass = 'bg-warning text-dark';
+
+        let html = `
+            <div class="mb-3">
+                <h6><i class="bi bi-shield-check me-2"></i>Pest Risk: ${data.season}</h6>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <div class="agri-card mb-0">
+                        <small class="text-muted">Risk Level</small>
+                        <p class="mb-0">
+                            <span class="badge ${riskBadgeClass} fs-6">${data.risk_level}</span>
+                        </p>
+                        <small class="text-muted">Score: ${data.risk_score}/10</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="agri-card mb-0">
+                        <small class="text-muted">Recommendation</small>
+                        <p class="mb-0 small">${data.recommendation}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="agri-card mb-0">
+                        <h6 class="mb-2"><i class="bi bi-bug me-1"></i>Common Pests</h6>
+                        <ul class="mb-0 ps-3">
+                            ${data.common_pests.map(p => `<li class="mb-1"><small>${p}</small></li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="agri-card mb-0">
+                        <h6 class="mb-2"><i class="bi bi-shield me-1"></i>Preventive Measures</h6>
+                        <ul class="mb-0 ps-3">
+                            ${data.preventive_measures.map(m => `<li class="mb-1"><small>${m}</small></li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                <small>${data.weather_factor}</small>
+            </div>
+        `;
+        resultDiv.innerHTML = html;
+        resultDiv.classList.add('show');
+    } catch (err) {
+        resultDiv.innerHTML = `<div class="error-box">Error fetching pest risk data. Please try again.</div>`;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ process.name }} - Process Details - OptiFlow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="bi bi-diagram-2"></i> {{ process.name }}</h1>
+                <p class="text-muted mb-0">{{ process.description|default:"No description" }}</p>
+            </div>
+            <div class="btn-group">
+                <a href="{% url 'core:process_dashboard' process.id %}" class="btn btn-outline-primary">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+                <a href="{% url 'core:process_analysis' process.id %}" class="btn btn-outline-success">
+                    <i class="bi bi-graph-up"></i> Analyze
+                </a>
+                <a href="{% url 'core:step_create' process.id %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add Step
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Process Info -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="card-title">{{ steps.count }}</h4>
+                <p class="text-muted mb-0">Total Steps</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="card-title">{{ process.get_average_cycle_time|floatformat:1 }}</h4>
+                <p class="text-muted mb-0">Avg Cycle Time (min)</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="card-title">{{ process.get_completion_rate }}%</h4>
+                <p class="text-muted mb-0">Completion Rate</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="card-title">{{ process.target_cycle_time|default:"-" }}</h4>
+                <p class="text-muted mb-0">Target Time (min)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Process Steps -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-list-ol"></i> Process Steps</h5>
+            </div>
+            <div class="card-body">
+                {% if steps %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Order</th>
+                                <th>Step Name</th>
+                                <th>Type</th>
+                                <th>Estimated Duration</th>
+                                <th>Avg Execution Time</th>
+                                <th>Failure Rate</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for step in steps %}
+                            <tr>
+                                <td><span class="badge bg-secondary">#{{ step.step_order }}</span></td>
+                                <td><strong>{{ step.name }}</strong></td>
+                                <td>
+                                    <span class="badge bg-{{ step.step_type|yesno:'primary,info,warning,success,dark' }}">
+                                        {{ step.get_step_type_display }}
+                                    </span>
+                                </td>
+                                <td>{{ step.estimated_duration|default:"-" }} min</td>
+                                <td>{{ step.get_average_execution_time|floatformat:1 }} min</td>
+                                <td>
+                                    {% if step.get_failure_rate > 0 %}
+                                        <span class="text-danger">{{ step.get_failure_rate }}%</span>
+                                    {% else %}
+                                        <span class="text-success">0%</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if step.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
+                    <p class="text-muted">No steps defined for this process.</p>
+                    <a href="{% url 'core:step_create' process.id %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Add First Step
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

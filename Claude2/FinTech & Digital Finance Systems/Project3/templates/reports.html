@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load finance_filters %}
+
+{% block title %}Reports - Finance Intelligence{% endblock %}
+
+{% block content %}
+<div class="reports-container">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-file-earmark-bar-graph"></i> Monthly Reports</h1>
+        <button onclick="window.print()" class="btn btn-outline-primary">
+            <i class="bi bi-printer"></i> Print Report
+        </button>
+    </div>
+
+    <!-- Report Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="month" class="form-label">Month</label>
+                    <select name="month" id="month" class="form-select">
+                        {% for value, label in form.fields.month.choices %}
+                        <option value="{{ value }}" {% if form.month.value == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="year" class="form-label">Year</label>
+                    <select name="year" id="year" class="form-select">
+                        {% for value, label in form.fields.year.choices %}
+                        <option value="{{ value }}" {% if form.year.value == value %}selected{% endif %}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-funnel"></i> Generate Report
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Report Content -->
+    {% if report %}
+    <div id="report-content">
+        <!-- Report Header -->
+        <div class="text-center mb-4">
+            <h2>Financial Summary</h2>
+            <h4 class="text-muted">{{ report.month_name }}</h4>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card income-card text-center">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2">Total Income</h6>
+                        <h3 class="text-success mb-0">${{ report.total_income|floatformat:2 }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card expense-card text-center">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2">Total Expenses</h6>
+                        <h3 class="text-danger mb-0">${{ report.total_expense|floatformat:2 }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card savings-card text-center">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2">Net Savings</h6>
+                        <h3 class="{% if report.net_savings >= 0 %}text-success{% else %}text-danger{% endif %} mb-0">
+                            ${{ report.net_savings|floatformat:2 }}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card rate-card text-center">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2">Savings Rate</h6>
+                        <h3 class="text-info mb-0">{{ report.savings_rate|floatformat:1 }}%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Transaction Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <small class="text-muted d-block">Total</small>
+                                <h4 class="mb-0">{{ report.transaction_count }}</h4>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted d-block">Income</small>
+                                <h4 class="text-success mb-0">{{ report.income_count }}</h4>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted d-block">Expenses</small>
+                                <h4 class="text-danger mb-0">{{ report.expense_count }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Top Expense Categories</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if report.top_expense_categories %}
+                        <div class="list-group list-group-flush">
+                            {% for category, amount in report.top_expense_categories %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ category }}
+                                <span class="badge bg-primary rounded-pill">${{ amount|floatformat:2 }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center mb-0">No expense data</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budget Performance -->
+        {% if report.budget_performance %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Budget Performance</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th class="text-end">Budget</th>
+                                <th class="text-end">Spent</th>
+                                <th class="text-end">Remaining</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bp in report.budget_performance %}
+                            <tr>
+                                <td>{{ bp.category }}</td>
+                                <td class="text-end">${{ bp.budget|floatformat:2 }}</td>
+                                <td class="text-end">${{ bp.spent|floatformat:2 }}</td>
+                                <td class="text-end {% if bp.remaining < 0 %}text-danger{% else %}text-success{% endif %}">
+                                    ${{ bp.remaining|floatformat:2 }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ bp.status|get_status_color }}">{{ bp.status }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Transaction List -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">All Transactions ({{ report.transactions|length }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in report.transactions %}
+                            <tr>
+                                <td>{{ transaction.date|date:"M d, Y" }}</td>
+                                <td>{{ transaction.description }}</td>
+                                <td>{{ transaction.category }}</td>
+                                <td>
+                                    <span class="badge bg-{% if transaction.transaction_type == 'income' %}success{% else %}danger{% endif %}">
+                                        {{ transaction.transaction_type|title }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="{% if transaction.transaction_type == 'income' %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                        {% if transaction.transaction_type == 'income' %}+{% endif %}${{ transaction.amount }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No transactions for this period</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Select a month and year to generate a report.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

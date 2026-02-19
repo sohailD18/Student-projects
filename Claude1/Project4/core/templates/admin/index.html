@@ -1,0 +1,255 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; {% translate 'Welcome' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <!-- Custom Dashboard Cards -->
+    <div class="ecotrack-admin-dashboard">
+        <!-- Quick Stats -->
+        <div class="stats-grid">
+            <div class="stat-card stat-users">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-value">{{ total_users }}</div>
+                    <div class="stat-description">Active registered users</div>
+                </div>
+                <a href="/admin/auth/user/" class="stat-link">View All →</a>
+            </div>
+
+            <div class="stat-card stat-activities">
+                <div class="stat-icon">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Activities Logged</div>
+                    <div class="stat-value">{{ total_activities }}</div>
+                    <div class="stat-description">Total activities tracked</div>
+                </div>
+                <a href="/admin/core/activitylog/" class="stat-link">View All →</a>
+            </div>
+
+            <div class="stat-card stat-carbon">
+                <div class="stat-icon">
+                    <i class="fas fa-cloud"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Carbon Tracked</div>
+                    <div class="stat-value">{{ total_carbon|floatformat:0 }}</div>
+                    <div class="stat-description">kg CO₂ emissions</div>
+                </div>
+                <a href="/admin/core/activitylog/" class="stat-link">View Details →</a>
+            </div>
+
+            <div class="stat-card stat-points">
+                <div class="stat-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Points Awarded</div>
+                    <div class="stat-value">{{ total_points|floatformat:0 }}</div>
+                    <div class="stat-description">Avg: {{ avg_points|floatformat:0 }} per user</div>
+                </div>
+                <a href="/admin/core/userprofile/" class="stat-link">View Profiles →</a>
+            </div>
+
+            <div class="stat-card stat-badges">
+                <div class="stat-icon">
+                    <i class="fas fa-medal"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Badges Earned</div>
+                    <div class="stat-value">{{ total_earned }}</div>
+                    <div class="stat-description">{{ total_badges }} badge types</div>
+                </div>
+                <a href="/admin/core/userbadge/" class="stat-link">View Badges →</a>
+            </div>
+
+            <div class="stat-card stat-streaks">
+                <div class="stat-icon">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Active Streaks</div>
+                    <div class="stat-value">{{ total_streaks }}</div>
+                    <div class="stat-description">Avg: {{ avg_streak|floatformat:1 }} days</div>
+                </div>
+                <a href="/admin/core/userprofile/" class="stat-link">View Users →</a>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions-section">
+            <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+            <div class="quick-actions-grid">
+                <a href="/admin/custom-dashboard/" class="quick-action-btn">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/admin/core/userprofile/add/" class="quick-action-btn">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Add User</span>
+                </a>
+                <a href="/admin/core/badge/add/" class="quick-action-btn">
+                    <i class="fas fa-award"></i>
+                    <span>Create Badge</span>
+                </a>
+                <a href="/admin/core/challenge/add/" class="quick-action-btn">
+                    <i class="fas fa-trophy"></i>
+                    <span>New Challenge</span>
+                </a>
+                <a href="/admin/core/activitylog/" class="quick-action-btn">
+                    <i class="fas fa-list"></i>
+                    <span>View Activities</span>
+                </a>
+                <a href="{% url 'dashboard' %}" class="quick-action-btn primary">
+                    <i class="fas fa-home"></i>
+                    <span>App Home</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Activities & Top Users -->
+        <div class="dashboard-grid">
+            <div class="dashboard-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-history"></i> Recent Activities</h2>
+                    <a href="/admin/core/activitylog/" class="view-all">View All →</a>
+                </div>
+                <div class="panel-content">
+                    {% if recent_activities %}
+                        <ul class="recent-list">
+                            {% for activity in recent_activities %}
+                                <li class="recent-item">
+                                    <div class="activity-icon activity-{{ activity.activity_type|lower }}">
+                                        {% if activity.activity_type == 'Travel' %}<i class="fas fa-car"></i>
+                                        {% elif activity.activity_type == 'Energy' %}<i class="fas fa-bolt"></i>
+                                        {% elif activity.activity_type == 'Diet' %}<i class="fas fa-utensils"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="activity-details">
+                                        <div class="activity-user">{{ activity.user.username }}</div>
+                                        <div class="activity-type">{{ activity.activity_type }}</div>
+                                        <div class="activity-meta">
+                                            <span>{{ activity.date|date:"M d, Y" }}</span>
+                                            {% if activity.activity_subtype %}
+                                            <span>• {{ activity.get_activity_subtype_display }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="activity-carbon">
+                                        {{ activity.calculated_carbon|floatformat:1 }} kg
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No activities yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="dashboard-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-trophy"></i> Top Users</h2>
+                    <a href="/admin/core/userprofile/" class="view-all">View All →</a>
+                </div>
+                <div class="panel-content">
+                    {% if top_users %}
+                        <ul class="top-users-list">
+                            {% for profile in top_users %}
+                                <li class="top-user-item">
+                                    <div class="user-rank">#{{ forloop.counter }}</div>
+                                    <div class="user-info">
+                                        <div class="user-name">{{ profile.user.username }}</div>
+                                        <div class="user-location">
+                                            {% if profile.location %}
+                                                <i class="fas fa-map-marker-alt"></i> {{ profile.location }}
+                                            {% else %}
+                                                <i class="fas fa-globe"></i> Location not set
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="user-points">
+                                        <i class="fas fa-star"></i>
+                                        {{ profile.total_points }}
+                                    </div>
+                                    <div class="user-streak">
+                                        <i class="fas fa-fire"></i>
+                                        {{ profile.streak_days }}d
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-user-slash"></i>
+                            <p>No users yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Breakdown -->
+        <div class="dashboard-panel full-width">
+            <div class="panel-header">
+                <h2><i class="fas fa-chart-pie"></i> Activity Breakdown</h2>
+            </div>
+            <div class="panel-content">
+                <div class="activity-breakdown-grid">
+                    {% for item in activity_breakdown %}
+                        <div class="breakdown-card breakdown-{{ item.type|lower }}">
+                            <div class="breakdown-icon">
+                                {% if item.type == 'Travel' %}<i class="fas fa-car"></i>
+                                {% elif item.type == 'Energy' %}<i class="fas fa-bolt"></i>
+                                {% elif item.type == 'Diet' %}<i class="fas fa-utensils"></i>
+                                {% endif %}
+                            </div>
+                            <div class="breakdown-stats">
+                                <div class="breakdown-type">{{ item.type }}</div>
+                                <div class="breakdown-count">{{ item.count }} activities</div>
+                                <div class="breakdown-carbon">{{ item.carbon|floatformat:0 }} kg CO₂</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Model List Sections -->
+        {% if app_list %}
+            {% for app in app_list %}
+                {% for model in app.models %}
+                    <div class="model-section">
+                        <div class="model-header">
+                            <h3>
+                                <i class="fas fa-cube"></i>
+                                {{ model.name }}
+                            </h3>
+                            <p>{{ model.description }}</p>
+                        </div>
+                        {% if model.admin_url %}
+                            <a href="{{ model.admin_url }}" class="model-link">
+                                <i class="fas fa-cog"></i> Manage {{ model.name }}
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

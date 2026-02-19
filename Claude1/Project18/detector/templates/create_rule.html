@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-plus-circle"></i> Create Fraud Detection Rule</h1>
+    <a href="{% url 'fraud_rules' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back to Rules</a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">New Rule Configuration</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Rule Name</label>
+                        <input type="text" name="name" id="name" class="form-control" required placeholder="e.g., Very Large Transaction">
+                    </div>
+                    <div class="mb-3">
+                        <label for="rule_type" class="form-label">Rule Type</label>
+                        <select name="rule_type" id="rule_type" class="form-select" required onchange="showConfigFields()">
+                            <option value="">Select Type...</option>
+                            <option value="amount_threshold">Amount Threshold</option>
+                            <option value="time_based">Time Based</option>
+                            <option value="location_based">Location Based</option>
+                            <option value="velocity_check">Velocity Check</option>
+                            <option value="pattern_based">Pattern Based</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea name="description" id="description" class="form-control" rows="2" required placeholder="Describe what this rule detects"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="weight" class="form-label">Weight (0-100)</label>
+                        <input type="number" name="weight" id="weight" class="form-control" value="50" min="0" max="100" required>
+                        <small class="form-text text-muted">Higher weight = more important in risk scoring</small>
+                    </div>
+
+                    <!-- Dynamic config fields -->
+                    <div id="config-fields"></div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Create Rule</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Help</h5>
+            </div>
+            <div class="card-body">
+                <h6>Rule Types:</h6>
+                <ul>
+                    <li><strong>Amount Threshold:</strong> Flag transactions above a certain amount</li>
+                    <li><strong>Time Based:</strong> Flag transactions during specific hours</li>
+                    <li><strong>Location Based:</strong> Flag transactions from specific locations</li>
+                    <li><strong>Velocity Check:</strong> Flag rapid successive transactions</li>
+                    <li><strong>Pattern Based:</strong> Flag deviations from user behavior</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showConfigFields() {
+    const ruleType = document.getElementById('rule_type').value;
+    const container = document.getElementById('config-fields');
+    container.innerHTML = '';
+
+    if (ruleType === 'amount_threshold') {
+        container.innerHTML = `
+            <div class="mb-3">
+                <label class="form-label">Threshold Amount ($)</label>
+                <input type="number" name="threshold" class="form-control" value="10000" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Risk Points</label>
+                <input type="number" name="risk_points" class="form-control" value="50" required>
+            </div>
+        `;
+    } else if (ruleType === 'time_based') {
+        container.innerHTML = `
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Start Hour (0-23)</label>
+                    <input type="number" name="start_hour" class="form-control" value="1" min="0" max="23" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">End Hour (0-23)</label>
+                    <input type="number" name="end_hour" class="form-control" value="5" min="0" max="23" required>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Risk Points</label>
+                <input type="number" name="risk_points" class="form-control" value="30" required>
+            </div>
+        `;
+    } else if (ruleType === 'location_based') {
+        container.innerHTML = `
+            <div class="mb-3">
+                <label class="form-label">Suspicious Locations (comma-separated)</label>
+                <input type="text" name="suspicious_locations" class="form-control" value="Foreign,International" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Risk Points</label>
+                <input type="number" name="risk_points" class="form-control" value="40" required>
+            </div>
+        `;
+    } else if (ruleType === 'velocity_check') {
+        container.innerHTML = `
+            <div class="mb-3">
+                <label class="form-label">Time Window (minutes)</label>
+                <input type="number" name="time_window_minutes" class="form-control" value="10" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Max Transactions in Window</label>
+                <input type="number" name="max_transactions" class="form-control" value="3" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Risk Points</label>
+                <input type="number" name="risk_points" class="form-control" value="60" required>
+            </div>
+        `;
+    } else if (ruleType === 'pattern_based') {
+        container.innerHTML = `
+            <div class="mb-3">
+                <label class="form-label">Max Deviation (x average)</label>
+                <input type="number" name="max_deviation" class="form-control" value="3.0" step="0.1" required>
+            </div>
+            <div class="mb-3 form-check">
+                <input type="checkbox" name="check_new_merchant" id="check_new_merchant" class="form-check-input">
+                <label for="check_new_merchant" class="form-check-label">Flag new merchants</label>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Pattern Risk Points</label>
+                <input type="number" name="risk_points" class="form-control" value="40" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">New Merchant Risk Points</label>
+                <input type="number" name="merchant_risk_points" class="form-control" value="20" required>
+            </div>
+        `;
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "pricing_engine/base.html" %}
+
+{% block title %}Profile - Dynamic Pricing System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 10px 10px 0 0;
+        text-align: center;
+    }
+    .profile-header h2 {
+        margin: 0;
+        font-weight: bold;
+    }
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 48px;
+        color: #667eea;
+    }
+    .profile-body {
+        background: white;
+        padding: 40px;
+        border-radius: 0 0 10px 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .info-row {
+        padding: 15px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    .info-label {
+        font-weight: 600;
+        color: #495057;
+    }
+    .info-value {
+        color: #6c757d;
+    }
+    .stat-card {
+        text-align: center;
+        padding: 20px;
+        border-radius: 10px;
+        background: #f8f9fa;
+        margin-bottom: 20px;
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    .stat-label {
+        color: #6c757d;
+        margin-top: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-avatar">
+            <i class="bi bi-person-fill"></i>
+        </div>
+        <h2>{{ user.get_full_name|default:user.username }}</h2>
+        <p class="mb-0">@{{ user.username }}</p>
+    </div>
+
+    <div class="profile-body">
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-value">
+                        <i class="bi bi-calendar-check"></i>
+                        {{ days_since_joined }}+
+                    </div>
+                    <div class="stat-label">Member Since</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-value">Active</div>
+                    <div class="stat-label">Account Status</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-value">Staff</div>
+                    <div class="stat-label">
+                        {% if user.is_staff %}Yes{% else %}No{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h4 class="mb-3">Account Information</h4>
+        <div class="info-row">
+            <div class="row">
+                <div class="col-md-4 info-label">Username:</div>
+                <div class="col-md-8 info-value">{{ user.username }}</div>
+            </div>
+        </div>
+        <div class="info-row">
+            <div class="row">
+                <div class="col-md-4 info-label">Email:</div>
+                <div class="col-md-8 info-value">{{ user.email|default:"Not provided" }}</div>
+            </div>
+        </div>
+        <div class="info-row">
+            <div class="row">
+                <div class="col-md-4 info-label">First Name:</div>
+                <div class="col-md-8 info-value">{{ user.first_name|default:"Not provided" }}</div>
+            </div>
+        </div>
+        <div class="info-row">
+            <div class="row">
+                <div class="col-md-4 info-label">Last Name:</div>
+                <div class="col-md-8 info-value">{{ user.last_name|default:"Not provided" }}</div>
+            </div>
+        </div>
+        <div class="info-row">
+            <div class="row">
+                <div class="col-md-4 info-label">Member Since:</div>
+                <div class="col-md-8 info-value">{{ user.date_joined|date:"F d, Y" }}</div>
+            </div>
+        </div>
+        <div class="info-row">
+            <div class="row">
+                <div class="col-md-4 info-label">Last Login:</div>
+                <div class="col-md-8 info-value">{{ user.last_login|date:"F d, Y H:i"|default:"Never" }}</div>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="d-flex gap-2">
+            <a href="{% url 'pricing_engine:dashboard' %}" class="btn btn-primary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+            <a href="{% url 'pricing_engine:user_logout' %}" class="btn btn-danger ms-auto">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Create Process - OptiFlow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-plus-circle"></i> Create New Process</h1>
+            <a href="{% url 'core:process_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Processes
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Process Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" required
+                               placeholder="e.g., Order Processing, Customer Onboarding">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4"
+                                  placeholder="Describe the business process..."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="target_cycle_time" class="form-label">Target Cycle Time (minutes)</label>
+                                <input type="number" class="form-control" id="target_cycle_time"
+                                       name="target_cycle_time" step="0.1" min="0"
+                                       placeholder="e.g., 60">
+                                <small class="form-text text-muted">
+                                    Optional: Set a target time for process completion
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="active" selected>Active</option>
+                                    <option value="inactive">Inactive</option>
+                                    <option value="archived">Archived</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Create Process
+                        </button>
+                        <a href="{% url 'core:process_list' %}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card bg-info bg-opacity-10">
+            <div class="card-body">
+                <h5><i class="bi bi-info-circle"></i> About Business Processes</h5>
+                <p>A business process represents a complete workflow that you want to optimize.</p>
+                <h6>Examples:</h6>
+                <ul>
+                    <li>Order Processing</li>
+                    <li>Customer Onboarding</li>
+                    <li>Product Development</li>
+                    <li>Invoice Approval</li>
+                    <li>Hiring Process</li>
+                </ul>
+                <hr>
+                <p class="mb-0"><strong>Next Steps:</strong> After creating a process, add steps and start logging data to track performance.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

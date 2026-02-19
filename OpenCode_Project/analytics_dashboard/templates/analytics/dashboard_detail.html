@@ -1,0 +1,169 @@
+{% extends 'analytics/base.html' %}
+
+{% block title %}{{ dashboard.name }} - Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1>{{ dashboard.name }}</h1>
+            {% if dashboard.description %}
+            <p>{{ dashboard.description }}</p>
+            {% endif %}
+        </div>
+        <div class="header-actions">
+            <select id="timeRange" class="form-control" style="width: auto;">
+                <option value="1d">Last 24 Hours</option>
+                <option value="7d" selected>Last 7 Days</option>
+                <option value="30d">Last 30 Days</option>
+                <option value="90d">Last 90 Days</option>
+            </select>
+            <button id="refreshAll" class="btn btn-primary">Refresh All</button>
+        </div>
+    </div>
+
+    {% if widgets %}
+    <div class="widgets-grid" id="widgetsGrid">
+        {% for widget in widgets %}
+        <div class="widget-card" data-widget-id="{{ widget.id }}" style="grid-column: span {{ widget.width }}; grid-row: span {{ widget.height }};">
+            <div class="widget-header">
+                <h3>{{ widget.title }}</h3>
+                <button class="refresh-widget" data-widget-id="{{ widget.id }}">↻</button>
+            </div>
+            <div class="widget-content">
+                <canvas id="chart-{{ widget.id }}"></canvas>
+                {% if widget.metric.unit %}
+                <div class="widget-unit">{{ widget.metric.unit }}</div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h2>No widgets yet</h2>
+        <p>Widgets will appear here once you add them to this dashboard.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Store chart instances
+const charts = {};
+
+// Initialize all widgets
+async function initializeWidgets() {
+    const widgets = document.querySelectorAll('[data-widget-id]');
+
+    for (const widgetEl of widgets) {
+        const widgetId = widgetEl.dataset.widgetId;
+        await loadWidgetData(widgetId);
+    }
+}
+
+// Load widget data from API
+async function loadWidgetData(widgetId) {
+    const timeRange = document.getElementById('timeRange')?.value || '7d';
+    const response = await fetch(`/api/widget/${widgetId}/data/?range=${timeRange}`);
+    const data = await response.json();
+
+    renderWidgetChart(data);
+}
+
+// Render chart based on widget type
+function renderWidgetChart(data) {
+    const canvas = document.getElementById(`chart-${data.widget_id}`);
+    const ctx = canvas.getContext('2d');
+
+    // Destroy existing chart if any
+    if (charts[data.widget_id]) {
+        charts[data.widget_id].destroy();
+    }
+
+    const chartConfig = {
+        type: data.widget_type,
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: data.title,
+                data: data.data,
+                backgroundColor: getChartColors(data.widget_type, data.data.length),
+                borderColor: getChartBorderColors(data.widget_type),
+                borderWidth: 2,
+                tension: 0.4,
+                fill: data.widget_type === 'area'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: data.widget_type === 'pie' || data.widget_type === 'doughnut'
+                }
+            },
+            scales: data.widget_type === 'pie' || data.widget_type === 'doughnut' ? {} : {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    };
+
+    charts[data.widget_id] = new Chart(ctx, chartConfig);
+}
+
+// Get chart colors
+function getChartColors(type, count) {
+    const colors = [
+        'rgba(54, 162, 235, 0.7)',
+        'rgba(255, 99, 132, 0.7)',
+        'rgba(255, 206, 86, 0.7)',
+        'rgba(75, 192, 192, 0.7)',
+        'rgba(153, 102, 255, 0.7)',
+        'rgba(255, 159, 64, 0.7)',
+        'rgba(199, 199, 199, 0.7)',
+        'rgba(83, 102, 255, 0.7)'
+    ];
+
+    if (type === 'pie' || type === 'doughnut') {
+        return colors.slice(0, count);
+    }
+    return colors[0];
+}
+
+function getChartBorderColors(type) {
+    return type === 'pie' || type === 'doughnut' ? [] : 'rgba(54, 162, 235, 1)';
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    initializeWidgets();
+
+    // Time range change
+    document.getElementById('timeRange')?.addEventListener('change', () => {
+        initializeWidgets();
+    });
+
+    // Refresh all button
+    document.getElementById('refreshAll')?.addEventListener('click', () => {
+        initializeWidgets();
+    });
+
+    // Individual widget refresh
+    document.querySelectorAll('.refresh-widget').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const widgetId = e.target.dataset.widgetId;
+            loadWidgetData(widgetId);
+        });
+    });
+
+    // Auto-refresh every 5 minutes
+    setInterval(() => {
+        initializeWidgets();
+    }, 300000);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Add Step - {{ process.name }} - OptiFlow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-plus-circle"></i> Add Step to {{ process.name }}</h1>
+            <a href="{% url 'core:process_detail' process.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Process
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Step Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" required
+                                       placeholder="e.g., Order Verification">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="step_order" class="form-label">Order <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="step_order" name="step_order"
+                                       required min="1" value="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"
+                                  placeholder="Describe this step..."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="step_type" class="form-label">Step Type</label>
+                                <select class="form-select" id="step_type" name="step_type">
+                                    <option value="manual" selected>Manual Task</option>
+                                    <option value="automated">Automated Task</option>
+                                    <option value="approval">Approval Gate</option>
+                                    <option value="notification">Notification</option>
+                                    <option value="integration">System Integration</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="estimated_duration" class="form-label">Estimated Duration (minutes)</label>
+                                <input type="number" class="form-control" id="estimated_duration"
+                                       name="estimated_duration" step="0.1" min="0"
+                                       placeholder="e.g., 15">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Create Step
+                        </button>
+                        <a href="{% url 'core:process_detail' process.id %}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card bg-info bg-opacity-10">
+            <div class="card-body">
+                <h5><i class="bi bi-info-circle"></i> About Process Steps</h5>
+                <p>Steps represent individual phases or tasks in your business process workflow.</p>
+                <h6>Step Types:</h6>
+                <ul>
+                    <li><strong>Manual:</strong> Requires human intervention</li>
+                    <li><strong>Automated:</strong> Performed by systems</li>
+                    <li><strong>Approval:</strong> Requires approval</li>
+                    <li><strong>Notification:</strong> Sends alerts</li>
+                    <li><strong>Integration:</strong> External system call</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

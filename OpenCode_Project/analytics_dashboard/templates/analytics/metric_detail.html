@@ -1,0 +1,68 @@
+{% extends 'analytics/base.html' %}
+
+{% block title %}{{ metric.name }} - Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1>{{ metric.name }}</h1>
+            {% if metric.description %}
+            <p>{{ metric.description }}</p>
+            {% endif %}
+        </div>
+        <div class="header-actions">
+            <a href="/metrics/{{ metric.id }}/add-data/" class="btn btn-primary">Add Data</a>
+        </div>
+    </div>
+
+    <div class="metric-info">
+        <div class="info-card">
+            <h3>Type</h3>
+            <p>{{ metric.get_metric_type_display }}</p>
+        </div>
+        <div class="info-card">
+            <h3>Unit</h3>
+            <p>{{ metric.unit|default:"N/A" }}</p>
+        </div>
+        <div class="info-card">
+            <h3>Aggregation</h3>
+            <p>{{ metric.aggregation_period }}</p>
+        </div>
+        {% if metric.target_value %}
+        <div class="info-card">
+            <h3>Target</h3>
+            <p>{{ metric.target_value }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <h2>Recent Data Points</h2>
+    {% if recent_data %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Value</th>
+                    <th>Metadata</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in recent_data %}
+                <tr>
+                    <td>{{ data.timestamp }}</td>
+                    <td>{{ data.value }}</td>
+                    <td>{{ data.metadata }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No data points yet. <a href="/metrics/{{ metric.id }}/add-data/">Add your first data point</a>.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load deals_filters %}
+
+{% block title %}{{ view.view.title }} Deal - CRM System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{% if form.instance.pk %}Edit Deal{% else %}New Deal{% endif %}</h1>
+    <a href="{% url 'deal_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Deals
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                        <div class="text-danger">{{ form.title.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.company.id_for_label }}" class="form-label">Company</label>
+                        {{ form.company }}
+                        {% if form.company.errors %}
+                        <div class="text-danger">{{ form.company.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.contact.id_for_label }}" class="form-label">Contact</label>
+                        {{ form.contact }}
+                        {% if form.contact.errors %}
+                        <div class="text-danger">{{ form.contact.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.value.id_for_label }}" class="form-label">Value</label>
+                        {{ form.value }}
+                        {% if form.value.errors %}
+                        <div class="text-danger">{{ form.value.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.pipeline.id_for_label }}" class="form-label">Pipeline</label>
+                        {{ form.pipeline }}
+                        {% if form.pipeline.errors %}
+                        <div class="text-danger">{{ form.pipeline.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.stage.id_for_label }}" class="form-label">Stage</label>
+                        {{ form.stage }}
+                        {% if form.stage.errors %}
+                        <div class="text-danger">{{ form.stage.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.source.id_for_label }}" class="form-label">Source</label>
+                        {{ form.source }}
+                        {% if form.source.errors %}
+                        <div class="text-danger">{{ form.source.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.priority.id_for_label }}" class="form-label">Priority</label>
+                        {{ form.priority }}
+                        {% if form.priority.errors %}
+                        <div class="text-danger">{{ form.priority.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.expected_close_date.id_for_label }}" class="form-label">Expected Close Date</label>
+                        {{ form.expected_close_date }}
+                        {% if form.expected_close_date.errors %}
+                        <div class="text-danger">{{ form.expected_close_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <div class="text-danger">{{ form.description.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'deal_list' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> {% if form.instance.pk %}Update Deal{% else %}Create Deal{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        if (!input.classList.contains('form-control') && !input.classList.contains('form-select') && !input.classList.contains('form-check-input')) {
+            input.classList.add('form-control');
+        }
+    });
+});
+</script>
+{% endblock %}

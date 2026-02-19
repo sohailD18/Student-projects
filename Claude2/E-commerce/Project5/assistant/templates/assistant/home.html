@@ -1,0 +1,461 @@
+{% extends "assistant/base.html" %}
+
+{% block title %}Home - Smart Shopping Assistant{% endblock %}
+
+{% block content %}
+<style>
+    /* Hero Section */
+    .hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 5rem 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: float 20s linear infinite;
+    }
+
+    @keyframes float {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(50px, 50px); }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        animation: fadeInDown 0.8s ease-out;
+    }
+
+    .hero-subtitle {
+        font-size: 1.35rem;
+        margin-bottom: 2.5rem;
+        opacity: 0.95;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .hero-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        animation: fadeInUp 1s ease-out;
+    }
+
+    .hero-btn {
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-decoration: none;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .hero-btn-primary {
+        background: white;
+        color: var(--primary-color);
+    }
+
+    .hero-btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .hero-btn-secondary {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 2px solid white;
+    }
+
+    .hero-btn-secondary:hover {
+        background: white;
+        color: var(--primary-color);
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Features Section */
+    .features-section {
+        padding: 4rem 2rem;
+        background: white;
+    }
+
+    .section-title {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+    }
+
+    .section-subtitle {
+        text-align: center;
+        color: var(--text-secondary);
+        margin-bottom: 3rem;
+        font-size: 1.1rem;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .feature-card {
+        padding: 2rem;
+        background: var(--background);
+        border-radius: var(--radius-lg);
+        text-align: center;
+        transition: all 0.3s;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+        background: white;
+    }
+
+    .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .feature-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: var(--text-primary);
+    }
+
+    .feature-description {
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    /* Products Section */
+    .products-section {
+        padding: 4rem 2rem;
+        background: var(--background);
+    }
+
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .product-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-md);
+        transition: all 0.3s;
+        position: relative;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .product-image {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+    }
+
+    .product-content {
+        padding: 1.5rem;
+    }
+
+    .product-category {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .product-name {
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: var(--text-primary);
+    }
+
+    .product-rating {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .stars {
+        color: var(--warning-color);
+    }
+
+    .product-price {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    /* CTA Section */
+    .cta-section {
+        padding: 4rem 2rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-align: center;
+    }
+
+    .cta-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .cta-text {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+    }
+
+    /* Categories Section */
+    .categories-section {
+        padding: 4rem 2rem;
+        background: white;
+    }
+
+    .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .category-card {
+        background: var(--background);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .category-card:hover {
+        transform: translateY(-5px);
+        background: white;
+        box-shadow: var(--shadow-md);
+    }
+
+    .category-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .category-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .category-count {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">AI-Powered Smart Shopping</h1>
+        <p class="hero-subtitle">Discover products, compare options, and make informed purchase decisions with your personal AI shopping assistant</p>
+        <div class="hero-buttons">
+            <a href="{% url 'assistant:assistant' %}" class="hero-btn hero-btn-primary">
+                🤖 Try AI Assistant
+            </a>
+            <a href="{% url 'assistant:products' %}" class="hero-btn hero-btn-secondary">🛍️ Browse Products</a>
+            {% if not user.is_authenticated %}
+            <a href="{% url 'assistant:register' %}" class="hero-btn hero-btn-secondary">✨ Sign Up Free</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <h2 class="section-title">Why Choose Smart Shopper?</h2>
+    <p class="section-subtitle">Experience the future of online shopping with AI-powered features</p>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">💬</div>
+            <h3 class="feature-title">Conversational AI</h3>
+            <p class="feature-description">Chat naturally with our AI assistant to find exactly what you're looking for</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h3 class="feature-title">Smart Recommendations</h3>
+            <p class="feature-description">Get personalized product recommendations based on your preferences</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">⚖️</div>
+            <h3 class="feature-title">Easy Comparison</h3>
+            <p class="feature-description">Compare products side-by-side to make the best choice</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">💡</div>
+            <h3 class="feature-title">Purchase Insights</h3>
+            <p class="feature-description">Get AI-powered insights to support your buying decisions</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🔍</div>
+            <h3 class="feature-title">Smart Search</h3>
+            <p class="feature-description">Find products by budget, category, ratings, and more</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3 class="feature-title">Track History</h3>
+            <p class="feature-description">View your interactions and improve your shopping experience</p>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products Section -->
+<section class="products-section">
+    <h2 class="section-title">Featured Products</h2>
+    <p class="section-subtitle">Discover our top-rated products loved by customers</p>
+
+    <div class="products-grid">
+        {% for product in featured_products %}
+        <div class="product-card">
+            {% if product.image_url %}
+                <img src="{{ product.image_url }}" alt="{{ product.name }}" class="product-image">
+            {% else %}
+                <div class="product-image">📦</div>
+            {% endif %}
+            <div class="product-content">
+                <div class="product-category">{{ product.category }}</div>
+                <h3 class="product-name">{{ product.name }}</h3>
+                <div class="product-rating">
+                    <span class="stars">⭐</span>
+                    <span>{{ product.rating|floatformat:1 }}</span>
+                </div>
+                <div class="product-price">${{ product.price }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div style="text-align: center; margin-top: 3rem;">
+        <a href="{% url 'assistant:products' %}" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.875rem 2rem;">
+            View All Products →
+        </a>
+    </div>
+</section>
+
+<!-- Categories Section -->
+{% if categories %}
+<section class="categories-section">
+    <h2 class="section-title">Shop by Category</h2>
+    <p class="section-subtitle">Browse products in your favorite categories</p>
+
+    <div class="categories-grid">
+        {% for cat in categories %}
+        <a href="{% url 'assistant:products' %}?category={{ cat.category }}" class="category-card">
+            <div class="category-icon">
+                {% if 'Laptop' in cat.category %}💻
+                {% elif 'Phone' in cat.category %}📱
+                {% elif 'Headphone' in cat.category %}🎧
+                {% elif 'Tablet' in cat.category %}📱
+                {% elif 'Watch' in cat.category %}⌚
+                {% else %}📦{% endif %}
+            </div>
+            <div class="category-name">{{ cat.category }}s</div>
+            <div class="category-count">{{ cat.count }} products</div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <h2 class="cta-title">Ready to Shop Smarter?</h2>
+    <p class="cta-text">Experience AI-powered shopping with product comparison and personalized recommendations</p>
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="{% url 'assistant:products' %}" class="hero-btn hero-btn-primary">🛍️ Browse & Compare Products</a>
+        <a href="{% url 'assistant:assistant' %}" class="hero-btn hero-btn-secondary">🤖 Talk to AI Assistant</a>
+        {% if not user.is_authenticated %}
+        <a href="{% url 'assistant:register' %}" class="hero-btn hero-btn-secondary">✨ Create Free Account</a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page.title }} - CMS{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'pages:page_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Pages
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h1>{{ page.title }}</h1>
+        {% if page.published_at %}
+            <p class="text-muted">Published: {{ page.published_at|date:"F j, Y" }}</p>
+        {% endif %}
+        
+        <hr>
+        
+        {% for block in page.content_blocks %}
+            {% if block.is_active %}
+                <div class="content-block mb-4" style="order: {{ block.order }}">
+                    {% if block.block_type == 'TEXT' %}
+                        <div class="content-text {% if block.css_classes %}{{ block.css_classes }}{% endif %}">
+                            <h3>{{ block.title }}</h3>
+                            {{ block.content|safe }}
+                        </div>
+                    {% elif block.block_type == 'HTML' %}
+                        <div class="content-html {% if block.css_classes %}{{ block.css_classes }}{% endif %}">
+                            {{ block.content|safe }}
+                        </div>
+                    {% elif block.block_type == 'IMAGE' %}
+                        <div class="content-image {% if block.css_classes %}{{ block.css_classes }}{% endif %}">
+                            {% if block.title %}<h3>{{ block.title }}</h3>{% endif %}
+                            <img src="{{ block.content }}" class="img-fluid" alt="{{ block.alt_text|default:page.title }}">
+                            {% if block.caption %}<p class="text-muted small">{{ block.caption }}</p>{% endif %}
+                        </div>
+                    {% elif block.block_type == 'QUOTE' %}
+                        <blockquote class="blockquote {% if block.css_classes %}{{ block.css_classes }}{% endif %}">
+                            <p>{{ block.content }}</p>
+                            {% if block.title %}<footer class="blockquote-footer">{{ block.title }}</footer>{% endif %}
+                        </blockquote>
+                    {% elif block.block_type == 'DIVIDER' %}
+                        <hr {% if block.css_classes %}class="{{ block.css_classes }}"{% endif %}>
+                    {% elif block.block_type == 'CODE' %}
+                        <div class="content-code {% if block.css_classes %}{{ block.css_classes }}{% endif %}">
+                            {% if block.title %}<h3>{{ block.title }}</h3>{% endif %}
+                            <pre><code>{{ block.content }}</code></pre>
+                        </div>
+                    {% else %}
+                        <div class="content-generic {% if block.css_classes %}{{ block.css_classes }}{% endif %}">
+                            {% if block.title %}<h3>{{ block.title }}</h3>{% endif %}
+                            {{ block.content|safe }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endfor %}
+        
+        {% if page.views.count > 0 %}
+            <div class="alert alert-info mt-4">
+                <i class="fas fa-eye"></i> This page has been viewed {{ page.views.count }} times.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    {% for block in page.content_blocks %}
+        {% if block.custom_css %}
+            .content-block[data-block-id="{{ block.id }}"] {
+                {{ block.custom_css }}
+            }
+        {% endif %}
+    {% endfor %}
+</style>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch(`/api/pages/{{ page.slug }}/view/`, {method: 'POST'})
+            .catch(console.error);
+    });
+</script>
+{% endblock %}
+{% endblock %}

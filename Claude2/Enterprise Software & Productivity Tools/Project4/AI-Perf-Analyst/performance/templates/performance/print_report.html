@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Report - {{ employee.name }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            padding: 2rem;
+            background: #fff;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 3px solid #2563eb;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-item {
+            padding: 0.75rem;
+            background: white;
+            border-radius: 4px;
+            border-left: 4px solid #2563eb;
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2563eb;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        thead {
+            background: #1e293b;
+            color: white;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        .recommendation-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
+
+        .recommendation-title {
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 0.5rem;
+        }
+
+        .strength-item {
+            background: #d1fae5;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            border-left: 3px solid #10b981;
+        }
+
+        .weakness-item {
+            background: #fee2e2;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            border-left: 3px solid #ef4444;
+        }
+
+        .footer {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid #e2e8f0;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .info-grid,
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📊 Performance Report</h1>
+            <p>Employee Performance Analysis and AI Recommendations</p>
+        </div>
+
+        <!-- Employee Information -->
+        <div class="section">
+            <div class="section-title">Employee Information</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Name</div>
+                    <div class="info-value">{{ employee.name }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Department</div>
+                    <div class="info-value">{{ employee.department }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Role</div>
+                    <div class="info-value">{{ employee.role }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Join Date</div>
+                    <div class="info-value">{{ employee.join_date|date:"F d, Y" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Performance Category</div>
+                    <div class="info-value">{{ employee.get_performance_category_display }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Records Count</div>
+                    <div class="info-value">{{ analysis.record_count }}</div>
+                </div>
+            </div>
+        </div>
+
+        {% if analysis.has_data %}
+            <!-- Performance Statistics -->
+            <div class="section">
+                <div class="section-title">Performance Overview</div>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">Overall Score</div>
+                        <div class="stat-value">{{ analysis.averages.overall_score|floatformat:2 }}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Efficiency</div>
+                        <div class="stat-value">{{ analysis.averages.efficiency|floatformat:2 }}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Quality</div>
+                        <div class="stat-value">{{ analysis.averages.quality|floatformat:2 }}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Productivity</div>
+                        <div class="stat-value">{{ analysis.averages.productivity|floatformat:2 }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Prediction -->
+            <div class="section">
+                <div class="section-title">🤖 AI Prediction - Next Month</div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Predicted Efficiency</div>
+                        <div class="info-value">{{ analysis.prediction.predicted_efficiency|floatformat:2 }}/10</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Predicted Quality</div>
+                        <div class="info-value">{{ analysis.prediction.predicted_quality|floatformat:2 }}/10</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Predicted Overall</div>
+                        <div class="info-value">{{ analysis.prediction.predicted_overall_score|floatformat:2 }}/10</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Confidence Level</div>
+                        <div class="info-value">{{ analysis.prediction.confidence_level|floatformat:1 }}%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="section">
+                <div class="section-title">💡 AI Recommendations</div>
+                <div class="recommendation-box">
+                    <div class="recommendation-title">{{ analysis.recommendation.summary }}</div>
+                    <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                        {% for action in analysis.recommendation.actions %}
+                        <li>{{ action.action }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Strengths and Weaknesses -->
+            <div class="section">
+                <div class="section-title">Strengths and Areas for Improvement</div>
+                <div class="info-grid">
+                    <div>
+                        <h3 style="margin-bottom: 0.5rem;">💪 Strengths</h3>
+                        {% if analysis.strengths_weaknesses.strengths %}
+                            {% for strength in analysis.strengths_weaknesses.strengths %}
+                            <div class="strength-item">
+                                <strong>{{ strength.area }}:</strong> {{ strength.description }}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p style="color: #64748b;">No specific strengths identified yet.</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom: 0.5rem;">🎯 Areas for Improvement</h3>
+                        {% if analysis.strengths_weaknesses.weaknesses %}
+                            {% for weakness in analysis.strengths_weaknesses.weaknesses %}
+                            <div class="weakness-item">
+                                <strong>{{ weakness.area }}:</strong> {{ weakness.description }}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p style="color: #64748b;">No critical weaknesses identified.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance History -->
+            <div class="section">
+                <div class="section-title">📋 Performance History</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Tasks</th>
+                            <th>Hours</th>
+                            <th>Efficiency</th>
+                            <th>Quality</th>
+                            <th>Overall</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                        <tr>
+                            <td>{{ record.date|date:"M d, Y" }}</td>
+                            <td>{{ record.tasks_completed }}</td>
+                            <td>{{ record.hours_worked }}</td>
+                            <td>{{ record.efficiency|floatformat:1 }}</td>
+                            <td>{{ record.quality|floatformat:1 }}</td>
+                            <td><strong>{{ record.get_overall_score|floatformat:1 }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="section">
+                <div class="section-title">No Performance Data</div>
+                <p style="color: #64748b;">No performance records have been logged for this employee yet.</p>
+            </div>
+        {% endif %}
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Report Generated:</strong> {{ generated_date }}</p>
+            <p>AI Performance Analyst - Employee Performance Analysis System</p>
+            <p style="margin-top: 0.5rem;">This report contains AI-generated predictions and recommendations based on historical performance data.</p>
+        </div>
+    </div>
+</body>
+</html>

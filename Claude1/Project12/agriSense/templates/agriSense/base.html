@@ -1,0 +1,423 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AgriSense - Smart Agriculture{% endblock %}</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <style>
+        :root {
+            --primary-green: #2d5a27;
+            --secondary-green: #4a7c43;
+            --light-green: #8bc34a;
+            --accent-green: #c5e1a5;
+            --earth-brown: #8d6e63;
+            --light-brown: #d7ccc8;
+            --cream: #faf8f5;
+            --dark-green: #1b3d17;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--dark-green) 0%, var(--primary-green) 50%, var(--secondary-green) 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .agri-header {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-bottom: 4px solid var(--light-green);
+        }
+
+        .agri-navbar {
+            background: transparent !important;
+            padding: 0.8rem 0;
+        }
+
+        .navbar-brand {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white !important;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-brand i {
+            color: var(--light-green);
+            font-size: 2rem;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 500;
+            padding: 0.6rem 1.2rem !important;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            margin: 0 0.2rem;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white !important;
+            transform: translateY(-2px);
+        }
+
+        .main-container {
+            flex: 1;
+            padding: 2rem 1rem;
+            margin-top: 1rem;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(139, 195, 74, 0.2);
+        }
+
+        .agri-footer {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
+            color: white;
+            padding: 2rem 0 1rem;
+            margin-top: auto;
+            border-top: 4px solid var(--light-green);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-section h5 {
+            color: var(--light-green);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .footer-section p,
+        .footer-section a {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            line-height: 1.8;
+            transition: color 0.3s;
+        }
+
+        .footer-section a:hover {
+            color: var(--light-green);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        /* Buttons */
+        .btn-agri {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.8rem;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(45, 90, 39, 0.3);
+        }
+
+        .btn-agri:hover {
+            background: linear-gradient(135deg, var(--secondary-green) 0%, var(--primary-green) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(45, 90, 39, 0.4);
+            color: white;
+        }
+
+        .btn-outline-agri {
+            background: transparent;
+            border: 2px solid var(--primary-green);
+            color: var(--primary-green);
+            padding: 0.75rem 1.8rem;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-agri:hover {
+            background: var(--primary-green);
+            color: white;
+        }
+
+        /* Cards */
+        .agri-card {
+            background: var(--cream);
+            border: none;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(45, 90, 39, 0.1);
+            border-left: 5px solid var(--primary-green);
+            transition: all 0.3s ease;
+        }
+
+        .agri-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(45, 90, 39, 0.15);
+        }
+
+        .stat-card {
+            text-align: center;
+            border-left: 5px solid var(--light-green);
+        }
+
+        .stat-card h3 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-green);
+        }
+
+        .stat-card p {
+            color: var(--earth-brown);
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* Forms */
+        .form-control,
+        .form-select {
+            border: 2px solid var(--light-brown);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 0.2rem rgba(45, 90, 39, 0.15);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--primary-green);
+        }
+
+        /* Tables */
+        .table-agri {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table-agri thead {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+            color: white;
+        }
+
+        .table-agri th {
+            padding: 1rem;
+            font-weight: 600;
+            border: none;
+        }
+
+        .table-agri td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        .table-agri tbody tr:nth-child(even) {
+            background: var(--cream);
+        }
+
+        /* Results */
+        .result-box {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border-left: 5px solid var(--primary-green);
+            display: none;
+        }
+
+        .result-box.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Error */
+        .error-box {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            border-left: 5px solid #c62828;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        /* Badge Styles */
+        .badge-success {
+            background: var(--light-green);
+            color: var(--dark-green);
+            font-weight: 600;
+        }
+
+        .badge-warning {
+            background: #ffd54f;
+            color: #5d4037;
+            font-weight: 600;
+        }
+
+        .badge-danger {
+            background: #ef5350;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Page Title */
+        .page-title {
+            color: var(--primary-green);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--earth-brown);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.4rem;
+            }
+
+            .main-content {
+                padding: 1.5rem;
+            }
+
+            .stat-card h3 {
+                font-size: 2.2rem;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner-agri {
+            width: 3rem;
+            height: 3rem;
+            border: 4px solid var(--light-green);
+            border-top-color: var(--primary-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="agri-header">
+        <div class="container">
+            <nav class="navbar navbar-expand-lg agri-navbar">
+                <a class="navbar-brand" href="{% url 'agriSense:dashboard' %}">
+                    <i class="bi bi-flower1"></i>
+                    AgriSense
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'agriSense:dashboard' %}">
+                                <i class="bi bi-house-door me-1"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'agriSense:crop_planner' %}">
+                                <i class="bi bi-calendar-check me-1"></i>Planner
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'agriSense:yield_predictor' %}">
+                                <i class="bi bi-graph-up me-1"></i>Yield
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'agriSense:reports' %}">
+                                <i class="bi bi-file-bar-graph me-1"></i>Reports
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container main-container">
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="agri-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h5><i class="bi bi-flower1"></i> AgriSense</h5>
+                    <p>Smart Agriculture Management System helping farmers make data-driven decisions for better yields and sustainable farming practices.</p>
+                </div>
+                <div class="footer-section">
+                    <h5><i class="bi bi-link-45deg"></i> Quick Links</h5>
+                    <p><a href="{% url 'agriSense:dashboard' %}"><i class="bi bi-chevron-right me-1"></i>Dashboard</a></p>
+                    <p><a href="{% url 'agriSense:crop_planner' %}"><i class="bi bi-chevron-right me-1"></i>Crop Planner</a></p>
+                    <p><a href="{% url 'agriSense:yield_predictor' %}"><i class="bi bi-chevron-right me-1"></i>Yield Predictor</a></p>
+                    <p><a href="{% url 'agriSense:reports' %}"><i class="bi bi-chevron-right me-1"></i>Analytics Reports</a></p>
+                </div>
+                <div class="footer-section">
+                    <h5><i class="bi bi-info-circle"></i> About</h5>
+                    <p>AgriSense provides intelligent crop recommendations, yield predictions, and pest risk assessments to optimize agricultural productivity.</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 AgriSense - Smart Agriculture Management. All rights reserved.</p>
+                <p class="mb-0"><small>Built with Django | Empowering Farmers Through Technology</small></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

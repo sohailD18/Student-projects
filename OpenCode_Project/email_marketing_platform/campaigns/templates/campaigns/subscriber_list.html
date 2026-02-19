@@ -1,0 +1,124 @@
+{% extends 'campaigns/base.html' %}
+
+{% block title %}Subscribers - Email Marketing Platform{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Subscribers</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'campaigns:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Subscribers</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a href="{% url 'campaigns:subscriber_import' %}" class="btn btn-warning">
+                <i class="bi bi-upload"></i> Import
+            </a>
+            <a href="{% url 'campaigns:subscriber_create' %}" class="btn btn-success">
+                <i class="bi bi-person-plus"></i> Add Subscriber
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <input type="text" name="search" class="form-control" placeholder="Search by email or name..." value="{{ search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                    <option value="unsubscribed" {% if status_filter == 'unsubscribed' %}selected{% endif %}>Unsubscribed</option>
+                    <option value="bounced" {% if status_filter == 'bounced' %}selected{% endif %}>Bounced</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Search
+                </button>
+                <a href="{% url 'campaigns:subscriber_list' %}" class="btn btn-secondary">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if subscribers %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Email Lists</th>
+                            <th>Subscribed</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subscriber in subscribers %}
+                            <tr>
+                                <td><strong>{{ subscriber.email }}</strong></td>
+                                <td>{{ subscriber.full_name }}</td>
+                                <td>
+                                    <span class="badge bg-{% if subscriber.status == 'active' %}success{% elif subscriber.status == 'unsubscribed' %}danger{% elif subscriber.status == 'bounced' %}dark{% else %}warning{% endif %}">
+                                        {{ subscriber.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ subscriber.email_list.all|join:", " }}</td>
+                                <td>{{ subscriber.subscribed_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'campaigns:subscriber_delete' subscriber.pk %}" class="btn btn-sm btn-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if subscribers.has_other_pages %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if subscribers.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ subscribers.previous_page_number }}&search={{ search }}&status={{ status_filter }}">Previous</a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">{{ subscribers.number }}</span>
+                        </li>
+
+                        {% if subscribers.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ subscribers.next_page_number }}&search={{ search }}&status={{ status_filter }}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-people" style="font-size: 4rem; color: #dee2e6;"></i>
+                <p class="mt-3 text-muted">No subscribers found. Add your first subscriber to get started!</p>
+                <a href="{% url 'campaigns:subscriber_create' %}" class="btn btn-success">
+                    <i class="bi bi-person-plus"></i> Add Subscriber
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

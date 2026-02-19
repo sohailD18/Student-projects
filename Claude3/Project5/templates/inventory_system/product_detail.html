@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load inventory_filters %}
+
+{% block title %}{{ product.name }} - Product Details{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px;">
+    <a href="{% url 'inventory_system:dashboard' %}" class="btn btn-secondary">← Back to Dashboard</a>
+</div>
+
+<!-- Product Info -->
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title">{{ product.name }}</h3>
+            <p class="card-subtitle">{{ product.get_category_display }}</p>
+        </div>
+        <div>
+            <span class="badge" style="font-size: 0.875rem;">${{ product.unit_price }}/unit</span>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+        <div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">Current Stock</div>
+            <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">{{ product.current_stock }}</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">units</div>
+        </div>
+        <div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">Stock Value</div>
+            <div style="font-size: 2rem; font-weight: 700; color: var(--success-color);">${{ product.stock_value|floatformat:2 }}</div>
+        </div>
+        <div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">Total Sold</div>
+            <div style="font-size: 2rem; font-weight: 700; color: var(--info-color);">{{ total_quantity_sold }}</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">units</div>
+        </div>
+        <div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">Total Revenue</div>
+            <div style="font-size: 2rem; font-weight: 700; color: var(--warning-color);">${{ total_revenue|floatformat:2 }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Latest Prediction -->
+{% if latest_prediction %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">🤖 Latest AI Prediction</h3>
+        <p class="card-subtitle">Generated on {{ latest_prediction.date_of_prediction|date:"F j, Y" }}</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
+        <div style="padding: 16px; background-color: var(--bg-primary); border-radius: var(--radius-md);">
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">Predicted Demand</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);">
+                {{ latest_prediction.predicted_demand }} units
+            </div>
+        </div>
+        <div style="padding: 16px; background-color: var(--bg-primary); border-radius: var(--radius-md);">
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">Recommended Stock</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--success-color);">
+                {{ latest_prediction.recommended_stock }} units
+            </div>
+        </div>
+        <div style="padding: 16px; background-color: var(--bg-primary); border-radius: var(--radius-md);">
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">Status</div>
+            <div style="margin-top: 8px;">
+                {% if latest_prediction.status == 'low_stock' %}
+                    <span class="badge low-stock">Low Stock</span>
+                {% elif latest_prediction.status == 'optimal' %}
+                    <span class="badge optimal">Optimal</span>
+                {% else %}
+                    <span class="badge overstock">Overstock</span>
+                {% endif %}
+            </div>
+        </div>
+        {% if latest_prediction.confidence_score %}
+        <div style="padding: 16px; background-color: var(--bg-primary); border-radius: var(--radius-md);">
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">AI Confidence</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--info-color);">
+                {{ latest_prediction.confidence_score|percentage }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="margin-top: 20px; padding: 16px; background-color: #f0fdf4; border-radius: var(--radius-md);">
+        <strong>💡 Recommendation:</strong>
+        {% if latest_prediction.status == 'low_stock' %}
+            <p style="margin: 8px 0 0 0; color: var(--text-secondary);">
+                Order <strong>{{ latest_prediction.recommended_stock|add:product.current_stock }}</strong> more units to meet predicted demand.
+            </p>
+        {% elif latest_prediction.status == 'overstock' %}
+            <p style="margin: 8px 0 0 0; color: var(--text-secondary);">
+                Consider running a promotion. You have <strong>{{ product.current_stock|add:"-"|add:latest_prediction.recommended_stock }}</strong> excess units.
+            </p>
+        {% else %}
+            <p style="margin: 8px 0 0 0; color: var(--text-secondary);">
+                Stock levels are optimal. No immediate action required.
+            </p>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <strong>No predictions available.</strong>
+    <a href="{% url 'inventory_system:run_predictions' %}" class="btn btn-primary" style="margin-left: 12px;">
+        Run AI Predictions
+    </a>
+</div>
+{% endif %}
+
+<!-- Sales History -->
+{% if sales_history %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">📜 Recent Sales History</h3>
+        <p class="card-subtitle">Last 50 transactions</p>
+    </div>
+
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Quantity Sold</th>
+                    <th>Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sale in sales_history %}
+                <tr>
+                    <td>{{ sale.sale_date|date:"M j, Y" }}</td>
+                    <td>{{ sale.quantity_sold }} units</td>
+                    <td>${{ sale.revenue }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Analytics Link -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">📊 Detailed Analytics</h3>
+    </div>
+    <a href="{% url 'inventory_system:analytics' %}?product={{ product.id }}" class="btn btn-primary">
+        View Demand Chart for {{ product.name }}
+    </a>
+</div>
+
+{% endblock %}

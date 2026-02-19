@@ -1,0 +1,254 @@
+{% extends 'agriSense/base.html' %}
+
+{% block title %}Yield Predictor - AgriSense{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="text-center mb-5">
+    <h1 class="page-title">
+        <i class="bi bi-graph-up me-2"></i>Yield Predictor
+    </h1>
+    <p class="page-subtitle">Estimate your crop yield based on historical data</p>
+</div>
+
+<div class="row">
+    <!-- Form Section -->
+    <div class="col-lg-5 mb-4">
+        <div class="agri-card">
+            <h5 class="mb-4">
+                <i class="bi bi-calculator me-2"></i>Enter Details
+            </h5>
+
+            <form id="yieldPredictorForm">
+                <div class="mb-4">
+                    <label for="crop_name" class="form-label">
+                        <i class="bi bi-dot me-1"></i>Select Crop
+                    </label>
+                    <select id="crop_name" name="crop_name" class="form-select" required>
+                        <option value="">Choose a crop...</option>
+                        {% for crop in crops %}
+                        <option value="{{ crop.name }}">{{ crop.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>Select the crop you want to predict yield for
+                    </small>
+                </div>
+
+                <div class="mb-4">
+                    <label for="area_acres" class="form-label">
+                        <i class="bi bi-dot me-1"></i>Farm Area
+                    </label>
+                    <input type="number" id="area_acres" name="area_acres"
+                           class="form-control" step="0.01" min="0.1"
+                           placeholder="Enter area in acres" required>
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>Enter the total area in acres
+                    </small>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-agri btn-lg">
+                        <i class="bi bi-magic me-2"></i>Predict Yield
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Info Card -->
+        <div class="agri-card mt-4">
+            <h6 class="mb-3">
+                <i class="bi bi-info-circle me-2 text-info"></i>How It Works
+            </h6>
+            <ul class="list-group list-group-flush mb-0">
+                <li class="list-group-item">
+                    <small><i class="bi bi-check2 text-success me-1"></i>Select your crop from the database</small>
+                </li>
+                <li class="list-group-item">
+                    <small><i class="bi bi-check2 text-success me-1"></i>Enter your farm area in acres</small>
+                </li>
+                <li class="list-group-item">
+                    <small><i class="bi bi-check2 text-success me-1"></i>Get predictions based on historical yield data</small>
+                </li>
+                <li class="list-group-item">
+                    <small><i class="bi bi-check2 text-success me-1"></i>View confidence level and yield range</small>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="col-lg-7">
+        <!-- Loading State -->
+        <div id="loadingState" style="display: none;" class="text-center py-5">
+            <div class="spinner-agri mx-auto mb-3"></div>
+            <p class="text-muted">Calculating yield predictions...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="agri-card text-center py-5">
+            <i class="bi bi-graph-up display-1 text-muted mb-3"></i>
+            <h5 class="text-muted mb-3">Ready to Predict</h5>
+            <p class="text-muted mb-0">Select a crop and enter your farm area to get yield predictions</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="error-box" style="display: none;">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <span id="errorMessage"></span>
+        </div>
+
+        <!-- Results -->
+        <div id="resultsState" style="display: none;">
+            <div class="agri-card mb-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-clipboard-check me-2 text-success"></i>Yield Prediction Results
+                </h5>
+                <small class="text-muted" id="cropName"></small>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <div class="agri-card stat-card text-center">
+                        <i class="bi bi-rulers display-4 mb-2" style="color: var(--primary-green);"></i>
+                        <h4 class="mb-1" id="areaValue"></h4>
+                        <p class="mb-0">Area</p>
+                        <small class="text-muted" id="areaHectares"></small>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="agri-card stat-card text-center">
+                        <i class="bi bi-bar-chart-fill display-4 mb-2" style="color: #4caf50;"></i>
+                        <h4 class="mb-1" id="predictedYield"></h4>
+                        <p class="mb-0">Predicted Yield</p>
+                        <small class="text-muted" id="predictedYieldKg"></small>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="agri-card stat-card text-center">
+                        <i class="bi bi-speedometer2 display-4 mb-2" style="color: var(--secondary-green);"></i>
+                        <h4 class="mb-1" id="avgYield"></h4>
+                        <p class="mb-0">Avg Yield</p>
+                        <small class="text-muted">tons/acre</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confidence Card -->
+            <div class="agri-card mb-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h6 class="mb-0">
+                        <i class="bi bi-shield-check me-2"></i>Confidence Level
+                    </h6>
+                    <span class="badge fs-6" id="confidenceBadge"></span>
+                </div>
+                <hr class="my-2">
+                <p class="mb-0 text-muted" id="confidenceInfo"></p>
+            </div>
+
+            <!-- Yield Range -->
+            <div class="agri-card">
+                <h6 class="mb-3">
+                    <i class="bi bi-graph-up-arrow me-2"></i>Estimated Yield Range
+                </h6>
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <small class="text-muted">Minimum</small>
+                        <p class="mb-0 fw-bold text-success" id="yieldMin"></p>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted">Maximum</small>
+                        <p class="mb-0 fw-bold text-primary" id="yieldMax"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('yieldPredictorForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const cropName = document.getElementById('crop_name').value;
+    const areaAcres = parseFloat(document.getElementById('area_acres').value);
+
+    // Hide all states
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('errorState').style.display = 'none';
+    document.getElementById('resultsState').style.display = 'none';
+    document.getElementById('loadingState').style.display = 'block';
+
+    const payload = {
+        crop_name: cropName,
+        area_acres: areaAcres
+    };
+
+    try {
+        const response = await fetch('/api/yield-prediction/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        document.getElementById('loadingState').style.display = 'none';
+
+        if (data.error) {
+            let errorHtml = '<strong>' + data.error + '</strong>';
+            if (data.note) {
+                errorHtml += '<p class="mb-0 mt-2">' + data.note + '</p>';
+            }
+            document.getElementById('errorMessage').innerHTML = errorHtml;
+            document.getElementById('errorState').style.display = 'block';
+        } else {
+            // Set confidence badge class
+            let confidenceClass = 'bg-success';
+            if (data.confidence.includes('Moderate')) confidenceClass = 'bg-warning text-dark';
+            else if (data.confidence.includes('Low')) confidenceClass = 'bg-danger';
+
+            // Update DOM elements
+            document.getElementById('cropName').innerHTML = '<strong>' + data.crop + '</strong>';
+
+            document.getElementById('areaValue').textContent = data.area_acres + ' acres';
+            document.getElementById('areaHectares').textContent = '(' + data.area_hectares + ' hectares)';
+
+            document.getElementById('predictedYield').textContent = data.predicted_yield_tons + ' tons';
+            document.getElementById('predictedYieldKg').textContent = data.predicted_yield_kg.toLocaleString() + ' kg';
+
+            document.getElementById('avgYield').textContent = data.average_yield_tons_per_acre;
+
+            document.getElementById('confidenceBadge').className = 'badge ' + confidenceClass + ' fs-6';
+            document.getElementById('confidenceBadge').textContent = data.confidence;
+            document.getElementById('confidenceInfo').textContent =
+                'Based on ' + data.years_of_data + ' years of historical yield data';
+
+            const minPerAcre = (data.yield_range_tons_per_hectare.min * data.area_hectares).toFixed(2);
+            const maxPerAcre = (data.yield_range_tons_per_hectare.max * data.area_hectares).toFixed(2);
+            document.getElementById('yieldMin').textContent = minPerAcre + ' tons';
+            document.getElementById('yieldMax').textContent = maxPerAcre + ' tons';
+
+            document.getElementById('resultsState').style.display = 'block';
+
+            // Scroll to results on mobile
+            if (window.innerWidth < 992) {
+                document.getElementById('resultsState').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    } catch (err) {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('errorMessage').textContent =
+            'Error predicting yield. Please check your connection and try again.';
+        document.getElementById('errorState').style.display = 'block';
+        console.error(err);
+    }
+});
+</script>
+{% endblock %}

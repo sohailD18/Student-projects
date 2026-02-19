@@ -1,0 +1,8 @@
+# Django
+Django>=5.0.0,<6.0.0
+
+# Data Analysis
+pandas>=2.0.0,<3.0.0
+
+# Database (SQLite is included with Python)
+# No additional database packages needed for SQLite

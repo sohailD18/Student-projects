@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <!-- Print Header -->
+    <div class="no-print" style="margin-bottom: 1rem;">
+        <a href="{% url 'core:profile_detail' profile.pk %}" style="color: var(--color-accent); text-decoration: none;">
+            ← Back to Profile
+        </a>
+    </div>
+
+    <!-- Report Header -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: start; border-bottom: 3px solid var(--color-primary); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+            <div>
+                <h1 style="color: var(--color-primary); margin-bottom: 0.5rem;">Financial Risk Profiling Report</h1>
+                <p style="color: var(--color-gray-500);">Module 8: Comprehensive Financial Analysis</p>
+            </div>
+            <div class="no-print">
+                <button onclick="window.print()" class="btn btn-primary">🖨️ Print Report</button>
+            </div>
+        </div>
+
+        <div class="grid grid-2">
+            <div>
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="padding: 0.5rem; color: var(--color-gray-500);"><strong>Profile Name:</strong></td>
+                        <td style="padding: 0.5rem;">{{ profile.name }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; color: var(--color-gray-500);"><strong>Age:</strong></td>
+                        <td style="padding: 0.5rem;">{{ profile.age }} years</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; color: var(--color-gray-500);"><strong>Employment:</strong></td>
+                        <td style="padding: 0.5rem;">{{ profile.get_employment_status_display }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="padding: 0.5rem; color: var(--color-gray-500);"><strong>Report Date:</strong></td>
+                        <td style="padding: 0.5rem;">{{ report_date|date:"F d, Y" }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; color: var(--color-gray-500);"><strong>Annual Income:</strong></td>
+                        <td style="padding: 0.5rem;">${{ profile.annual_income|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; color: var(--color-gray-500);"><strong>Dependents:</strong></td>
+                        <td style="padding: 0.5rem;">{{ profile.dependents }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Health Card -->
+    <div class="card" style="border: 3px solid var(--color-primary);">
+        <div class="card-header">
+            <h2 class="card-title" style="text-align: center;">📊 Financial Health Card</h2>
+        </div>
+
+        <div class="card-body">
+            <div class="grid grid-3" style="margin-bottom: 2rem;">
+                <div style="text-align: center; padding: 1.5rem; background-color: var(--color-gray-50); border-radius: var(--radius-md);">
+                    <div style="font-size: 0.9rem; color: var(--color-gray-500); margin-bottom: 0.5rem;">RISK CLASSIFICATION</div>
+                    <span class="risk-badge risk-{{ risk_profile.classification }}" style="font-size: 1.2rem; padding: 0.75rem 1.5rem;">
+                        {{ risk_profile.get_classification_display }}
+                    </span>
+                </div>
+                <div style="text-align: center; padding: 1.5rem; background-color: var(--color-gray-50); border-radius: var(--radius-md);">
+                    <div style="font-size: 0.9rem; color: var(--color-gray-500); margin-bottom: 0.5rem;">RISK SCORE</div>
+                    <div style="font-size: 2.5rem; font-weight: 700; color: var(--color-primary);">{{ risk_profile.risk_score }}/100</div>
+                </div>
+                <div style="text-align: center; padding: 1.5rem; background-color: var(--color-gray-50); border-radius: var(--radius-md);">
+                    <div style="font-size: 0.9rem; color: var(--color-gray-500); margin-bottom: 0.5rem;">SAVINGS RATE</div>
+                    <div style="font-size: 2.5rem; font-weight: 700; color: var(--color-success-dark);">{{ risk_profile.savings_rate }}%</div>
+                </div>
+            </div>
+
+            <!-- Score Breakdown -->
+            <h3 style="color: var(--color-primary); margin-bottom: 1rem;">Score Components</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Score</th>
+                        <th>Weight</th>
+                        <th>Weighted Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Age Factor</td>
+                        <td>{{ risk_profile.age_factor_score }}/100</td>
+                        <td>30%</td>
+                        <td>{{ risk_profile.age_factor_score|floatformat:1 }} points</td>
+                    </tr>
+                    <tr>
+                        <td>Savings Rate</td>
+                        <td>{{ risk_profile.savings_rate_score }}/100</td>
+                        <td>30%</td>
+                        <td>{{ risk_profile.savings_rate_score|floatformat:1 }} points</td>
+                    </tr>
+                    <tr>
+                        <td>Income Stability</td>
+                        <td>{{ risk_profile.income_stability_score }}/100</td>
+                        <td>25%</td>
+                        <td>{{ risk_profile.income_stability_score|floatformat:1 }} points</td>
+                    </tr>
+                    <tr>
+                        <td>Investment Experience</td>
+                        <td>{{ risk_profile.experience_score }}/100</td>
+                        <td>15%</td>
+                        <td>{{ risk_profile.experience_score|floatformat:1 }} points</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Financial Summary -->
+    <div class="grid grid-2">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Income & Expenses</h3>
+            </div>
+            <table class="table" style="margin-top: 0;">
+                <tr>
+                    <td>Total Income</td>
+                    <td style="color: var(--color-success-dark); font-weight: 600;">${{ total_income|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td>Total Expenses</td>
+                    <td style="color: var(--color-aggressive); font-weight: 600;">${{ total_expenses|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Net Savings</strong></td>
+                    <td style="color: {% if net_savings >= 0 %}var(--color-success-dark){% else %}var(--color-aggressive){% endif %}; font-weight: 700;">
+                        {% if net_savings >= 0 %}+{% endif %} ${{ net_savings|floatformat:2 }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Essential Expenses</td>
+                    <td>${{ risk_profile.essential_expenses|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td>Discretionary Expenses</td>
+                    <td>${{ risk_profile.discretionary_expenses|floatformat:2 }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Spending Pattern</h3>
+            </div>
+            <div style="padding: 1rem; text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: 600; color: var(--color-primary); margin-bottom: 1rem;">
+                    {{ risk_profile.spending_pattern }}
+                </div>
+                <div style="height: 200px;">
+                    <canvas id="spendingChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personalized Insights -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Personalized Financial Insights</h3>
+        </div>
+        <div class="card-body">
+            <div style="background-color: var(--color-gray-50); padding: 1.5rem; border-radius: var(--radius-md); line-height: 1.8; white-space: pre-line;">
+                {{ insights }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Recent Transactions</h3>
+            <p class="card-subtitle">Last 10 transactions</p>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.date|date:"M d, Y" }}</td>
+                        <td>{{ transaction.get_category_display }}</td>
+                        <td>{{ transaction.get_transaction_type_display }}</td>
+                        <td style="color: {% if transaction.transaction_type == 'income' %}var(--color-success-dark){% else %}var(--color-aggressive){% endif %}; font-weight: 600;">
+                            {% if transaction.transaction_type == 'income' %}+{% else %}-{% endif %} ${{ transaction.amount|floatformat:2 }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Investment Recommendations -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Investment Recommendations</h3>
+        </div>
+        <div class="card-body">
+            <div class="grid grid-2">
+                <div>
+                    <h4 style="color: var(--color-success); margin-bottom: 1rem;">✅ Recommended For You</h4>
+                    <ul style="padding-left: 1.25rem; line-height: 1.8;">
+                        {% if risk_profile.classification == 'conservative' %}
+                            <li>Government bonds and Treasury securities</li>
+                            <li>Certificates of Deposit (CDs)</li>
+                            <li>High-quality corporate bonds</li>
+                            <li>Blue-chip dividend stocks</li>
+                            <li>Money market funds</li>
+                        {% elif risk_profile.classification == 'moderate' %}
+                            <li>Index funds and ETFs</li>
+                            <li>Balanced mutual funds</li>
+                            <li>Blue-chip stocks</li>
+                            <li>Investment-grade bonds</li>
+                            <li>Real Estate Investment Trusts (REITs)</li>
+                        {% else %}
+                            <li>Growth-oriented mutual funds</li>
+                            <li>International and emerging market funds</li>
+                            <li>Small-cap and mid-cap stocks</li>
+                            <li>Sector-specific ETFs</li>
+                            <li>Alternative investments (limited allocation)</li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="color: var(--color-aggressive); margin-bottom: 1rem;">⚠️ Approach with Caution</h4>
+                    <ul style="padding-left: 1.25rem; line-height: 1.8;">
+                        {% if risk_profile.classification == 'conservative' %}
+                            <li>Highly volatile stocks</li>
+                            <li>Cryptocurrencies</li>
+                            <li>Speculative investments</li>
+                            <li>Leveraged products</li>
+                            <li>Penny stocks</li>
+                        {% elif risk_profile.classification == 'moderate' %}
+                            <li>Highly concentrated positions</li>
+                            <li>Excessive allocation to single sector</li>
+                            <li>Timing the market</li>
+                        {% else %}
+                            <li>Putting all funds in high-risk assets</li>
+                            <li>Ignoring diversification</li>
+                            <li>Emotional trading decisions</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Footer -->
+    <div class="card">
+        <div class="card-body" style="text-align: center; color: var(--color-gray-500); font-size: 0.9rem;">
+            <p><strong>Disclaimer:</strong> This report is generated by FinRisk AI's algorithmic analysis engine and is for informational purposes only.</p>
+            <p style="margin-top: 0.5rem;">It does not constitute financial advice. Consult with a qualified financial advisor before making investment decisions.</p>
+            <p style="margin-top: 1rem;">Generated by FinRisk AI v1.0.0 | {{ report_date|date:"F d, Y H:i" }}</p>
+        </div>
+    </div>
+
+    <!-- Print Button (Bottom) -->
+    <div class="no-print" style="text-align: center; margin-top: 2rem;">
+        <button onclick="window.print()" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.75rem 2rem;">
+            🖨️ Print This Report
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Create spending pattern doughnut chart
+    const ctx = document.getElementById('spendingChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Essential', 'Discretionary'],
+                datasets: [{
+                    data: [
+                        {{ risk_profile.essential_expenses }},
+                        {{ risk_profile.discretionary_expenses }}
+                    ],
+                    backgroundColor: [
+                        '#3b82f6',
+                        '#f59e0b'
+                    ],
+                    borderWidth: 3,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ${percentage}%`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

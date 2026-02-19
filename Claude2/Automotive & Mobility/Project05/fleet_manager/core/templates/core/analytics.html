@@ -1,0 +1,361 @@
+{% extends "core/base.html" %}
+{% load custom_filters %}
+
+{% block title %}Fleet Analytics - Fleet Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-graph-up"></i> Fleet Analytics
+            <span class="badge bg-primary">AI-Powered</span>
+        </h1>
+    </div>
+</div>
+
+<!-- Fleet Summary Stats -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card border-primary">
+            <div class="card-body text-center">
+                <h5 class="card-title text-muted">Average Fuel Efficiency</h5>
+                <h2 class="display-5 text-primary">{{ avg_fuel_efficiency }} MPG</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-success">
+            <div class="card-body text-center">
+                <h5 class="card-title text-muted">Average Cost per Mile</h5>
+                <h2 class="display-5 text-success">${{ avg_cost_per_mile }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-info">
+            <div class="card-body text-center">
+                <h5 class="card-title text-muted">Total Distance Traveled</h5>
+                <h2 class="display-5 text-info">{{ usage_stats.total_distance|floatformat }} mi</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- High Risk & Immediate Maintenance -->
+<div class="row mb-4">
+    <!-- High Risk Vehicles -->
+    <div class="col-lg-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle-fill"></i> High Risk Vehicles ({{ high_risk_vehicles|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if high_risk_vehicles %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Vehicle</th>
+                                <th>Failure Risk</th>
+                                <th>Risk Level</th>
+                                <th>Urgency</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in high_risk_vehicles %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'core:vehicle_detail' item.vehicle.id %}">
+                                        {{ item.vehicle.plate }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="text-danger fw-bold">
+                                        {{ item.failure_prediction.failure_probability|percentage:"0" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ item.failure_prediction.risk_level }}">
+                                        {{ item.failure_prediction.risk_level|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ item.maintenance_prediction.urgency }}">
+                                        {{ item.maintenance_prediction.urgency|title }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">
+                    <i class="bi bi-check-circle"></i> No high-risk vehicles detected
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Immediate Maintenance Needed -->
+    <div class="col-lg-6">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="bi bi-tools"></i> Immediate Maintenance Required ({{ immediate_maintenance|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if immediate_maintenance %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Vehicle</th>
+                                <th>Miles Until Service</th>
+                                <th>Predicted At</th>
+                                <th>Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in immediate_maintenance %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'core:vehicle_detail' item.vehicle.id %}">
+                                        {{ item.vehicle.plate }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-{{ item.maintenance_prediction.urgency }}">
+                                        {{ item.maintenance_prediction.miles_until_maintenance|floatformat }} mi
+                                    </span>
+                                </td>
+                                <td>{{ item.maintenance_prediction.predicted_next_maintenance_mileage|floatformat }} mi</td>
+                                <td>{{ item.maintenance_prediction.confidence|percentage:"0" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">
+                    <i class="bi bi-check-circle"></i> No vehicles requiring immediate maintenance
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Rankings -->
+<div class="row mb-4">
+    <!-- Top Performers -->
+    <div class="col-lg-6">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-trophy-fill"></i> Top Performing Vehicles</h5>
+            </div>
+            <div class="card-body">
+                {% if top_performers %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Vehicle</th>
+                                <th>Rating</th>
+                                <th>MPG</th>
+                                <th>Cost/Mile</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vehicle in top_performers %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-primary">#{{ forloop.counter }}</span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'core:vehicle_detail' vehicle.vehicle_id %}">
+                                        {{ vehicle.plate }}
+                                    </a>
+                                    <br><small class="text-muted">{{ vehicle.make_model }}</small>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-success" style="width: {{ vehicle.rating }}%">
+                                            {{ vehicle.rating }}
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ vehicle.rating_label }}</small>
+                                </td>
+                                <td class="text-success">{{ vehicle.fuel_efficiency }} MPG</td>
+                                <td>${{ vehicle.cost_per_mile|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No performance data available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Underperformers -->
+    <div class="col-lg-6">
+        <div class="card border-warning">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-exclamation-circle"></i> Vehicles Requiring Attention</h5>
+            </div>
+            <div class="card-body">
+                {% if underperformers %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Vehicle</th>
+                                <th>Rating</th>
+                                <th>MPG</th>
+                                <th>Cost/Mile</th>
+                                <th>Total Distance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vehicle in underperformers|slice:"5" %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'core:vehicle_detail' vehicle.vehicle_id %}">
+                                        {{ vehicle.plate }}
+                                    </a>
+                                    <br><small class="text-muted">{{ vehicle.make_model }}</small>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar {% if vehicle.rating >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                             style="width: {{ vehicle.rating }}%">
+                                            {{ vehicle.rating }}
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ vehicle.rating_label }}</small>
+                                </td>
+                                <td class="{% if vehicle.fuel_efficiency >= 20 %}text-success{% else %}text-warning{% endif %}">
+                                    {{ vehicle.fuel_efficiency }} MPG
+                                </td>
+                                <td class="{% if vehicle.cost_per_mile <= 0.5 %}text-success{% else %}text-warning{% endif %}">
+                                    ${{ vehicle.cost_per_mile|floatformat:2 }}
+                                </td>
+                                <td>{{ vehicle.total_distance|floatformat }} mi</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No underperforming vehicles detected</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Predictions Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-robot"></i> AI Predictions - All Vehicles</h5>
+            </div>
+            <div class="card-body">
+                {% if predictions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Vehicle</th>
+                                <th>Current Mileage</th>
+                                <th>Predicted Service</th>
+                                <th>Miles Until</th>
+                                <th>Failure Risk</th>
+                                <th>Risk Level</th>
+                                <th>Confidence</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in predictions %}
+                            <tr class="table-{{ item.maintenance_prediction.urgency }}">
+                                <td>
+                                    <strong>{{ item.vehicle.plate }}</strong><br>
+                                    <small class="text-muted">{{ item.vehicle.year }} {{ item.vehicle.make }} {{ item.vehicle.model }}</small>
+                                </td>
+                                <td>{{ item.maintenance_prediction.current_mileage|floatformat }} mi</td>
+                                <td>{{ item.maintenance_prediction.predicted_next_maintenance_mileage|floatformat }} mi</td>
+                                <td>
+                                    <span class="badge bg-{{ item.maintenance_prediction.urgency }}">
+                                        {{ item.maintenance_prediction.miles_until_maintenance|floatformat }} mi
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="text-{{ item.failure_prediction.risk_level }} fw-bold">
+                                        {{ item.failure_prediction.failure_probability|percentage:"0" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ item.failure_prediction.risk_level }}">
+                                        {{ item.failure_prediction.risk_level|title }}
+                                    </span>
+                                </td>
+                                <td>{{ item.maintenance_prediction.confidence|percentage:"0" }}</td>
+                                <td>
+                                    <a href="{% url 'core:vehicle_detail' item.vehicle.id %}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Details
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-4">No predictions available. Add vehicles and trip data first.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Info Panel -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6 class="card-title"><i class="bi bi-info-circle"></i> About AI Predictions</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>Maintenance Prediction</h6>
+                        <p class="small text-muted">
+                            Uses Linear Regression on historical maintenance intervals to predict when each vehicle
+                            will next require service. Considers mileage patterns, service intervals, and costs.
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Failure Probability</h6>
+                        <p class="small text-muted">
+                            Analyzes multiple risk factors including high mileage, low fuel efficiency,
+                            frequent repairs, and overdue maintenance to calculate failure risk.
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Efficiency Rating</h6>
+                        <p class="small text-muted">
+                            Combines fuel efficiency (MPG) and cost-per-mile metrics to generate
+                            a 0-100 rating for each vehicle's overall performance.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

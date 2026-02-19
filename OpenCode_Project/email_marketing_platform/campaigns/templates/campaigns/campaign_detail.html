@@ -1,0 +1,212 @@
+{% extends 'campaigns/base.html' %}
+
+{% block title %}{{ campaign.name }} - Email Marketing Platform{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">{{ campaign.name }}</h1>
+            {% if campaign.is_ab_test %}
+                <span class="badge bg-info">A/B Test Campaign</span>
+            {% endif %}
+            <span class="badge bg-{{ campaign.status|yesno:'secondary,info,primary,success,warning' }}">
+                {{ campaign.get_status_display }}
+            </span>
+        </div>
+        <div>
+            {% if campaign.status == 'draft' or campaign.status == 'scheduled' %}
+                <a href="{% url 'campaigns:campaign_edit' campaign.pk %}" class="btn btn-warning">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+                <a href="{% url 'campaigns:campaign_send' campaign.pk %}" class="btn btn-success">
+                    <i class="bi bi-send"></i> Send Campaign
+                </a>
+            {% endif %}
+            {% if campaign.status == 'sent' or campaign.is_ab_test %}
+                <a href="{% url 'campaigns:campaign_analytics' campaign.pk %}" class="btn btn-primary">
+                    <i class="bi bi-graph-up"></i> View Analytics
+                </a>
+            {% endif %}
+            <a href="{% url 'campaigns:campaign_delete' campaign.pk %}" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Delete
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Overview -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value text-primary">{{ campaign.total_recipients }}</div>
+            <div class="stat-label">
+                <i class="bi bi-people"></i> Recipients
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-success">
+            <div class="stat-value text-success">{{ campaign.total_sent }}</div>
+            <div class="stat-label">
+                <i class="bi bi-envelope"></i> Emails Sent
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-info">
+            <div class="stat-value text-info">{{ campaign.open_rate }}%</div>
+            <div class="stat-label">
+                <i class="bi bi-eye"></i> Open Rate
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-warning">
+            <div class="stat-value text-warning">{{ campaign.click_rate }}%</div>
+            <div class="stat-label">
+                <i class="bi bi-mouse"></i> Click Rate
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Campaign Details -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-info-circle"></i> Campaign Details
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>Status:</strong></td>
+                        <td>
+                            <span class="badge bg-{{ campaign.status|yesno:'secondary,info,primary,success,warning' }}">
+                                {{ campaign.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Email Template:</strong></td>
+                        <td>{{ campaign.email_template.name }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Email List:</strong></td>
+                        <td>{{ campaign.email_list.name }} ({{ campaign.email_list.subscriber_count }} subscribers)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Created By:</strong></td>
+                        <td>{{ campaign.created_by.username }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Created At:</strong></td>
+                        <td>{{ campaign.created_at|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% if campaign.scheduled_at %}
+                    <tr>
+                        <td><strong>Scheduled For:</strong></td>
+                        <td>{{ campaign.scheduled_at|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if campaign.sent_at %}
+                    <tr>
+                        <td><strong>Sent At:</strong></td>
+                        <td>{{ campaign.sent_at|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if campaign.is_ab_test %}
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-gem"></i> A/B Test Details
+            </div>
+            <div class="card-body">
+                <div class="variant-card variant-a">
+                    <h6>Variant A</h6>
+                    <p class="mb-1"><strong>Template:</strong> {{ campaign.ab_test_variant_a.name }}</p>
+                    <p class="mb-1"><strong>Split:</strong> {{ campaign.ab_test_split_percentage }}%</p>
+                    {% if campaign.ab_test_winner == 'A' %}
+                        <span class="badge bg-success">Winner</span>
+                    {% endif %}
+                </div>
+
+                <div class="variant-card variant-b">
+                    <h6>Variant B</h6>
+                    <p class="mb-1"><strong>Template:</strong> {{ campaign.ab_test_variant_b.name }}</p>
+                    <p class="mb-1"><strong>Split:</strong> {{ 100|add:campaign.ab_test_split_percentage }}%</p>
+                    {% if campaign.ab_test_winner == 'B' %}
+                        <span class="badge bg-success">Winner</span>
+                    {% endif %}
+                </div>
+
+                {% if campaign.status == 'sent' and not campaign.ab_test_winner %}
+                    <a href="{% url 'campaigns:ab_test_winner' campaign.pk %}" class="btn btn-primary w-100">
+                        <i class="bi bi-trophy"></i> Select Winner
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Email Logs -->
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-list-ul"></i> Email Sending Logs ({{ email_logs|length }})
+    </div>
+    <div class="card-body">
+        {% if email_logs %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Subscriber</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Variant</th>
+                            <th>Sent At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in email_logs %}
+                            <tr>
+                                <td>{{ log.subscriber.full_name }}</td>
+                                <td>{{ log.subscriber.email }}</td>
+                                <td>
+                                    <span class="badge bg-{% if log.status == 'sent' %}success{% elif log.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                        {{ log.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if log.variant %}
+                                        <span class="badge bg-{{ log.variant|yesno:'info,success' }}">Variant {{ log.variant }}</span>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.sent_at %}
+                                        {{ log.sent_at|date:"M d, Y H:i" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">No email logs yet. Campaign not yet sent.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

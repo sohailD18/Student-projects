@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb -->
+    <div style="margin-bottom: 1rem;">
+        <a href="{% url 'core:profile_list' %}" style="color: var(--color-accent); text-decoration: none;">
+            ← Back to Profiles
+        </a>
+    </div>
+
+    <!-- Profile Header -->
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">{{ profile.name }}'s Profile</h1>
+            <p class="card-subtitle">
+                Created on {{ profile.created_at|date:"F d, Y" }}
+            </p>
+        </div>
+
+        <div class="card-body">
+            <div class="grid grid-2">
+                <div>
+                    <h3 style="color: var(--color-primary); margin-bottom: 1rem;">Personal Information</h3>
+                    <table class="table">
+                        <tr>
+                            <td><strong>Age:</strong></td>
+                            <td>{{ profile.age }} years</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Employment:</strong></td>
+                            <td>{{ profile.get_employment_status_display }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Income Stability:</strong></td>
+                            <td>{{ profile.get_income_stability_display }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Dependents:</strong></td>
+                            <td>{{ profile.dependents }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Investment Experience:</strong></td>
+                            <td>{{ profile.investment_experience_years }} years</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div>
+                    <h3 style="color: var(--color-primary); margin-bottom: 1rem;">Financial Information</h3>
+                    <table class="table">
+                        <tr>
+                            <td><strong>Annual Income:</strong></td>
+                            <td>${{ profile.annual_income|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Monthly Income:</strong></td>
+                            <td>${{ profile.monthly_income|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Transactions:</strong></td>
+                            <td>{{ transactions.count }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <a href="{% url 'core:transaction_create' profile.pk %}" class="btn btn-primary">
+                <span style="margin-right: 0.5rem;">+</span> Add Transaction
+            </a>
+            <a href="{% url 'core:transaction_list' profile.pk %}" class="btn btn-secondary">View Transactions</a>
+            {% if transactions.count > 0 %}
+                <a href="{% url 'core:analyze_profile' profile.pk %}" class="btn btn-success">Analyze Profile</a>
+            {% endif %}
+            {% if has_risk_profile %}
+                <a href="{% url 'core:dashboard' profile.pk %}" class="btn btn-outline">Dashboard</a>
+                <a href="{% url 'core:scenario_calculator' profile.pk %}" class="btn btn-outline">Scenario Calculator</a>
+                <a href="{% url 'core:financial_report' profile.pk %}" class="btn btn-outline">Financial Report</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if error %}
+        <div class="alert alert-warning">
+            <strong>Notice:</strong> {{ error }}
+        </div>
+    {% endif %}
+
+    <!-- Recent Transactions -->
+    {% if transactions %}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Recent Transactions</h3>
+                <p class="card-subtitle">Latest 5 transactions</p>
+            </div>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions|slice:":5" %}
+                        <tr>
+                            <td>{{ transaction.date|date:"M d, Y" }}</td>
+                            <td>{{ transaction.get_category_display }}</td>
+                            <td>
+                                <span class="risk-badge {% if transaction.transaction_type == 'income' %}risk-conservative{% else %}risk-aggressive{% endif %}">
+                                    {{ transaction.get_transaction_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span style="color: {% if transaction.transaction_type == 'income' %}var(--color-success-dark){% else %}var(--color-aggressive){% endif %}; font-weight: 600;">
+                                    {% if transaction.transaction_type == 'income' %}+{% else %}-{% endif %} ${{ transaction.amount|floatformat:2 }}
+                                </span>
+                            </td>
+                            <td>{{ transaction.description|truncatewords:10 }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="card-footer">
+                <a href="{% url 'core:transaction_list' profile.pk %}" class="btn btn-secondary">View All Transactions</a>
+            </div>
+        </div>
+    {% else %}
+        <div class="card" style="text-align: center; padding: 2rem;">
+            <h3 style="color: var(--color-gray-500);">No Transactions Yet</h3>
+            <p style="color: var(--color-gray-400); margin: 1rem 0;">Add transactions to begin financial analysis.</p>
+            <a href="{% url 'core:transaction_create' profile.pk %}" class="btn btn-primary">Add First Transaction</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

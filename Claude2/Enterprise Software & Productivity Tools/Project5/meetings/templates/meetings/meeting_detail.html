@@ -1,0 +1,243 @@
+{% extends 'meetings/base.html' %}
+
+{% block title %}{{ meeting.title }} - Meeting Analyzer{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <a href="{% url 'meetings:meeting_list' %}" class="text-muted text-decoration-none mb-2 d-inline-block">
+                    <i class="bi bi-arrow-left"></i> Back to Meetings
+                </a>
+                <h1 class="h3 mb-0">{{ meeting.title }}</h1>
+                <p class="text-muted mb-0">
+                    <i class="bi bi-calendar"></i> {{ meeting.date|date:"F d, Y" }} at {{ meeting.date|date:"H:i" }}
+                    | <i class="bi bi-clock"></i> {{ meeting.duration }} minutes
+                </p>
+            </div>
+            <div class="btn-group">
+                {% if meeting.transcript %}
+                <a href="{% url 'meetings:rerun_analysis' meeting.pk %}"
+                   class="btn btn-outline-primary"
+                   onclick="return confirm('Re-run the AI analysis? This will replace existing results.');">
+                    <i class="bi bi-arrow-clockwise"></i> Re-run Analysis
+                </a>
+                {% endif %}
+                <a href="{% url 'meetings:delete_meeting' meeting.pk %}"
+                   class="btn btn-outline-danger">
+                    <i class="bi bi-trash"></i> Delete
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Participants -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-2">
+                    <i class="bi bi-people"></i> Participants
+                </h6>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for participant in meeting.get_participants_list %}
+                    <span class="badge bg-light text-dark border">{{ participant }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Analysis Section -->
+{% if analysis %}
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="metric-card card shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-graph-up-arrow text-primary" style="font-size: 2rem;"></i>
+                <h3 class="metric-value mt-2">{{ analysis.productivity_score }}</h3>
+                <p class="metric-label text-muted mb-0">Productivity Score</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="metric-card card shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-emoji-smile text-{{ sentiment_class }}" style="font-size: 2rem;"></i>
+                <h3 class="metric-value mt-2">{{ analysis.sentiment }}</h3>
+                <p class="metric-label text-muted mb-0">Meeting Sentiment</p>
+                <small class="text-muted">Score: {{ analysis.sentiment_score }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="metric-card card shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-file-text text-info" style="font-size: 2rem;"></i>
+                <h3 class="metric-value mt-2">{{ analysis.word_count }}</h3>
+                <p class="metric-label text-muted mb-0">Words Processed</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary & Keywords -->
+<div class="row mb-4">
+    <div class="col-md-8 mb-3">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-file-earmark-text"></i> AI-Generated Summary
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ analysis.summary }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-tags"></i> Key Topics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-1">
+                    {% for keyword in analysis.get_keywords_list %}
+                    <span class="badge bg-light text-dark border">{{ keyword }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Follow-up Recommendations -->
+{% if analysis.follow_up_recommendations %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightbulb"></i> Follow-up Recommendations
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ analysis.follow_up_recommendations }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% else %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>No Analysis Available:</strong>
+            {% if meeting.transcript %}
+                <a href="{% url 'meetings:rerun_analysis' meeting.pk %}" class="alert-link">Run AI Analysis</a>
+                to extract insights from this meeting.
+            {% else %}
+                No transcript is available for this meeting. Edit the meeting to add a transcript and run analysis.
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Action Items -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-check2-square"></i> Action Items
+                    <span class="badge bg-primary ms-2">{{ action_items|length }}</span>
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if action_items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50%;">Description</th>
+                                    <th>Assignee</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in action_items %}
+                                <tr>
+                                    <td>{{ item.description }}</td>
+                                    <td>
+                                        {% if item.assignee %}
+                                            <span class="badge bg-light text-dark border">{{ item.assignee }}</span>
+                                        {% else %}
+                                            <span class="text-muted">Unassigned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ item.status == 'Done' and 'success' or 'warning' }}">
+                                            {{ item.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <form method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action_item_id" value="{{ item.pk }}">
+                                            <select name="status" class="form-select form-select-sm"
+                                                    onchange="this.form.submit()">
+                                                <option value="Pending" {% if item.status == 'Pending' %}selected{% endif %}>
+                                                    Pending
+                                                </option>
+                                                <option value="Done" {% if item.status == 'Done' %}selected{% endif %}>
+                                                    Done
+                                                </option>
+                                            </select>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-3 text-muted">
+                        <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                        <p class="mb-0 mt-2">No action items found.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transcript -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-file-text"></i> Meeting Transcript
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if meeting.transcript %}
+                    <div class="transcript-content">
+                        {{ meeting.transcript|linebreaks }}
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No transcript available for this meeting.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

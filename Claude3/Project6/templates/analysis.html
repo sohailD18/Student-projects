@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ industry.name }} - Analysis{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active">{{ industry.name }}</li>
+            </ol>
+        </nav>
+        <h1 class="display-5">{{ industry.name }}</h1>
+        <p class="lead">
+            <span class="badge bg-secondary">{{ industry.get_industry_type_display }}</span>
+            {% if industry.description %}
+            <small class="text-muted">{{ industry.description }}</small>
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<!-- Industry Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Emission Limit</h6>
+                <h3>{{ industry.emission_limit }} tons</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Current Emissions (YTD)</h6>
+                <h3>{{ industry.total_emissions|floatformat:0 }} tons</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center {% if industry.carbon_surplus >= 0 %}border-success{% else %}border-danger{% endif %}">
+            <div class="card-body">
+                <h6 class="text-muted">Surplus/Deficit</h6>
+                <h3 class="{% if industry.carbon_surplus >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    {{ industry.carbon_surplus|floatformat:0 }} tons
+                </h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Efficiency</h6>
+                <h3>{{ industry.efficiency_score }}%</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if prediction_result.success %}
+<!-- Trading Insights Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightbulb"></i> AI Trading Insights
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Next Month Prediction</h6>
+                        <div class="alert alert-info">
+                            <strong>Predicted Emission:</strong>
+                            {{ prediction_result.predictions.0.predicted_emission }} tons CO₂
+                            <br>
+                            <small class="text-muted">
+                                Confidence Score: {{ prediction_result.confidence_score|floatformat:2 }}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Trading Recommendation</h6>
+                        {% if trading_suggestion %}
+                        <div class="alert {% if trading_suggestion.suggestion == 'SELL' %}alert-success{% elif trading_suggestion.suggestion == 'BUY' %}alert-danger{% else %}alert-warning{% endif %}">
+                            <h4 class="alert-heading">
+                                {% if trading_suggestion.suggestion == 'SELL' %}💰 SELL CREDITS{% elif trading_suggestion.suggestion == 'BUY' %}🛒 BUY CREDITS{% else %}⏸️ HOLD{% endif %}
+                            </h4>
+                            <p>{{ trading_suggestion.message }}</p>
+                            <hr>
+                            <small>
+                                <strong>Projected Total:</strong> {{ trading_suggestion.total_projected }} tons<br>
+                                <strong>Limit Utilization:</strong> {{ trading_suggestion.percentage_used }}%<br>
+                                <strong>Surplus/Deficit:</strong> {{ trading_suggestion.surplus_deficit }} tons
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Prediction Chart -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up"></i> Emission Forecast (6 Months)
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="predictionChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Predictions Table -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Detailed Predictions</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Predicted Emission</th>
+                            <th>Cumulative Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prediction in prediction_result.predictions %}
+                        {% with cumulative=industry.total_emissions|add:prediction.predicted_emission %}
+                        <tr>
+                            <td>{{ prediction.month }}/{{ prediction.year }}</td>
+                            <td>{{ prediction.predicted_emission }} tons</td>
+                            <td>{{ cumulative|floatformat:0 }} tons</td>
+                            <td>
+                                {% if cumulative <= industry.emission_limit %}
+                                <span class="badge bg-success">Under Limit</span>
+                                {% else %}
+                                <span class="badge bg-danger">Over Limit</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endwith %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-warning">
+            <h5>Unable to Generate Predictions</h5>
+            <p>{{ prediction_result.error }}</p>
+            <a href="{% url 'home' %}" class="btn btn-primary">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Historical Data -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Emission Records</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Month</th>
+                                <th>Emission Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in historical_data %}
+                            <tr>
+                                <td>{{ record.year }}</td>
+                                <td>{{ record.month }}</td>
+                                <td>{{ record.emission_amount }} tons</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <a href="{% url 'home' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+        <a href="{% url 'report' %}" class="btn btn-primary">
+            <i class="bi bi-file-earmark-text"></i> View Report
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load prediction chart
+    fetch('/api/predictions/{{ industry.id }}/')
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                const ctx = document.getElementById('predictionChart').getContext('2d');
+
+                // Combine historical and prediction data
+                const allLabels = [...result.historical.labels, ...result.predictions.labels];
+                const historicalData = result.historical.data;
+                const predictionData = new Array(result.historical.data.length - 1).fill(null);
+
+                // Add connection point
+                predictionData.push(result.historical.data[result.historical.data.length - 1]);
+
+                // Add predictions
+                result.predictions.data.forEach((val, idx) => {
+                    predictionData.push(val);
+                });
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: allLabels,
+                        datasets: [
+                            {
+                                label: 'Historical Emissions',
+                                data: [...historicalData, ...new Array(result.predictions.data.length).fill(null)],
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderWidth: 2
+                            },
+                            {
+                                label: 'AI Predictions',
+                                data: predictionData,
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                borderWidth: 2,
+                                borderDash: [5, 5]
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Historical vs Predicted Emissions'
+                            },
+                            legend: {
+                                display: true,
+                                position: 'bottom'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Emissions (tons CO₂)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+});
+</script>
+{% endblock %}

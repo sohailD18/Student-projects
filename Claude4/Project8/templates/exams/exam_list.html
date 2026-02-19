@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Browse Examinations - GovExamPortal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Filter Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="filter-sidebar sticky-top" style="top: 90px;">
+                <h5 class="mb-3">
+                    <i class="bi bi-funnel-fill"></i> Filter Exams
+                </h5>
+
+                <form method="get" class="mb-3">
+                    <!-- Category Filter -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Category</label>
+                        <select name="category" class="form-select">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}"
+                                    {% if current_filters.category == category.id|stringformat:'s' %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Qualification Filter -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Qualification</label>
+                        <select name="qualification" class="form-select">
+                            <option value="">Any</option>
+                            <option value="10th" {% if current_filters.qualification == '10th' %}selected{% endif %}>10th</option>
+                            <option value="12th" {% if current_filters.qualification == '12th' %}selected{% endif %}>12th</option>
+                            <option value="Graduate" {% if current_filters.qualification == 'Graduate' %}selected{% endif %}>Graduate</option>
+                            <option value="Post Graduate" {% if current_filters.qualification == 'Post Graduate' %}selected{% endif %}>Post Graduate</option>
+                        </select>
+                    </div>
+
+                    <!-- Age Limit Filter -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Age Limit</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="number" name="age_min" class="form-control" placeholder="Min"
+                                       value="{{ current_filters.age_min }}" min="16" max="60">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" name="age_max" class="form-control" placeholder="Max"
+                                       value="{{ current_filters.age_max }}" min="16" max="65">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Filter -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Keyword</label>
+                        <input type="text" name="search" class="form-control"
+                               placeholder="Search exams..."
+                               value="{{ current_filters.search }}">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-funnel"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'exam_list' %}" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset
+                    </a>
+                </form>
+            </div>
+        </div>
+
+        <!-- Exam List -->
+        <div class="col-lg-9">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item active">Browse Exams</li>
+                </ol>
+            </nav>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="bi bi-journal-text"></i> All Examinations
+                </h2>
+                <span class="text-muted">Showing {{ exams|length }} exams</span>
+            </div>
+
+            {% if exams %}
+            <div class="row g-4">
+                {% for exam in exams %}
+                <div class="col-md-6">
+                    <div class="card exam-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge bg-primary">{{ exam.category.name|default:exam.get_exam_type_display }}</span>
+                                {% if exam.is_application_open %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Apply Now
+                                </span>
+                                {% elif exam.is_upcoming %}
+                                <span class="badge bg-info">
+                                    <i class="bi bi-clock"></i> Upcoming
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary">Expired</span>
+                                {% endif %}
+                            </div>
+
+                            <h5 class="card-title">
+                                <a href="{% url 'exam_detail' exam.pk %}" class="text-decoration-none text-dark">
+                                    {{ exam.title }}
+                                </a>
+                            </h5>
+
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="bi bi-person-fill me-1"></i>
+                                    {{ exam.educational_qualification }}
+                                </small>
+                            </div>
+
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar-event me-1"></i>
+                                    <strong>Exam:</strong> {{ exam.exam_date|date:"M d, Y" }}
+                                </small>
+                            </div>
+
+                            <div class="mb-2">
+                                <small class="{% if exam.days_until_application_deadline <= 10 %}text-danger{% else %}text-muted{% endif %}">
+                                    <i class="bi bi-calendar-x me-1"></i>
+                                    <strong>Apply by:</strong> {{ exam.application_end_date|date:"M d, Y" }}
+                                    {% if exam.is_application_open %}
+                                    ({{ exam.days_until_application_deadline }} days left)
+                                    {% endif %}
+                                </small>
+                            </div>
+
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="bi bi-bounding-box me-1"></i>
+                                    <strong>Age:</strong> {{ exam.age_limit_min }} - {{ exam.age_limit_max }} years
+                                </small>
+                            </div>
+
+                            <p class="card-text text-muted small">
+                                {{ exam.description|truncatewords:20 }}
+                            </p>
+                        </div>
+
+                        <div class="card-footer bg-white border-top">
+                            <a href="{% url 'exam_detail' exam.pk %}" class="btn btn-sm btn-primary w-100">
+                                View Details <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                            First
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                            Previous
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                            Next
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                            Last
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                No examinations found matching your criteria.
+                <a href="{% url 'exam_list' %}" class="alert-link">Clear all filters</a> to see all exams.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

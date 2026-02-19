@@ -1,0 +1,161 @@
+{% extends 'meetings/base.html' %}
+
+{% block title %}Create Meeting - Meeting Analyzer{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-plus-circle text-primary"></i> Create New Meeting
+                </h4>
+                <p class="text-muted mb-0">Add a meeting and optionally provide a transcript for AI analysis</p>
+            </div>
+            <div class="card-body">
+                <form method="post" id="meetingForm">
+                    <div class="mb-4">
+                        <label for="title" class="form-label">
+                            <strong>Meeting Title *</strong>
+                        </label>
+                        <input type="text" class="form-control" id="title" name="title"
+                               placeholder="e.g., Weekly Team Standup" required
+                               value="{{ title|default:'' }}">
+                        <div class="form-text">Enter a descriptive title for the meeting</div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="date" class="form-label">
+                                <strong>Date *</strong>
+                            </label>
+                            <input type="date" class="form-control" id="date" name="date" required
+                                   value="{{ date|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="time" class="form-label">
+                                <strong>Time *</strong>
+                            </label>
+                            <input type="time" class="form-control" id="time" name="time" required
+                                   value="{{ time|default:'' }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="duration" class="form-label">
+                            <strong>Duration (minutes) *</strong>
+                        </label>
+                        <input type="number" class="form-control" id="duration" name="duration"
+                               placeholder="e.g., 60" min="1" required
+                               value="{{ duration|default:'' }}">
+                        <div class="form-text">Enter the meeting duration in minutes</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="participants" class="form-label">
+                            <strong>Participants *</strong>
+                        </label>
+                        <input type="text" class="form-control" id="participants" name="participants"
+                               placeholder="e.g., John Smith, Jane Doe, Bob Johnson" required
+                               value="{{ participants|default:'' }}">
+                        <div class="form-text">Separate multiple participants with commas</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="transcript" class="form-label">
+                            <strong>Meeting Transcript / Notes</strong>
+                            <span class="badge bg-info ms-2">Optional</span>
+                        </label>
+                        <textarea class="form-control" id="transcript" name="transcript"
+                                  rows="10" placeholder="Paste or type the meeting transcript or notes here...">{{ transcript|default:'' }}</textarea>
+                        <div class="form-text">
+                            Provide a transcript or notes for AI-powered analysis including:
+                            <ul class="mb-0 mt-1">
+                                <li>Action item extraction</li>
+                                <li>Meeting summary generation</li>
+                                <li>Sentiment analysis</li>
+                                <li>Productivity scoring</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Sample Transcript Button -->
+                    <div class="mb-4">
+                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                onclick="loadSampleTranscript()">
+                            <i class="bi bi-file-text"></i> Load Sample Transcript
+                        </button>
+                        <div class="form-text">
+                            Click to see an example of what a transcript looks like
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'meetings:meeting_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle"></i> Create Meeting
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tips Card -->
+        <div class="card mt-4 border-info">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-lightbulb text-warning"></i> Tips for Better Analysis
+                </h6>
+                <ul class="mb-0 small">
+                    <li>Include action phrases like "John will", "assigned to", "to do", "action item"</li>
+                    <li>Mention deadlines with phrases like "by Friday", "due next week"</li>
+                    <li>Specify assignees clearly (names, roles, or teams)</li>
+                    <li>Include key decisions and outcomes from the meeting</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function loadSampleTranscript() {
+    const sample = `Welcome everyone to today's weekly standup meeting. Let's start with project updates.
+
+Sarah: The frontend development is progressing well. I've completed the dashboard UI components. The user authentication module will be finished by this Friday.
+
+John: Backend API is on track. I need to fix a few bugs in the payment integration. Maria will help me with the testing tomorrow.
+
+Mike: We need to make a decision on the hosting provider. The team should review the AWS and Azure options by Thursday. Sarah, can you prepare a comparison document?
+
+Sarah: Sure, I'll have that ready by Wednesday afternoon.
+
+John: Also, we need to schedule a code review for the new features. Let's aim for next Monday.
+
+Mike: Great! Action items summary:
+1. Sarah - Complete user auth by Friday
+2. Sarah - Prepare hosting comparison by Wednesday
+3. John - Fix payment integration bugs
+4. Maria - Help with API testing tomorrow
+5. Team - Code review next Monday
+
+The project timeline looks good. Our productivity has improved this sprint. Everyone seems motivated despite the tight deadline. Let's meet again same time next week.`;
+
+    document.getElementById('transcript').value = sample;
+
+    // Also fill in some sample data
+    if (!document.getElementById('title').value) {
+        document.getElementById('title').value = 'Weekly Team Standup';
+    }
+    if (!document.getElementById('duration').value) {
+        document.getElementById('duration').value = '30';
+    }
+    if (!document.getElementById('participants').value) {
+        document.getElementById('participants').value = 'Sarah, John, Mike, Maria';
+    }
+}
+</script>
+{% endblock %}

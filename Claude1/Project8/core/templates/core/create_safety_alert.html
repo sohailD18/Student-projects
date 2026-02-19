@@ -1,0 +1,75 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0"><i class="bi me-2"></i>Create Safety Alert</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">Alert Title *</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="text-danger small">{{ form.title.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.severity.id_for_label }}" class="form-label">Severity *</label>
+                        {{ form.severity }}
+                        {% if form.severity.errors %}
+                            <div class="text-danger small">{{ form.severity.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.message.id_for_label }}" class="form-label">Message *</label>
+                        {{ form.message }}
+                        {% if form.message.errors %}
+                            <div class="text-danger small">{{ form.message.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Provide detailed information about the safety alert.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.affected_areas.id_for_label }}" class="form-label">Affected Areas *</label>
+                        {{ form.affected_areas }}
+                        {% if form.affected_areas.errors %}
+                            <div class="text-danger small">{{ form.affected_areas.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Comma-separated list of locations (e.g., Downtown, Westside, North Hills).</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.expires_at.id_for_label }}" class="form-label">Expiration Time (Optional)</label>
+                        {{ form.expires_at }}
+                        {% if form.expires_at.errors %}
+                            <div class="text-danger small">{{ form.expires_at.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">When should this alert expire? Leave blank for no expiration.</div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This will send notifications to all users with notifications enabled. Use this feature only for important safety alerts.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'safety_alerts' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi me-1"></i>Publish Alert
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

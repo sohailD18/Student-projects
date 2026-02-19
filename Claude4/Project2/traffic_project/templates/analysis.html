@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+
+{% block title %}Traffic Analysis - Traffic Prediction System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1 class="page-title">Traffic Analysis & Visualization</h1>
+        <p class="page-subtitle">Comprehensive insights from traffic data</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Charts Grid -->
+    <div class="charts-grid">
+        <!-- Hourly Traffic Chart -->
+        <div class="card chart-card">
+            <div class="card-header">
+                <h3>Traffic Volume by Hour</h3>
+                <p class="card-subtitle">Vehicles distribution throughout the day</p>
+            </div>
+            <div class="card-body">
+                <canvas id="hourlyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Congestion Distribution Chart -->
+        <div class="card chart-card">
+            <div class="card-header">
+                <h3>Congestion Level Distribution</h3>
+                <p class="card-subtitle">Percentage of each congestion category</p>
+            </div>
+            <div class="card-body">
+                <canvas id="congestionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Charts -->
+    <div class="charts-grid">
+        <!-- Day of Week Chart -->
+        <div class="card chart-card">
+            <div class="card-header">
+                <h3>Traffic by Day of Week</h3>
+                <p class="card-subtitle">Weekly traffic patterns</p>
+            </div>
+            <div class="card-body">
+                <canvas id="dayChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Location Stats -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Top Locations by Traffic Volume</h3>
+                <p class="card-subtitle">Busiest locations in the city</p>
+            </div>
+            <div class="card-body">
+                <div id="locationStats" class="location-stats">
+                    <div class="loading">Loading location data...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weather Impact -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Weather Impact on Traffic</h3>
+            <p class="card-subtitle">How weather conditions affect congestion</p>
+        </div>
+        <div class="card-body">
+            <div id="weatherStats" class="weather-stats">
+                <div class="loading">Loading weather data...</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Chart.js global configuration
+Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+Chart.defaults.color = '#64748b';
+Chart.defaults.plugins.tooltip.backgroundColor = '#1e293b';
+Chart.defaults.plugins.tooltip.titleColor = '#f8fafc';
+Chart.defaults.plugins.tooltip.bodyColor = '#f8fafc';
+Chart.defaults.plugins.tooltip.padding = 12;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+
+// Chart instances
+let hourlyChart, congestionChart, dayChart;
+
+// Load analysis data on page load
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadAnalysisData();
+});
+
+async function loadAnalysisData() {
+    try {
+        const response = await fetch('{% url "traffic_app:analysis_api" %}');
+        const result = await response.json();
+
+        if (result.success) {
+            const data = result.data;
+
+            // Initialize charts
+            initHourlyChart(data.hourly);
+            initCongestionChart(data.congestion);
+            initDayChart(data.days, data.day_names);
+
+            // Display location and weather stats
+            displayLocationStats(data.locations);
+            displayWeatherStats(data.weather);
+        } else {
+            console.error('Failed to load analysis data');
+        }
+    } catch (error) {
+        console.error('Error loading analysis:', error);
+    }
+}
+
+// Hourly Traffic Bar Chart
+function initHourlyChart(hourlyData) {
+    const ctx = document.getElementById('hourlyChart').getContext('2d');
+
+    hourlyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
+            datasets: [{
+                label: 'Number of Records',
+                data: hourlyData,
+                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 1,
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false },
+                title: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+}
+
+// Congestion Distribution Pie Chart
+function initCongestionChart(congestionData) {
+    const ctx = document.getElementById('congestionChart').getContext('2d');
+
+    congestionChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Low', 'Medium', 'High'],
+            datasets: [{
+                data: [congestionData.Low, congestionData.Medium, congestionData.High],
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.8)',   // Green for Low
+                    'rgba(245, 158, 11, 0.8)',   // Orange for Medium
+                    'rgba(239, 68, 68, 0.8)'     // Red for High
+                ],
+                borderColor: [
+                    'rgba(16, 185, 129, 1)',
+                    'rgba(245, 158, 11, 1)',
+                    'rgba(239, 68, 68, 1)'
+                ],
+                borderWidth: 2,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                title: { display: false }
+            },
+            cutout: '60%'
+        }
+    });
+}
+
+// Day of Week Bar Chart
+function initDayChart(dayData, dayNames) {
+    const ctx = document.getElementById('dayChart').getContext('2d');
+
+    dayChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: dayNames,
+            datasets: [{
+                label: 'Traffic Records',
+                data: dayData,
+                backgroundColor: [
+                    'rgba(99, 102, 241, 0.8)',
+                    'rgba(139, 92, 246, 0.8)',
+                    'rgba(168, 85, 247, 0.8)',
+                    'rgba(192, 132, 252, 0.8)',
+                    'rgba(217, 70, 239, 0.8)',
+                    'rgba(236, 72, 153, 0.8)',
+                    'rgba(244, 114, 182, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(99, 102, 241, 1)',
+                    'rgba(139, 92, 246, 1)',
+                    'rgba(168, 85, 247, 1)',
+                    'rgba(192, 132, 252, 1)',
+                    'rgba(217, 70, 239, 1)',
+                    'rgba(236, 72, 153, 1)',
+                    'rgba(244, 114, 182, 1)'
+                ],
+                borderWidth: 1,
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false },
+                title: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+}
+
+// Display Location Statistics
+function displayLocationStats(locations) {
+    const container = document.getElementById('locationStats');
+
+    if (!locations || locations.length === 0) {
+        container.innerHTML = '<p class="empty-state">No location data available</p>';
+        return;
+    }
+
+    const maxCount = Math.max(...locations.map(l => l.total_count));
+
+    const html = locations.map((loc, index) => {
+        const percentage = (loc.total_count / maxCount * 100).toFixed(0);
+        const avgVehicles = Math.round(loc.avg_vehicles);
+
+        return `
+            <div class="location-stat-item">
+                <div class="location-stat-header">
+                    <span class="location-rank">#${index + 1}</span>
+                    <h4 class="location-name">${loc.location}</h4>
+                </div>
+                <div class="location-stat-info">
+                    <div class="stat-badge">
+                        <strong>${loc.total_count}</strong> records
+                    </div>
+                    <div class="stat-badge">
+                        <strong>${avgVehicles}</strong> avg vehicles
+                    </div>
+                </div>
+                <div class="location-progress">
+                    <div class="location-progress-bar" style="width: ${percentage}%"></div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = html;
+}
+
+// Display Weather Statistics
+function displayWeatherStats(weatherData) {
+    const container = document.getElementById('weatherStats');
+
+    if (!weatherData || weatherData.length === 0) {
+        container.innerHTML = '<p class="empty-state">No weather data available</p>';
+        return;
+    }
+
+    const weatherIcons = {
+        'Sunny': '☀️',
+        'Cloudy': '☁️',
+        'Rainy': '🌧️',
+        'Foggy': '🌫️'
+    };
+
+    const html = weatherData.map(w => {
+        const highCongestionPercent = w.count > 0
+            ? ((w.avg_congestion_high / w.count) * 100).toFixed(1)
+            : 0;
+
+        return `
+            <div class="weather-stat-item">
+                <div class="weather-icon">${weatherIcons[w.weather] || '🌤️'}</div>
+                <div class="weather-info">
+                    <h4>${w.weather}</h4>
+                    <p>${w.count} total records</p>
+                </div>
+                <div class="weather-congestion">
+                    <span class="congestion-badge congestion-high">
+                        ${highCongestionPercent}% High
+                    </span>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = `<div class="weather-stats-grid">${html}</div>`;
+}
+</script>
+{% endblock %}

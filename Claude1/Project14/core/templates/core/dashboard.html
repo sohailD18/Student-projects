@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - LexiGuard{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>LexiGuard Dashboard</h2>
+            <a href="#upload-modal" class="btn btn-primary" onclick="document.getElementById('upload-modal').style.display='block'">
+                + Upload New Document
+            </a>
+        </div>
+    </div>
+    <p class="text-muted">Manage and analyze your legal documents</p>
+</div>
+
+<!-- Upload Modal -->
+<div id="upload-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;">
+    <div style="position: relative; max-width: 500px; margin: 100px auto; background: white; border-radius: 8px; padding: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3>Upload Document</h3>
+            <a href="#" onclick="document.getElementById('upload-modal').style.display='none'; return false;" style="font-size: 1.5rem; text-decoration: none; color: #6c757d;">&times;</a>
+        </div>
+        <form method="post" enctype="multipart/form-data" action="{% url 'core:upload' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="title" class="form-label">Document Title</label>
+                <input type="text" id="title" name="title" class="form-control" placeholder="Enter document title" required>
+            </div>
+            <div class="form-group">
+                <label for="document" class="form-label">Upload File</label>
+                <input type="file" id="document" name="document" class="form-control" accept=".pdf,.docx,.txt" required>
+                <small class="text-muted">Supported formats: PDF, DOCX, TXT</small>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary">Upload Document</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('upload-modal').style.display='none'">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+{% if total_documents > 0 %}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+    <div class="card" style="margin-bottom: 0; text-align: center;">
+        <h3 style="font-size: 2.5rem; color: #2c5282; margin-bottom: 0.5rem;">{{ total_documents }}</h3>
+        <p class="text-muted">Total Documents</p>
+    </div>
+    <div class="card" style="margin-bottom: 0; text-align: center;">
+        <h3 style="font-size: 2.5rem; color: #28a745; margin-bottom: 0.5rem;">
+            {% widthratio documents|length 1 1 %}
+        </h3>
+        <p class="text-muted">Documents Uploaded</p>
+    </div>
+    <div class="card" style="margin-bottom: 0; text-align: center;">
+        <h3 style="font-size: 2.5rem; color: #ffc107; margin-bottom: 0.5rem;">
+            {% for doc in documents %}{% if doc.latest_report %}1{% endif %}{% endfor %}
+        </h3>
+        <p class="text-muted">Analyzed Documents</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Documents Table -->
+<div class="card">
+    <h3>Uploaded Documents</h3>
+    {% if documents %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Created At</th>
+                <th>Status</th>
+                <th>Risk Level</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for document in documents %}
+            <tr>
+                <td>
+                    <strong>{{ document.title }}</strong><br>
+                    <small class="text-muted">{{ document.filename }}</small>
+                </td>
+                <td>{{ document.created_at|date:"M d, Y H:i" }}</td>
+                <td>
+                    {% if document.latest_report %}
+                        <span class="badge badge-low">Analyzed</span>
+                    {% else %}
+                        <span class="badge badge-medium">Pending</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if document.latest_report %}
+                        {% if document.latest_report.risk_level == 'HIGH' %}
+                            <span class="badge badge-high">{{ document.latest_report.risk_level }}</span>
+                        {% elif document.latest_report.risk_level == 'MEDIUM' %}
+                            <span class="badge badge-medium">{{ document.latest_report.risk_level }}</span>
+                        {% else %}
+                            <span class="badge badge-low">{{ document.latest_report.risk_level }}</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'core:detail' document.id %}" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        View Analysis
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="text-center" style="padding: 3rem;">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2" style="margin-bottom: 1rem;">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+        <h4 style="color: #6c757d; margin-bottom: 0.5rem;">No Documents Yet</h4>
+        <p class="text-muted">Upload your first legal document to get started with analysis.</p>
+        <a href="#upload-modal" class="btn btn-primary mt-3" onclick="document.getElementById('upload-modal').style.display='block'">
+            Upload Your First Document
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+/* Modal close on outside click */
+#upload-modal {
+    cursor: pointer;
+}
+
+#upload-modal > div {
+    cursor: default;
+}
+</style>
+
+<script>
+// Close modal when clicking outside
+document.getElementById('upload-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        this.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,236 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI E-Commerce{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'shop/css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% csrf_token %}
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="logo">
+                    <a href="{% url 'shop:home' %}">AI Shop</a>
+                </h1>
+                <nav class="main-nav">
+                    <ul>
+                        <li><a href="{% url 'shop:home' %}">Home</a></li>
+                        {% if user.is_authenticated %}
+                            <li><a href="{% url 'shop:dashboard' %}">Dashboard</a></li>
+                            <li><a href="{% url 'shop:analytics' %}">Analytics</a></li>
+                            <li><a href="{% url 'admin:index' %}">Admin</a></li>
+                            <li><form method="post" action="{% url 'shop:logout' %}" class="logout-form">
+                                {% csrf_token %}
+                                <button type="submit">Logout</button>
+                            </form></li>
+                        {% else %}
+                            <li><a href="{% url 'shop:login' %}">Login</a></li>
+                            <li><a href="{% url 'shop:register' %}" class="btn-register">Register</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        {% if messages %}
+            <div class="messages-container">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 AI E-Commerce. Powered by Django & Scikit-Learn.</p>
+        </div>
+    </footer>
+
+    <script>
+    // Get CSRF token
+    function getCSRFToken() {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        return csrfToken ? csrfToken.value : '';
+    }
+
+    // Track user interactions (cart, wishlist, purchase)
+    function trackInteraction(productId, interactionType, callback) {
+        {% if user.is_authenticated %}
+        fetch('{% url "shop:track_interaction" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: new URLSearchParams({
+                'product_id': productId,
+                'interaction_type': interactionType
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (callback) callback(true, data.message);
+            } else {
+                console.error('Tracking failed:', data.error);
+                if (callback) callback(false, data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Tracking error:', error);
+            if (callback) callback(false, 'Network error');
+        });
+        {% else %}
+        alert('Please login to track interactions');
+        if (callback) callback(false, 'Not authenticated');
+        {% endif %}
+    }
+
+    // Add to cart function
+    function addToCart(productId) {
+        trackInteraction(productId, 'cart', function(success, message) {
+            if (success) {
+                // Show a brief success message
+                const toast = document.createElement('div');
+                toast.className = 'toast toast-success';
+                toast.textContent = 'Product added to cart!';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 2000);
+            } else {
+                alert('Failed to add to cart: ' + message);
+            }
+        });
+    }
+
+    // Add to wishlist function
+    function addToWishlist(productId) {
+        trackInteraction(productId, 'wishlist', function(success, message) {
+            if (success) {
+                const toast = document.createElement('div');
+                toast.className = 'toast toast-success';
+                toast.textContent = 'Product added to wishlist!';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 2000);
+            } else {
+                alert('Failed to add to wishlist: ' + message);
+            }
+        });
+    }
+
+    // Purchase function
+    function purchaseProduct(productId) {
+        trackInteraction(productId, 'purchase', function(success, message) {
+            if (success) {
+                const toast = document.createElement('div');
+                toast.className = 'toast toast-success';
+                toast.textContent = 'Purchase recorded! Thank you for your order.';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            } else {
+                alert('Failed to record purchase: ' + message);
+            }
+        });
+    }
+    </script>
+
+    <style>
+    .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        z-index: 9999;
+        animation: slideIn 0.3s ease-out;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .toast-success {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .btn-register {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        padding: 0.5rem 1rem !important;
+        border-radius: 6px !important;
+        font-weight: 600 !important;
+    }
+
+    .messages-container {
+        max-width: 800px;
+        margin: 1rem auto;
+        padding: 0 1rem;
+    }
+
+    .message {
+        padding: 1rem 1.25rem;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+        animation: slideDown 0.3s ease-out;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .message.success {
+        background: #c6f6d5;
+        color: #2f855a;
+        border-left: 4px solid #48bb78;
+    }
+
+    .message.error {
+        background: #fed7d7;
+        color: #c53030;
+        border-left: 4px solid #f56565;
+    }
+
+    .message.warning {
+        background: #feebc8;
+        color: #7c2d12;
+        border-left: 4px solid #ed8936;
+    }
+
+    .message.info {
+        background: #bee3f8;
+        color: #2c5282;
+        border-left: 4px solid #4299e1;
+    }
+
+    @keyframes slideDown {
+        from {
+            transform: translateY(-10px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    </style>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

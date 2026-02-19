@@ -1,0 +1,425 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - AI Safety System{% endblock %}
+
+{% block page_title %}Worker Safety Monitor{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards Row -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-icon workers">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-content">
+            <h3>Workers Detected</h3>
+            <p class="stat-value" id="workersCount">0</p>
+            <span class="stat-label">Currently active</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon violations">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-content">
+            <h3>Violations Today</h3>
+            <p class="stat-value" id="violationsCount">{{ today_incidents }}</p>
+            <span class="stat-label">Safety incidents</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon score">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stat-content">
+            <h3>Safety Score</h3>
+            <p class="stat-value" id="safetyScore">{{ safety_score }}%</p>
+            <span class="stat-label">Overall rating</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon unresolved">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+            <h3>Unresolved</h3>
+            <p class="stat-value" id="unresolvedCount">{{ unresolved_incidents }}</p>
+            <span class="stat-label">Pending review</span>
+        </div>
+    </div>
+</div>
+
+<!-- Main Dashboard Grid -->
+<div class="dashboard-grid">
+    <!-- Video Feed Section -->
+    <div class="video-section">
+        <div class="section-header">
+            <h2><i class="fas fa-video"></i> Live Camera Feed</h2>
+            <div class="camera-indicator">
+                <span class="dot recording"></span>
+                <span>REC</span>
+            </div>
+        </div>
+
+        <div class="video-container" id="videoContainer">
+            <img
+                src="{% url 'monitoring:video_feed' %}"
+                alt="Live Feed"
+                class="live-feed"
+                id="liveFeed"
+                onerror="handleVideoError()"
+            >
+            <div class="video-overlay">
+                <div class="timestamp" id="videoTimestamp">{{ current_time }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Alerts Panel -->
+    <div class="alerts-panel">
+        <div class="section-header">
+            <h2><i class="fas fa-bell"></i> Recent Alerts</h2>
+            <button class="btn-refresh" onclick="refreshAlerts()">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+
+        <div class="alerts-list" id="alertsList">
+            {% if recent_incidents %}
+                {% for incident in recent_incidents %}
+                    <div class="alert-item {% if incident.hazard_type == 'RESTRICTED_ZONE' %}critical{% else %}warning{% endif %}">
+                        <div class="alert-icon">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <div class="alert-content">
+                            <h4>{{ incident.get_hazard_type_display }}</h4>
+                            <p>{{ incident.timestamp|date:"H:i:s" }}</p>
+                            <span class="confidence">{{ incident.confidence_percentage }}% confidence</span>
+                        </div>
+                        <div class="alert-status">
+                            {% if incident.is_resolved %}
+                                <span class="resolved">Resolved</span>
+                            {% else %}
+                                <span class="pending">Pending</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-alerts">
+                    <i class="fas fa-check-circle"></i>
+                    <p>No recent alerts</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="charts-section">
+    <div class="chart-container">
+        <div class="section-header">
+            <h2><i class="fas fa-chart-area"></i> Violations by Type</h2>
+        </div>
+        <div class="chart-placeholder">
+            <canvas id="violationChart"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <div class="section-header">
+            <h2><i class="fas fa-calendar-week"></i> Last 7 Days</h2>
+        </div>
+        <div class="chart-placeholder">
+            <canvas id="weeklyChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    initDashboard();
+    startAutoRefresh();
+});
+
+// Handle video feed errors
+function handleVideoError() {
+    const container = document.getElementById('videoContainer');
+    container.innerHTML = `
+        <div class="video-error">
+            <i class="fas fa-video-slash"></i>
+            <h3>Camera Offline</h3>
+            <p>Unable to connect to video feed</p>
+            <button class="btn-retry" onclick="location.reload()">
+                <i class="fas fa-redo"></i> Retry
+            </button>
+        </div>
+    `;
+}
+
+// Dashboard initialization
+function initDashboard() {
+    console.log('Dashboard initialized');
+
+    // Load initial statistics
+    loadStatistics();
+
+    // Load charts
+    loadCharts();
+
+    // Update timestamp every second
+    setInterval(updateTimestamp, 1000);
+}
+
+// Update video timestamp
+function updateTimestamp() {
+    const now = new Date();
+    const timestamp = document.getElementById('videoTimestamp');
+    if (timestamp) {
+        timestamp.textContent = now.toLocaleString();
+    }
+}
+
+// Load statistics from API
+async function loadStatistics() {
+    try {
+        const response = await fetch('{% url "monitoring:incidents_api" %}');
+        const data = await response.json();
+
+        // Update UI
+        document.getElementById('violationsCount').textContent = data.stats.today;
+        document.getElementById('unresolvedCount').textContent = data.stats.unresolved;
+
+        // Update alerts list
+        updateAlertsList(data.incidents);
+
+    } catch (error) {
+        console.error('Error loading statistics:', error);
+    }
+}
+
+// Update alerts list
+function updateAlertsList(incidents) {
+    const alertsList = document.getElementById('alertsList');
+
+    if (!incidents || incidents.length === 0) {
+        alertsList.innerHTML = `
+            <div class="no-alerts">
+                <i class="fas fa-check-circle"></i>
+                <p>No recent alerts</p>
+            </div>
+        `;
+        return;
+    }
+
+    alertsList.innerHTML = incidents.map(incident => {
+        const isCritical = incident.type === 'RESTRICTED_ZONE';
+        const statusClass = incident.resolved ? 'resolved' : 'pending';
+        const statusText = incident.resolved ? 'Resolved' : 'Pending';
+
+        return `
+            <div class="alert-item ${isCritical ? 'critical' : 'warning'}">
+                <div class="alert-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <div class="alert-content">
+                    <h4>${formatHazardType(incident.type)}</h4>
+                    <p>${incident.timestamp}</p>
+                    <span class="confidence">${incident.confidence} confidence</span>
+                </div>
+                <div class="alert-status">
+                    <span class="${statusClass}">${statusText}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Format hazard type for display
+function formatHazardType(type) {
+    const types = {
+        'NO_HELMET': 'No Helmet',
+        'NO_VEST': 'No Safety Vest',
+        'RESTRICTED_ZONE': 'Restricted Zone',
+        'NO_PPE': 'Missing PPE',
+        'MULTIPLE_VIOLATIONS': 'Multiple Violations'
+    };
+    return types[type] || type;
+}
+
+// Load charts
+async function loadCharts() {
+    try {
+        const response = await fetch('{% url "monitoring:statistics_api" %}');
+        const data = await response.json();
+
+        // Draw violation types chart
+        drawViolationChart(data.violation_types);
+
+        // Draw weekly chart
+        drawWeeklyChart(data.daily_stats);
+
+    } catch (error) {
+        console.error('Error loading charts:', error);
+    }
+}
+
+// Draw violation types chart (simple bar chart)
+function drawViolationChart(data) {
+    const canvas = document.getElementById('violationChart');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = 200;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const labels = Object.keys(data);
+    const values = Object.values(data);
+    const maxValue = Math.max(...values, 1);
+
+    const barWidth = 60;
+    const gap = 20;
+    const startX = 40;
+    const chartHeight = canvas.height - 40;
+
+    // Draw bars
+    labels.forEach((label, index) => {
+        const x = startX + index * (barWidth + gap);
+        const barHeight = (values[index] / maxValue) * (chartHeight - 30);
+        const y = chartHeight - barHeight;
+
+        // Draw bar
+        const gradient = ctx.createLinearGradient(x, y, x, chartHeight);
+        gradient.addColorStop(0, '#e74c3c');
+        gradient.addColorStop(1, '#c0392b');
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, y, barWidth, barHeight);
+
+        // Draw value
+        ctx.fillStyle = '#2c3e50';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(values[index], x + barWidth/2, y - 5);
+
+        // Draw label
+        ctx.font = '10px Arial';
+        const shortLabel = label.replace('_', ' ');
+        ctx.fillText(shortLabel, x + barWidth/2, chartHeight + 15);
+    });
+}
+
+// Draw weekly chart (line chart)
+function drawWeeklyChart(data) {
+    const canvas = document.getElementById('weeklyChart');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = 200;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const labels = Object.keys(data).sort().reverse();
+    const values = labels.map(date => data[date]);
+    const maxValue = Math.max(...values, 1);
+
+    const padding = 40;
+    const chartWidth = canvas.width - 2 * padding;
+    const chartHeight = canvas.height - 2 * padding;
+
+    // Draw axes
+    ctx.strokeStyle = '#ecf0f1';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, canvas.height - padding);
+    ctx.lineTo(canvas.width - padding, canvas.height - padding);
+    ctx.stroke();
+
+    // Draw line
+    ctx.strokeStyle = '#3498db';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    labels.forEach((label, index) => {
+        const x = padding + (index / (labels.length - 1 || 1)) * chartWidth;
+        const y = (canvas.height - padding) - (values[index] / maxValue) * chartHeight;
+
+        if (index === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    });
+
+    ctx.stroke();
+
+    // Draw points
+    labels.forEach((label, index) => {
+        const x = padding + (index / (labels.length - 1 || 1)) * chartWidth;
+        const y = (canvas.height - padding) - (values[index] / maxValue) * chartHeight;
+
+        ctx.fillStyle = '#3498db';
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Draw date
+        ctx.fillStyle = '#7f8c8d';
+        ctx.font = '9px Arial';
+        ctx.textAlign = 'center';
+        const dateStr = label.split('-').slice(1).join('/');
+        ctx.fillText(dateStr, x, canvas.height - padding + 15);
+    });
+}
+
+// Auto refresh
+function startAutoRefresh() {
+    setInterval(() => {
+        loadStatistics();
+    }, 10000); // Refresh every 10 seconds
+}
+
+// Manual refresh
+function refreshAlerts() {
+    loadStatistics();
+    showToast('Alerts refreshed', 'info');
+}
+
+// Show toast notification
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <i class="fas fa-${type === 'error' ? 'times-circle' : 'info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    container.appendChild(toast);
+
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// Update current time in header
+setInterval(() => {
+    const now = new Date();
+    const timeEl = document.querySelector('#currentTime span');
+    if (timeEl) {
+        timeEl.textContent = now.toLocaleTimeString();
+    }
+}, 1000);
+</script>
+{% endblock %}

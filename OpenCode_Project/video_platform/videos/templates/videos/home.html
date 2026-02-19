@@ -1,0 +1,121 @@
+{% extends 'videos/base.html' %}
+
+{% block title %}VideoStream - Home{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    {% if featured_videos %}
+    <section class="mb-5">
+        <h3 class="mb-3">Featured Videos</h3>
+        <div class="row">
+            {% for video in featured_videos %}
+            <div class="col-md-3 mb-3">
+                <div class="card video-card h-100" onclick="location.href='{% url 'video_detail' video.slug %}'">
+                    <div class="video-thumbnail">
+                        {% if video.thumbnail %}
+                        <img src="{{ video.thumbnail.url }}" class="card-img-top" alt="{{ video.title }}" style="height: 180px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 180px;">
+                            <span class="text-white">No Thumbnail</span>
+                        </div>
+                        {% endif %}
+                        <span class="duration-badge">{{ video.formatted_duration }}</span>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-title">{{ video.title|truncatewords:10 }}</h6>
+                        <p class="card-text text-muted small">{{ video.channel.name }}</p>
+                        <p class="card-text small">{{ video.view_count }} views • {{ video.created_at|timesince }} ago</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if trending_videos %}
+    <section class="mb-5">
+        <h3 class="mb-3">Trending Videos</h3>
+        <div class="row">
+            {% for video in trending_videos %}
+            <div class="col-md-3 mb-3">
+                <div class="card video-card h-100" onclick="location.href='{% url 'video_detail' video.slug %}'">
+                    <div class="video-thumbnail">
+                        {% if video.thumbnail %}
+                        <img src="{{ video.thumbnail.url }}" class="card-img-top" alt="{{ video.title }}" style="height: 180px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 180px;">
+                            <span class="text-white">No Thumbnail</span>
+                        </div>
+                        {% endif %}
+                        <span class="duration-badge">{{ video.formatted_duration }}</span>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-title">{{ video.title|truncatewords:10 }}</h6>
+                        <p class="card-text text-muted small">{{ video.channel.name }}</p>
+                        <p class="card-text small">{{ video.view_count }} views</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="mb-5">
+        <h3 class="mb-3">Latest Videos</h3>
+        <div class="row">
+            {% for video in videos %}
+            <div class="col-md-3 mb-3">
+                <div class="card video-card h-100" onclick="location.href='{% url 'video_detail' video.slug %}'">
+                    <div class="video-thumbnail">
+                        {% if video.thumbnail %}
+                        <img src="{{ video.thumbnail.url }}" class="card-img-top" alt="{{ video.title }}" style="height: 180px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 180px;">
+                            <span class="text-white">No Thumbnail</span>
+                        </div>
+                        {% endif %}
+                        <span class="duration-badge">{{ video.formatted_duration }}</span>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-title">{{ video.title|truncatewords:10 }}</h6>
+                        <p class="card-text text-muted small">{{ video.channel.name }}</p>
+                        <p class="card-text small">{{ video.view_count }} views • {{ video.created_at|timesince }} ago</p>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <p class="text-center text-muted">No videos uploaded yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% if channels %}
+    <section>
+        <h3 class="mb-3">Popular Channels</h3>
+        <div class="row">
+            {% for channel in channels %}
+            <div class="col-md-2 mb-3">
+                <div class="card text-center" onclick="location.href='{% url 'channel_detail' channel.slug %}'" style="cursor: pointer;">
+                    <div class="card-body">
+                        {% if channel.profile_image %}
+                        <img src="{{ channel.profile_image.url }}" class="rounded-circle mb-2" alt="{{ channel.name }}" style="width: 60px; height: 60px; object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                            <span class="text-white">{{ channel.name|first|upper }}</span>
+                        </div>
+                        {% endif %}
+                        <h6 class="card-title mb-1">{{ channel.name }}</h6>
+                        <p class="card-text small text-muted">{{ channel.subscriber_count }} subscribers</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

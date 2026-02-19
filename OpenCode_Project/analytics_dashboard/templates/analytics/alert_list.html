@@ -1,0 +1,49 @@
+{% extends 'analytics/base.html' %}
+
+{% block title %}Alerts - Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Alerts</h1>
+        <a href="/alerts/create/" class="btn btn-primary">Create Alert</a>
+    </div>
+
+    {% if alerts %}
+    <div class="alerts-grid">
+        {% for alert in alerts %}
+        <div class="card alert-card alert-{{ alert.severity }}">
+            <h2>{{ alert.name }}</h2>
+            {% if alert.description %}
+            <p>{{ alert.description }}</p>
+            {% endif %}
+            <div class="alert-details">
+                <span>Metric: {{ alert.metric.name }}</span>
+                <span>Condition: {{ alert.get_condition_type_display }} {{ alert.threshold_value }}</span>
+            </div>
+            <div class="alert-meta">
+                <span class="badge badge-{{ alert.severity }}">{{ alert.get_severity_display }}</span>
+                {% if alert.is_active %}
+                <span class="badge badge-success">Active</span>
+                {% else %}
+                <span class="badge">Inactive</span>
+                {% endif %}
+                <span>Triggered: {{ alert.trigger_count }} times</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h2>No alerts yet</h2>
+        <p>Create alerts to get notified when metrics reach certain thresholds.</p>
+        <a href="/alerts/create/" class="btn btn-primary">Create Alert</a>
+    </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <h2>Alert Logs</h2>
+        <a href="/alerts/logs/" class="btn btn-secondary">View All Alert Logs</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}Management Dashboard - GovExamPortal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item active">Management Dashboard</li>
+                </ol>
+            </nav>
+
+            <h1 class="mb-4">
+                <i class="bi bi-gear-fill"></i> Management Dashboard
+            </h1>
+
+            <!-- Stats Cards -->
+            <div class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="card stat-card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">Total Categories</h6>
+                                    <div class="stat-number">{{ total_categories }}</div>
+                                    <small>Active categories</small>
+                                </div>
+                                <i class="bi bi-tags-fill" style="font-size: 3rem; opacity: 0.5;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">Total Exams</h6>
+                                    <div class="stat-number">{{ total_exams }}</div>
+                                    <small>All examinations</small>
+                                </div>
+                                <i class="bi bi-file-earmark-text-fill" style="font-size: 3rem; opacity: 0.5;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">Upcoming Exams</h6>
+                                    <div class="stat-number">{{ upcoming_exams }}</div>
+                                    <small>Fresh dates available</small>
+                                </div>
+                                <i class="bi bi-calendar-check-fill" style="font-size: 3rem; opacity: 0.5;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">
+                                <i class="bi bi-lightning-charge-fill"></i> Quick Actions
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <a href="{% url 'exam_create' %}" class="btn btn-primary w-100">
+                                        <i class="bi bi-plus-circle"></i> Create Exam
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="{% url 'category_create' %}" class="btn btn-success w-100">
+                                        <i class="bi bi-plus-circle"></i> Create Category
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="{% url 'category_list' %}" class="btn btn-info w-100">
+                                        <i class="bi bi-list-task"></i> Manage Categories
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="{% url 'exam_list' %}" class="btn btn-secondary w-100">
+                                        <i class="bi bi-eye"></i> View All Exams
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Recent Categories -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">
+                                <i class="bi bi-clock-history"></i> Recent Categories
+                            </h6>
+                        </div>
+                        <div class="card-body p-0">
+                            {% if recent_categories %}
+                            <div class="list-group list-group-flush">
+                                {% for category in recent_categories %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ category.name }}</strong>
+                                        <small class="text-muted d-block">{{ category.code }}</small>
+                                    </div>
+                                    <span class="badge bg-{{ category.is_active|yesno:'success,secondary' }}">
+                                        {{ category.is_active|yesno:'Active,Inactive' }}
+                                    </span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="p-4 text-center text-muted">
+                                <i class="bi bi-inbox fs-1"></i>
+                                <p class="mb-0">No categories yet</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-light">
+                            <a href="{% url 'category_list' %}" class="btn btn-sm btn-outline-primary">
+                                View All <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Exams -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">
+                                <i class="bi bi-clock-history"></i> Recent Exams
+                            </h6>
+                        </div>
+                        <div class="card-body p-0">
+                            {% if recent_exams %}
+                            <div class="list-group list-group-flush">
+                                {% for exam in recent_exams %}
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong>{{ exam.title }}</strong>
+                                            <small class="text-muted d-block">
+                                                {{ exam.category.name|default:exam.get_exam_type_display }}
+                                            </small>
+                                        </div>
+                                        <small class="text-muted">{{ exam.created_at|date:"M d, Y" }}</small>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="p-4 text-center text-muted">
+                                <i class="bi bi-inbox fs-1"></i>
+                                <p class="mb-0">No exams yet</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-light">
+                            <a href="{% url 'exam_list' %}" class="btn btn-sm btn-outline-primary">
+                                View All <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

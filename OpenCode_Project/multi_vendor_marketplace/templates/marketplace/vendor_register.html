@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Vendor Registration - Multi-Vendor Marketplace{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Become a Vendor</h4>
+            </div>
+            <div class="card-body">
+                <p class="lead">Start selling your products to thousands of customers!</p>
+                <hr>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <h5 class="mb-3">Store Information</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Store Name</label>
+                            {{ form.store_name }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Store Slug (URL)</label>
+                            {{ form.store_slug }}
+                            <small class="text-muted">This will be your store URL: /vendor/your-slug</small>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        {{ form.description }}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Logo</label>
+                            {{ form.logo }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Banner</label>
+                            {{ form.banner }}
+                        </div>
+                    </div>
+                    
+                    <h5 class="mb-3 mt-4">Contact Information</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Contact Email</label>
+                            {{ form.contact_email }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone</label>
+                            {{ form.contact_phone }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        {{ form.address }}
+                    </div>
+                    
+                    <h5 class="mb-3 mt-4">Payment Information</h5>
+                    <p class="text-muted small">This information will be used for payouts.</p>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Bank Name</label>
+                            {{ form.bank_name }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Account Number</label>
+                            {{ form.bank_account_number }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Routing Number</label>
+                            {{ form.bank_routing_number }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">PayPal Email (optional)</label>
+                            {{ form.paypal_email }}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Submit Application</button>
+                        <a href="{% url 'home' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

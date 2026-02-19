@@ -1,0 +1,234 @@
+{% extends 'shop/base.html' %}
+{% load static %}
+
+{% block title %}{{ category.name }} - AI E-Commerce{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav class="breadcrumb">
+    <div class="container">
+        <a href="{% url 'shop:home' %}">Home</a>
+        <span class="separator">&rsaquo;</span>
+        <span class="current">{{ category.name }}</span>
+    </div>
+</nav>
+
+<!-- Category Header -->
+<section class="category-header">
+    <div class="container">
+        <h1 class="category-title">{{ category.name }}</h1>
+        <p class="category-subtitle">
+            {% if products.count %}
+                {{ products.count }} product{{ products.count|pluralize }} in this category
+            {% else %}
+                No products in this category yet
+            {% endif %}
+        </p>
+    </div>
+</section>
+
+<!-- Products Grid -->
+{% if products %}
+<section class="products-section">
+    <div class="container">
+        <div class="products-grid">
+            {% for product in products %}
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{% static 'shop/images/placeholder.jpg' %}" alt="{{ product.name }}">
+                    <span class="category-badge">{{ category.name }}</span>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">
+                        <a href="{% url 'shop:product_detail' product.id %}">{{ product.name }}</a>
+                    </h3>
+                    <p class="product-description">{{ product.description|truncatewords:15 }}</p>
+                    <div class="product-footer">
+                        <span class="product-price">${{ product.price }}</span>
+                        <button class="btn-add-cart" onclick="addToCart({{ product.id }})">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Personalized Recommendations (Logged-in users) -->
+{% if user.is_authenticated and recommendations %}
+<section class="recommendations-section">
+    <div class="container">
+        <h2 class="section-title">
+            <span class="ai-badge">AI</span> Recommended for You
+        </h2>
+        <p class="section-subtitle">Personalized picks based on your interests</p>
+        <div class="products-grid">
+            {% for product in recommendations %}
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{% static 'shop/images/placeholder.jpg' %}" alt="{{ product.name }}">
+                    <span class="ai-indicator">AI Pick</span>
+                </div>
+                <div class="product-info">
+                    <span class="product-category">{{ product.category.name }}</span>
+                    <h3 class="product-name">
+                        <a href="{% url 'shop:product_detail' product.id %}">{{ product.name }}</a>
+                    </h3>
+                    <p class="product-description">{{ product.description|truncatewords:15 }}</p>
+                    <div class="product-footer">
+                        <span class="product-price">${{ product.price }}</span>
+                        <button class="btn-add-cart" onclick="addToCart({{ product.id }})">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Empty State -->
+{% if not products %}
+<section class="empty-state-large">
+    <div class="container">
+        <div class="empty-content">
+            <span class="empty-icon">📦</span>
+            <h2>No Products Yet</h2>
+            <p>There are no products in the {{ category.name }} category.</p>
+            <a href="{% url 'shop:home' %}" class="btn-primary">Browse Other Categories</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.breadcrumb {
+    padding: 1rem 0;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.breadcrumb .container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.breadcrumb a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb .separator {
+    color: #a0aec0;
+}
+
+.breadcrumb .current {
+    color: #718096;
+}
+
+.category-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+}
+
+.category-title {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.category-subtitle {
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+.products-section {
+    margin-bottom: 2rem;
+}
+
+.category-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(102, 126, 234, 0.9);
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.empty-state-large {
+    padding: 4rem 0;
+}
+
+.empty-content {
+    text-align: center;
+    background: white;
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.empty-content h2 {
+    color: #2d3748;
+    margin-bottom: 1rem;
+}
+
+.empty-content p {
+    color: #718096;
+    margin-bottom: 2rem;
+}
+
+.btn-primary {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .category-title {
+        font-size: 1.5rem;
+    }
+
+    .category-subtitle {
+        font-size: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addToCart(productId) {
+    alert('Product ' + productId + ' added to cart!');
+}
+</script>
+{% endblock %}

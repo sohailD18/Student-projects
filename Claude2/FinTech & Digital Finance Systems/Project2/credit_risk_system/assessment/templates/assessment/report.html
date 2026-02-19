@@ -1,0 +1,267 @@
+{% extends 'assessment/base.html' %}
+
+{% block title %}Report - {{ applicant.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">
+                    <i class="bi bi-file-earmark-text text-primary"></i>
+                    Assessment Report
+                </h2>
+                <p class="text-muted mb-0">for {{ applicant.name }}</p>
+            </div>
+            <div class="btn-group">
+                <button onclick="window.print()" class="btn btn-outline-primary">
+                    <i class="bi bi-printer"></i> Print
+                </button>
+                <a href="?format=pdf" class="btn btn-primary">
+                    <i class="bi bi-download"></i> Download PDF
+                </a>
+            </div>
+        </div>
+
+        <!-- Report Container -->
+        <div class="report-container" id="reportContent">
+            <!-- Header -->
+            <div class="report-header">
+                <h1 class="text-center mb-2">Credit Assessment Report</h1>
+                <p class="text-center text-muted">Generated on {{ generated_date }}</p>
+            </div>
+
+            <!-- Decision Summary -->
+            <div class="report-section mb-4">
+                <div class="card border-0 shadow-sm" style="border-left: 5px solid {{ risk_details.color }} !important;">
+                    <div class="card-body text-center py-4">
+                        <h2 class="mb-3" style="color: {{ risk_details.color }};">
+                            {{ applicant.get_eligibility_status_display }}
+                        </h2>
+                        <p class="lead mb-2">
+                            <strong>{{ risk_details.label }}</strong> - {{ applicant.risk_category|title }} Risk Applicant
+                        </p>
+                        <p class="mb-0">
+                            Default Probability:
+                            <strong>
+                                {% if applicant.risk_probability %}
+                                    {{ applicant.risk_probability|floatformat:2 }}%
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Applicant Information -->
+            <div class="report-section mb-4">
+                <h3 class="section-title">Applicant Information</h3>
+                <table class="table table-bordered">
+                    <tr>
+                        <th>Full Name</th>
+                        <td>{{ applicant.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email Address</th>
+                        <td>{{ applicant.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Phone Number</th>
+                        <td>{{ applicant.phone }}</td>
+                    </tr>
+                    <tr>
+                        <th>Assessment Date</th>
+                        <td>{{ applicant.created_at|date:"F d, Y" }}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Financial Profile -->
+            <div class="report-section mb-4">
+                <h3 class="section-title">Financial Profile</h3>
+                <table class="table table-bordered">
+                    <tr>
+                        <th>Annual Income</th>
+                        <td>${{ applicant.annual_income|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <th>Employment Status</th>
+                        <td>{{ applicant.get_employment_status_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Years Employed</th>
+                        <td>{{ applicant.years_employed }} years</td>
+                    </tr>
+                    <tr>
+                        <th>Debt-to-Income Ratio</th>
+                        <td>{{ applicant.debt_to_income_ratio }}%</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Credit History -->
+            <div class="report-section mb-4">
+                <h3 class="section-title">Credit History</h3>
+                <table class="table table-bordered">
+                    <tr>
+                        <th>Credit Score</th>
+                        <td>
+                            {{ financial_data.credit_score }}
+                            {% if financial_data.credit_score >= 800 %}
+                            <span class="badge bg-success ms-2">Exceptional</span>
+                            {% elif financial_data.credit_score >= 740 %}
+                            <span class="badge bg-success ms-2">Very Good</span>
+                            {% elif financial_data.credit_score >= 670 %}
+                            <span class="badge bg-primary ms-2">Good</span>
+                            {% elif financial_data.credit_score >= 580 %}
+                            <span class="badge bg-warning text-dark ms-2">Fair</span>
+                            {% else %}
+                            <span class="badge bg-danger ms-2">Poor</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Number of Open Loans</th>
+                        <td>{{ financial_data.num_open_loans }}</td>
+                    </tr>
+                    <tr>
+                        <th>Number of Credit Lines</th>
+                        <td>{{ financial_data.num_credit_lines }}</td>
+                    </tr>
+                    <tr>
+                        <th>Late Payments (Last 2 Years)</th>
+                        <td>{{ financial_data.late_payments }}</td>
+                    </tr>
+                    <tr>
+                        <th>Bankruptcy History</th>
+                        <td>
+                            {% if financial_data.bankruptcies %}
+                            <span class="badge bg-danger">Yes</span>
+                            {% else %}
+                            <span class="badge bg-success">No</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Home Ownership Status</th>
+                        <td>{{ financial_data.get_home_ownership_status_display }}</td>
+                    </tr>
+                    {% if financial_data.total_credit_limit %}
+                    <tr>
+                        <th>Total Credit Limit</th>
+                        <td>${{ financial_data.total_credit_limit|floatformat:2 }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if financial_data.credit_utilization %}
+                    <tr>
+                        <th>Credit Utilization</th>
+                        <td>{{ financial_data.credit_utilization }}%</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+
+            <!-- Assessment Details -->
+            <div class="report-section mb-4">
+                <h3 class="section-title">Assessment Details</h3>
+                <table class="table table-bordered">
+                    <tr>
+                        <th>Risk Category</th>
+                        <td>
+                            <span class="badge" style="background-color: {{ risk_details.color }};">
+                                {{ risk_details.label }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Eligibility Status</th>
+                        <td>{{ applicant.get_eligibility_status_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Default Probability</th>
+                        <td>
+                            {% if applicant.risk_probability %}
+                                {{ applicant.risk_probability|floatformat:2 }}%
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Recommendation -->
+            <div class="report-section mb-4">
+                <h3 class="section-title">Recommendation</h3>
+                <div class="alert alert-{{ risk_details.color == '#28a745' and 'success' or risk_details.color == '#ffc107' and 'warning' or 'danger' }}">
+                    <h6 class="alert-heading">Assessment Summary</h6>
+                    <p class="mb-2">{{ risk_details.description }}</p>
+                    <hr>
+                    <p class="mb-0"><strong>Recommendation:</strong> {{ risk_details.recommendation }}</p>
+                </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="report-section">
+                <div class="alert alert-secondary">
+                    <h6 class="alert-heading"><small>Disclaimer</small></h6>
+                    <p class="mb-0"><small>
+                        This report is generated by an AI-powered credit risk assessment system using machine learning algorithms.
+                        The results provided are for informational purposes only and should be used as a decision-support tool,
+                        not as the sole basis for lending decisions. Human review and additional verification are recommended,
+                        especially for borderline cases. The system's predictions are based on patterns from historical data
+                        and may not account for all relevant factors in individual cases.
+                    </small></p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="report-footer text-center mt-4">
+                <p class="text-muted mb-0">
+                    <small>
+                        Generated by Credit Risk Assessment System | Powered by Machine Learning<br>
+                        Report ID: {{ applicant.id }} | Created: {{ generated_date }}
+                    </small>
+                </p>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card shadow-sm mt-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'assessment:assessment_result' applicant.id %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Results
+                    </a>
+                    <div class="btn-group">
+                        <button onclick="window.print()" class="btn btn-outline-primary">
+                            <i class="bi bi-printer"></i> Print
+                        </button>
+                        <a href="?format=pdf" class="btn btn-primary">
+                            <i class="bi bi-file-earmark-pdf"></i> Download PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    .navbar, .alert-dismissible, footer, .btn-group, .card:last-child {
+        display: none !important;
+    }
+    .report-container {
+        box-shadow: none !important;
+    }
+    body {
+        background: white !important;
+    }
+}
+</style>
+{% endblock %}

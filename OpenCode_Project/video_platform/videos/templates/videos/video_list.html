@@ -1,0 +1,89 @@
+{% extends 'videos/base.html' %}
+
+{% block title %}All Videos - VideoStream{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <h2 class="mb-4">All Videos</h2>
+    
+    <div class="mb-4">
+        <form method="get" class="row g-3" id="filterForm">
+            <div class="col-md-4">
+                <input type="text" name="q" class="form-control" placeholder="Search videos..." value="{{ request.GET.q|default:'' }}" onkeypress="if(event.key === 'Enter') { document.getElementById('filterForm').submit(); }">
+            </div>
+            <div class="col-md-3">
+                <select name="category" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                    <option value="">All Categories</option>
+                    <option value="education" {% if request.GET.category|lower == 'education' %}selected{% endif %}>Education</option>
+                    <option value="entertainment" {% if request.GET.category|lower == 'entertainment' %}selected{% endif %}>Entertainment</option>
+                    <option value="gaming" {% if request.GET.category|lower == 'gaming' %}selected{% endif %}>Gaming</option>
+                    <option value="music" {% if request.GET.category|lower == 'music' %}selected{% endif %}>Music</option>
+                    <option value="tech" {% if request.GET.category|lower == 'tech' %}selected{% endif %}>Tech</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="sort" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                    <option value="">Sort By</option>
+                    <option value="new" {% if request.GET.sort == 'new' %}selected{% endif %}>Newest</option>
+                    <option value="popular" {% if request.GET.sort == 'popular' %}selected{% endif %}>Most Popular</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="row">
+        {% for video in videos %}
+        <div class="col-md-3 mb-4">
+            <div class="card video-card h-100" onclick="location.href='{% url 'video_detail' video.slug %}'">
+                <div class="video-thumbnail">
+                    {% if video.thumbnail %}
+                    <img src="{{ video.thumbnail.url }}" class="card-img-top" alt="{{ video.title }}" style="height: 180px; object-fit: cover;">
+                    {% else %}
+                    <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 180px;">
+                        <span class="text-white">No Thumbnail</span>
+                    </div>
+                    {% endif %}
+                    <span class="duration-badge">{{ video.formatted_duration }}</span>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">{{ video.title|truncatewords:10 }}</h6>
+                    <p class="card-text text-muted small">{{ video.channel.name }}</p>
+                    <p class="card-text small">{{ video.view_count }} views • {{ video.created_at|timesince }} ago</p>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="text-center text-muted">No videos found.</p>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% if is_paginated %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+            
+            {% for num in paginator.page_range %}
+            <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

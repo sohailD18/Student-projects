@@ -1,0 +1,314 @@
+{% extends 'campaigns/base.html' %}
+
+{% block title %}Dashboard - Email Marketing Platform{% endblock %}
+
+{% block content %}
+<style>
+    .dashboard-welcome {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 2rem;
+        border-radius: 1rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-xl);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dashboard-welcome::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(-20px, 20px); }
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(124, 58, 237, 0.1));
+    }
+
+    .quick-action-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .quick-action-card:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-xl);
+    }
+
+    .quick-action-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+    }
+
+    .quick-action-card:nth-child(1) .quick-action-icon {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+    }
+
+    .quick-action-card:nth-child(2) .quick-action-icon {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .quick-action-card:nth-child(3) .quick-action-icon {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
+
+    .quick-action-card:nth-child(4) .quick-action-icon {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+</style>
+
+<div class="dashboard-welcome fade-in-up">
+    <div class="position-relative">
+        <h1 class="display-4 fw-bold mb-2">Welcome back, {{ user.username }}!</h1>
+        <p class="lead mb-0">Here's what's happening with your email marketing today.</p>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3 fade-in-up" style="animation-delay: 0.1s;">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="bi bi-megaphone" style="color: var(--primary-color);"></i>
+            </div>
+            <div class="stat-value">{{ total_campaigns }}</div>
+            <div class="stat-label">Total Campaigns</div>
+        </div>
+    </div>
+    <div class="col-md-3 fade-in-up" style="animation-delay: 0.2s;">
+        <div class="stat-card stat-success">
+            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));">
+                <i class="bi bi-people" style="color: var(--success-color);"></i>
+            </div>
+            <div class="stat-value">{{ total_subscribers }}</div>
+            <div class="stat-label">Active Subscribers</div>
+        </div>
+    </div>
+    <div class="col-md-3 fade-in-up" style="animation-delay: 0.3s;">
+        <div class="stat-card stat-info">
+            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.1));">
+                <i class="bi bi-envelope" style="color: var(--info-color);"></i>
+            </div>
+            <div class="stat-value">{{ total_emails_sent }}</div>
+            <div class="stat-label">Emails Sent</div>
+        </div>
+    </div>
+    <div class="col-md-3 fade-in-up" style="animation-delay: 0.4s;">
+        <div class="stat-card stat-warning">
+            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1));">
+                <i class="bi bi-eye" style="color: var(--warning-color);"></i>
+            </div>
+            <div class="stat-value">{{ total_opens }}</div>
+            <div class="stat-label">Total Opens</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-4 mb-5">
+    <div class="col-12">
+        <h3 class="mb-4 fw-bold" style="color: var(--dark-bg);">Quick Actions</h3>
+    </div>
+    <div class="col-md-3 fade-in-up" style="animation-delay: 0.5s;">
+        <a href="{% url 'campaigns:campaign_create' %}" class="text-decoration-none">
+            <div class="quick-action-card">
+                <div class="quick-action-icon">
+                    <i class="bi bi-plus-circle"></i>
+                </div>
+                <h5 class="fw-bold mb-2" style="color: var(--dark-bg);">Create Campaign</h5>
+                <p class="text-muted mb-0">Launch a new email campaign</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 fade-in-up" style="animation-delay: 0.6s;">
+        <a href="{% url 'campaigns:subscriber_create' %}" class="text-decoration-none">
+            <div class="quick-action-card">
+                <div class="quick-action-icon">
+                    <i class="bi bi-person-plus"></i>
+                </div>
+                <h5 class="fw-bold mb-2" style="color: var(--dark-bg);">Add Subscriber</h5>
+                <p class="text-muted mb-0">Add new subscribers to your list</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 fade-in-up" style="animation-delay: 0.7s;">
+        <a href="{% url 'campaigns:template_create' %}" class="text-decoration-none">
+            <div class="quick-action-card">
+                <div class="quick-action-icon">
+                    <i class="bi bi-file-earmark-plus"></i>
+                </div>
+                <h5 class="fw-bold mb-2" style="color: var(--dark-bg);">New Template</h5>
+                <p class="text-muted mb-0">Design an email template</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 fade-in-up" style="animation-delay: 0.8s;">
+        <a href="{% url 'campaigns:subscriber_import' %}" class="text-decoration-none">
+            <div class="quick-action-card">
+                <div class="quick-action-icon">
+                    <i class="bi bi-upload"></i>
+                </div>
+                <h5 class="fw-bold mb-2" style="color: var(--dark-bg);">Import Contacts</h5>
+                <p class="text-muted mb-0">Bulk import subscribers</p>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Recent Campaigns and Subscribers -->
+<div class="row g-4 mb-5">
+    <div class="col-md-6 fade-in-left" style="animation-delay: 0.9s;">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fw-bold"><i class="bi bi-clock-history me-2"></i>Recent Campaigns</span>
+                <a href="{% url 'campaigns:campaign_list' %}" class="btn btn-sm btn-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_campaigns %}
+                    <div class="list-group list-group-flush">
+                        {% for campaign in recent_campaigns %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div>
+                                    <h6 class="mb-1 fw-bold">{{ campaign.name }}</h6>
+                                    <small class="text-muted">
+                                        <i class="bi bi-list-ul me-1"></i>{{ campaign.email_list.name }}
+                                    </small>
+                                </div>
+                                <span class="badge bg-{% if campaign.status == 'draft' %}secondary{% elif campaign.status == 'scheduled' %}info{% elif campaign.status == 'sending' %}primary{% elif campaign.status == 'sent' %}success{% else %}warning{% endif %}">
+                                    {{ campaign.get_status_display }}
+                                </span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox" style="font-size: 3rem; color: #e2e8f0;"></i>
+                        <p class="text-muted mt-3 mb-0">No campaigns yet.</p>
+                        <a href="{% url 'campaigns:campaign_create' %}" class="btn btn-primary btn-sm mt-2">Create your first campaign</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 fade-in-right" style="animation-delay: 0.9s;">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fw-bold"><i class="bi bi-person-plus me-2"></i>Recent Subscribers</span>
+                <a href="{% url 'campaigns:subscriber_list' %}" class="btn btn-sm btn-success">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_subscribers %}
+                    <div class="list-group list-group-flush">
+                        {% for subscriber in recent_subscribers %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div>
+                                    <h6 class="mb-1 fw-bold">{{ subscriber.full_name }}</h6>
+                                    <small class="text-muted">
+                                        <i class="bi bi-envelope me-1"></i>{{ subscriber.email }}
+                                    </small>
+                                </div>
+                                <span class="badge bg-{% if subscriber.status == 'active' %}success{% elif subscriber.status == 'unsubscribed' %}danger{% elif subscriber.status == 'bounced' %}dark{% else %}warning{% endif %}">
+                                    {{ subscriber.get_status_display }}
+                                </span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-people" style="font-size: 3rem; color: #e2e8f0;"></i>
+                        <p class="text-muted mt-3 mb-0">No subscribers yet.</p>
+                        <a href="{% url 'campaigns:subscriber_create' %}" class="btn btn-success btn-sm mt-2">Add your first subscriber</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Getting Started Guide -->
+{% if total_campaigns == 0 or total_subscribers == 0 %}
+<div class="row g-4 fade-in-up" style="animation-delay: 1s;">
+    <div class="col-12">
+        <div class="card" style="border: 2px dashed var(--border-color);">
+            <div class="card-body py-5">
+                <div class="text-center mb-4">
+                    <i class="bi bi-rocket-takeoff" style="font-size: 4rem; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                    <h2 class="fw-bold mt-3">Getting Started Guide</h2>
+                    <p class="text-muted">Follow these steps to launch your first email campaign</p>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 border-0" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
+                            <div class="card-body text-center">
+                                <div class="display-4 fw-bold text-primary mb-3">1</div>
+                                <h5 class="fw-bold mb-2">Create Email Lists</h5>
+                                <p class="text-muted mb-3">Organize your subscribers into different lists for targeted campaigns.</p>
+                                <a href="{% url 'campaigns:email_list_create' %}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle me-1"></i>Create List
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 border-0" style="background: linear-gradient(135deg, #d1fae5, #a7f3d0);">
+                            <div class="card-body text-center">
+                                <div class="display-4 fw-bold text-success mb-3">2</div>
+                                <h5 class="fw-bold mb-2">Add Subscribers</h5>
+                                <p class="text-muted mb-3">Import subscribers manually or in bulk via CSV import.</p>
+                                <a href="{% url 'campaigns:subscriber_create' %}" class="btn btn-success">
+                                    <i class="bi bi-person-plus me-1"></i>Add Subscribers
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 border-0" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
+                            <div class="card-body text-center">
+                                <div class="display-4 fw-bold text-warning mb-3">3</div>
+                                <h5 class="fw-bold mb-2">Create Campaign</h5>
+                                <p class="text-muted mb-3">Build and send email campaigns to your subscribers.</p>
+                                <a href="{% url 'campaigns:campaign_create' %}" class="btn btn-warning">
+                                    <i class="bi bi-megaphone me-1"></i>Create Campaign
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

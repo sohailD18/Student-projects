@@ -1,0 +1,98 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Processes - OptiFlow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-diagram-2"></i> Business Processes</h1>
+            <a href="{% url 'core:process_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> New Process
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Process Name</th>
+                                <th>Description</th>
+                                <th>Steps</th>
+                                <th>Avg Cycle Time</th>
+                                <th>Completion Rate</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in processes %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.process.name }}</strong><br>
+                                    <small class="text-muted">Created {{ item.process.created_at|date:"M d, Y" }}</small>
+                                </td>
+                                <td>{{ item.process.description|truncatewords:10|default:"-" }}</td>
+                                <td>{{ item.total_steps }}</td>
+                                <td>{{ item.avg_cycle_time }} min</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                            <div class="progress-bar bg-{{ item.completion_rate|floatformat:0|yesno:'success,warning,danger' }}"
+                                                 role="progressbar"
+                                                 style="width: {{ item.completion_rate }}%"
+                                                 aria-valuenow="{{ item.completion_rate }}"
+                                                 aria-valuemin="0" aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        <span class="">{{ item.completion_rate }}%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ item.process.status|yesno:'success,secondary,dark' }}">
+                                        {{ item.process.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'core:process_detail' item.process.id %}"
+                                           class="btn btn-sm btn-outline-primary" title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'core:process_dashboard' item.process.id %}"
+                                           class="btn btn-sm btn-outline-info" title="Dashboard">
+                                            <i class="bi bi-speedometer2"></i>
+                                        </a>
+                                        <a href="{% url 'core:process_analysis' item.process.id %}"
+                                           class="btn btn-sm btn-outline-success" title="Analyze">
+                                            <i class="bi bi-graph-up"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5">
+                                    <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+                                    <h4>No processes found</h4>
+                                    <p class="text-muted">Start by creating your first business process.</p>
+                                    <a href="{% url 'core:process_create' %}" class="btn btn-primary">
+                                        <i class="bi bi-plus-circle"></i> Create Process
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

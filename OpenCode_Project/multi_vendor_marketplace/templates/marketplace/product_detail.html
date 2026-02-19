@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} - Multi-Vendor Marketplace{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        {% if product.image %}
+        <img src="{{ product.image.url }}" class="img-fluid rounded" alt="{{ product.name }}">
+        {% else %}
+        <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 400px;">
+            <i class="fas fa-image fa-5x text-muted"></i>
+        </div>
+        {% endif %}
+    </div>
+    <div class="col-md-6">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Products</a></li>
+                {% if product.category %}
+                <li class="breadcrumb-item"><a href="{% url 'category_detail' product.category.slug %}">{{ product.category.name }}</a></li>
+                {% endif %}
+                <li class="breadcrumb-item active">{{ product.name|truncatewords:5 }}</li>
+            </ol>
+        </nav>
+        
+        <h1 class="mb-2">{{ product.name }}</h1>
+        <p class="text-muted">
+            Sold by <a href="{% url 'vendor_store' product.vendor.store_slug %}">{{ product.vendor.store_name }}</a>
+        </p>
+        
+        <div class="mb-3">
+            {% if product.sale_price and product.sale_price < product.price %}
+            <span class="h3 price-original">${{ product.price }}</span>
+            <span class="h3 price-sale">${{ product.sale_price }}</span>
+            {% else %}
+            <span class="h3">${{ product.price }}</span>
+            {% endif %}
+        </div>
+        
+        <div class="star-rating mb-3">
+            {% for i in "12345" %}
+            <i class="fas fa-star{% if forloop.counter <= product.rating %}{% else %}-o{% endif %}"></i>
+            {% endfor %}
+            <span class="text-muted">({{ product.review_count }} reviews)</span>
+            <span class="text-muted ms-3"><i class="fas fa-eye"></i> {{ product.view_count }} views</span>
+        </div>
+        
+        <div class="mb-3">
+            <span class="badge {% if product.is_in_stock %}bg-success{% else %}bg-danger{% endif %}">
+                {% if product.is_in_stock %}In Stock ({{ product.stock_quantity }}){% else %}Out of Stock{% endif %}
+            </span>
+            <span class="badge bg-secondary">SKU: {{ product.sku }}</span>
+        </div>
+        
+        <p class="mb-4">{{ product.description }}</p>
+        
+        <div class="d-flex gap-3 mb-4">
+            <div class="input-group" style="width: 150px;">
+                <button class="btn btn-outline-secondary" type="button" onclick="updateQuantity(-1)">-</button>
+                <input type="number" id="quantity" class="form-control text-center" value="1" min="1" max="{{ product.stock_quantity }}">
+                <button class="btn btn-outline-secondary" type="button" onclick="updateQuantity(1)">+</button>
+            </div>
+            <button class="btn btn-primary btn-lg" onclick="addToCart({{ product.id }})">
+                <i class="fas fa-cart-plus"></i> Add to Cart
+            </button>
+            <button class="btn btn-outline-danger" onclick="addToWishlist({{ product.id }})">
+                <i class="fas fa-heart"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <ul class="nav nav-tabs" id="productTabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button">
+                    Reviews ({{ reviews.count }})
+                </button>
+            </li>
+        </ul>
+        <div class="tab-content p-3 border border-top-0 rounded-bottom" id="productTabsContent">
+            <div class="tab-pane fade show active" id="reviews" role="tabpanel">
+                {% if reviews %}
+                {% for review in reviews %}
+                <div class="border-bottom pb-3 mb-3">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong>{{ review.user.username }}</strong>
+                            <div class="star-rating">
+                                {% for i in "12345" %}
+                                <i class="fas fa-star{% if forloop.counter <= review.rating %}{% else %}-o{% endif %}"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+                    </div>
+                    <h6 class="mt-2">{{ review.title }}</h6>
+                    <p class="mb-0">{{ review.content }}</p>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted text-center">No reviews yet. Be the first to review this product!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateQuantity(change) {
+    const input = document.getElementById('quantity');
+    const newValue = parseInt(input.value) + change;
+    if (newValue >= 1 && newValue <= {{ product.stock_quantity }}) {
+        input.value = newValue;
+    }
+}
+
+function addToCart(productId) {
+    const quantity = document.getElementById('quantity').value;
+    fetch(`/cart/add/${productId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `quantity=${quantity}`
+    })
+    .then(response => {
+        if (response.status === 401) {
+            showToast('warning', 'Please login to add items to cart');
+            setTimeout(() => {
+                window.location.href = '/accounts/login/?next=' + window.location.pathname;
+            }, 2000);
+            return null;
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data) {
+            if (data.success) {
+                showToast('success', data.message || 'Added to cart!');
+                updateCartBadge(data.cart_total_items);
+            } else {
+                showToast('error', data.message || 'Error adding to cart');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'An error occurred. Please try again.');
+    });
+}
+
+function addToWishlist(productId) {
+    fetch(`/wishlist/add/${productId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', data.added ? 'Added to wishlist!' : 'Removed from wishlist!');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'An error occurred.');
+    });
+}
+</script>
+{% endblock %}

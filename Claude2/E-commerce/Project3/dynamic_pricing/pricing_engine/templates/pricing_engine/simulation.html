@@ -1,0 +1,311 @@
+{% extends 'pricing_engine/base.html' %}
+
+{% block title %}Simulation - Dynamic Pricing System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1><i class="bi bi-calculator"></i> Pricing Simulation</h1>
+        <p class="text-muted">Test hypothetical pricing scenarios and see their impact on profitability</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Simulation Form -->
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-sliders"></i> Simulation Parameters</h5>
+            </div>
+            <div class="card-body">
+                <form id="simulationForm">
+                    <div class="mb-3">
+                        <label for="productSelect" class="form-label">Select Product</label>
+                        <select class="form-select" id="productSelect" required>
+                            <option value="">-- Choose a product --</option>
+                            {% for product in products %}
+                            <option value="{{ product.id }}"
+                                    data-cost="{{ product.base_cost }}"
+                                    data-price="{{ product.current_price }}">
+                                {{ product.name }} (Current: ${{ product.current_price }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="productInfo" class="alert alert-info d-none">
+                        <strong>Current Price:</strong> $<span id="currentPrice">-</span><br>
+                        <strong>Base Cost:</strong> $<span id="baseCost">-</span><br>
+                        <strong>Current Margin:</strong> <span id="currentMargin">-</span>%
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="hypotheticalPrice" class="form-label">Hypothetical Price ($)</label>
+                        <input type="number" class="form-control" id="hypotheticalPrice"
+                               step="0.01" min="0" required placeholder="Enter price">
+                        <div class="form-text">Test different price points to see projected outcomes</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="hypotheticalDemand" class="form-label">Expected Demand (units)</label>
+                        <input type="number" class="form-control" id="hypotheticalDemand"
+                               min="1" required placeholder="Enter quantity">
+                        <div class="form-text">Projected number of units to sell at this price</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-play-circle"></i> Run Simulation
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simulation Results -->
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-graph-up-arrow"></i> Simulation Results</h5>
+            </div>
+            <div class="card-body">
+                <div id="resultsPlaceholder" class="text-center py-5">
+                    <i class="bi bi-calculator" style="font-size: 4rem; color: #ccc;"></i>
+                    <p class="mt-3 text-muted">Run a simulation to see results</p>
+                </div>
+
+                <div id="resultsContent" class="d-none">
+                    <!-- Revenue Comparison -->
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="card-subtitle mb-2 text-muted">Current Revenue</h6>
+                                    <h4 class="card-title" id="currentRevenue">$-</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="card-subtitle mb-2 text-muted">Hypothetical Revenue</h6>
+                                    <h4 class="card-title" id="hypotheticalRevenue">$-</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profit Comparison -->
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="card-subtitle mb-2 text-muted">Current Profit</h6>
+                                    <h4 class="card-title" id="currentProfit">$-</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="card-subtitle mb-2 text-muted">Hypothetical Profit</h6>
+                                    <h4 class="card-title" id="hypotheticalProfit">$-</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Margin Comparison -->
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="card-subtitle mb-2 text-muted">Current Margin</h6>
+                                    <h4 class="card-title" id="currentMarginResult">-</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="card-subtitle mb-2 text-muted">Hypothetical Margin</h6>
+                                    <h4 class="card-title" id="hypotheticalMarginResult">-</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profit Difference -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card" id="profitDiffCard">
+                                <div class="card-body text-center">
+                                    <h6 class="card-subtitle mb-2">Profit Difference</h6>
+                                    <h3 class="card-title" id="profitDifference">$-</h3>
+                                    <p id="profitImprovement" class="mb-0">-</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommendation -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert" id="recommendationAlert" role="alert">
+                                <h6><i class="bi bi-lightbulb"></i> Recommendation</h6>
+                                <p id="recommendationText" class="mb-0">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Update product info when selection changes
+document.getElementById('productSelect').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+
+    if (this.value) {
+        const baseCost = parseFloat(selectedOption.dataset.cost);
+        const currentPrice = parseFloat(selectedOption.dataset.price);
+        const currentMargin = ((currentPrice - baseCost) / currentPrice * 100).toFixed(1);
+
+        document.getElementById('currentPrice').textContent = currentPrice.toFixed(2);
+        document.getElementById('baseCost').textContent = baseCost.toFixed(2);
+        document.getElementById('currentMargin').textContent = currentMargin;
+
+        document.getElementById('productInfo').classList.remove('d-none');
+        document.getElementById('hypotheticalPrice').value = currentPrice;
+    } else {
+        document.getElementById('productInfo').classList.add('d-none');
+    }
+});
+
+// Handle form submission
+document.getElementById('simulationForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const productId = document.getElementById('productSelect').value;
+    const hypotheticalPrice = document.getElementById('hypotheticalPrice').value;
+    const hypotheticalDemand = document.getElementById('hypotheticalDemand').value;
+
+    if (!productId || !hypotheticalPrice || !hypotheticalDemand) {
+        alert('Please fill in all fields');
+        return;
+    }
+
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Calculating...';
+
+    // Send AJAX request
+    const formData = new FormData();
+    formData.append('product_id', productId);
+    formData.append('hypothetical_price', hypotheticalPrice);
+    formData.append('hypothetical_demand', hypotheticalDemand);
+
+    fetch('/api/simulate/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayResults(data.results);
+        } else {
+            alert('Simulation failed: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Simulation failed. Please try again.');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-play-circle"></i> Run Simulation';
+    });
+});
+
+function displayResults(results) {
+    // Hide placeholder, show results
+    document.getElementById('resultsPlaceholder').classList.add('d-none');
+    document.getElementById('resultsContent').classList.remove('d-none');
+
+    // Update revenue
+    document.getElementById('currentRevenue').textContent = '$' + results.current_revenue.toFixed(2);
+    document.getElementById('hypotheticalRevenue').textContent = '$' + results.hypothetical_revenue.toFixed(2);
+
+    // Update profit
+    document.getElementById('currentProfit').textContent = '$' + results.current_profit.toFixed(2);
+    document.getElementById('hypotheticalProfit').textContent = '$' + results.hypothetical_profit.toFixed(2);
+
+    // Update margin
+    document.getElementById('currentMarginResult').textContent = results.current_margin.toFixed(1) + '%';
+    document.getElementById('hypotheticalMarginResult').textContent = results.hypothetical_margin.toFixed(1) + '%';
+
+    // Update profit difference
+    const profitDiff = results.profit_difference;
+    const profitDiffEl = document.getElementById('profitDifference');
+    const profitImprovementEl = document.getElementById('profitImprovement');
+    const profitDiffCard = document.getElementById('profitDiffCard');
+
+    profitDiffEl.textContent = (profitDiff >= 0 ? '+$' : '-$') + Math.abs(profitDiff).toFixed(2);
+    profitImprovementEl.textContent = results.profit_improvement_percent.toFixed(1) + '% improvement';
+
+    // Color coding
+    profitDiffCard.classList.remove('bg-success-subtle', 'bg-danger-subtle', 'bg-light');
+    if (profitDiff > 0) {
+        profitDiffCard.classList.add('bg-success-subtle');
+        profitDiffEl.classList.add('text-success');
+        profitDiffEl.classList.remove('text-danger');
+    } else if (profitDiff < 0) {
+        profitDiffCard.classList.add('bg-danger-subtle');
+        profitDiffEl.classList.add('text-danger');
+        profitDiffEl.classList.remove('text-success');
+    } else {
+        profitDiffCard.classList.add('bg-light');
+        profitDiffEl.classList.remove('text-success', 'text-danger');
+    }
+
+    // Update recommendation
+    const recAlert = document.getElementById('recommendationAlert');
+    const recText = document.getElementById('recommendationText');
+
+    recAlert.classList.remove('alert-success', 'alert-danger', 'alert-warning', 'alert-info');
+
+    if (results.recommendation === 'Increase') {
+        recAlert.classList.add('alert-success');
+        recText.innerHTML = '<strong>Recommended:</strong> Increase the price to improve profitability.';
+    } else if (results.recommendation === 'Decrease') {
+        recAlert.classList.add('alert-danger');
+        recText.innerHTML = '<strong>Recommended:</strong> Decrease the price or reconsider this pricing strategy.';
+    } else {
+        recAlert.classList.add('alert-info');
+        recText.innerHTML = '<strong>Neutral:</strong> The current price and hypothetical price yield similar results.';
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

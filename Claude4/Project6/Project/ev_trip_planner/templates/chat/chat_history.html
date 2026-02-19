@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat History - EV Trip Planner{% endblock %}
+
+{% block content %}
+<section class="chat-section">
+    <div class="container">
+        <div class="section-header">
+            <h1>Chat History</h1>
+            <a href="{% url 'chat:start_new_chat' %}" class="btn btn-primary">New Conversation</a>
+        </div>
+
+        <div class="chat-history-container">
+            {% if conversations %}
+                <div class="conversations-list">
+                    {% for conversation in conversations %}
+                        <a href="{% url 'chat:conversation_detail' conversation.pk %}" class="conversation-card">
+                            <div class="conversation-header">
+                                <div class="conversation-icon">💬</div>
+                                <div class="conversation-info">
+                                    <h3>Conversation from {{ conversation.started_at|date:"F d, Y" }}</h3>
+                                    <p>{{ conversation.started_at|time:"g:i A" }} • {{ conversation.message_count }} messages</p>
+                                </div>
+                            </div>
+                            <div class="conversation-arrow">→</div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state-large">
+                    <div class="empty-icon">💬</div>
+                    <h2>No Chat History Yet</h2>
+                    <p>Start a conversation with our AI Assistant to get help with EV-related questions.</p>
+                    <a href="{% url 'chat:start_new_chat' %}" class="btn btn-primary btn-large">Start Chatting</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

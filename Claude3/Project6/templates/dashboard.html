@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Carbon Credit Analysis{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5">Carbon Credit Dashboard</h1>
+        <p class="lead">Real-time emission tracking and AI-powered trading insights</p>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary summary-card">
+            <div class="card-body">
+                <h5 class="card-title">Total Industries</h5>
+                <h2 class="display-4">{{ total_industries }}</h2>
+                <p class="card-text">Active monitoring</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger summary-card">
+            <div class="card-body">
+                <h5 class="card-title">Total Emissions</h5>
+                <h2 class="display-4">{{ total_emissions|floatformat:0 }}</h2>
+                <p class="card-text">Tons CO₂ (YTD)</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success summary-card">
+            <div class="card-body">
+                <h5 class="card-title">Active Credits</h5>
+                <h2 class="display-4">{{ active_credits|floatformat:0 }}</h2>
+                <p class="card-text">Tons available</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info summary-card">
+            <div class="card-body">
+                <h5 class="card-title">Current Price</h5>
+                <h2 class="display-4">${{ current_price }}</h2>
+                <p class="card-text">Per ton</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Emission Trends (Current Year)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="emissionChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Carbon Price (30 Days)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="priceChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Industries Grid -->
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-3">Industry Overview</h2>
+    </div>
+</div>
+
+<div class="row" id="industriesGrid">
+    {% for industry in industries %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card industry-card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ industry.name }}</h5>
+                <p class="card-text">
+                    <span class="badge bg-secondary">{{ industry.get_industry_type_display }}</span>
+                </p>
+                <div class="row">
+                    <div class="col-6">
+                        <small class="text-muted">Emissions</small>
+                        <h6>{{ industry.total_emissions|floatformat:0 }} tons</h6>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Limit</small>
+                        <h6>{{ industry.emission_limit }} tons</h6>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <small class="text-muted">Surplus/Deficit</small>
+                        <h6 class="{% if industry.carbon_surplus >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ industry.carbon_surplus|floatformat:0 }} tons
+                        </h6>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Efficiency</small>
+                        <h6>{{ industry.efficiency_score }}%</h6>
+                    </div>
+                </div>
+                <div class="progress mb-3">
+                    <div class="progress-bar {% if industry.efficiency_score <= 80 %}bg-success{% elif industry.efficiency_score <= 100 %}bg-warning{% else %}bg-danger{% endif %}"
+                         role="progressbar"
+                         style="width: {% if industry.efficiency_score <= 100 %}{{ industry.efficiency_score }}{% else %}100{% endif %}%"
+                         aria-valuenow="{{ industry.efficiency_score }}"
+                         aria-valuemin="0"
+                         aria-valuemax="100">
+                    </div>
+                </div>
+                <a href="{% url 'industry_detail' industry.id %}" class="btn btn-primary btn-sm">
+                    View Analysis
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- AI Predictions Summary -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-robot"></i> AI Trading Insights
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="predictionsTable">
+                        <thead>
+                            <tr>
+                                <th>Industry</th>
+                                <th>Type</th>
+                                <th>Current Emissions</th>
+                                <th>AI Prediction (Next Month)</th>
+                                <th>Trading Suggestion</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6" class="text-center">
+                                    <div class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    Loading AI predictions...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load emission chart
+    fetch('{% url "api_emission_data" %}')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('emissionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: data,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Monthly Emissions by Industry'
+                        },
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Emissions (tons CO₂)'
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+    // Load price chart
+    fetch('{% url "api_carbon_prices" %}?days=30')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Price per Ton ($)',
+                        data: data.data,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Price (USD)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxTicksLimit: 5
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+    // Load AI predictions
+    fetch('{% url "all_predictions" %}')
+        .then(response => response.json())
+        .then(result => {
+            const tbody = document.querySelector('#predictionsTable tbody');
+            tbody.innerHTML = '';
+
+            result.predictions.forEach(pred => {
+                const badgeClass = pred.suggestion === 'SELL' ? 'bg-success' :
+                                  pred.suggestion === 'BUY' ? 'bg-danger' : 'bg-warning';
+                const urgencyIcon = pred.urgency === 'high' ? '🔴' :
+                                   pred.urgency === 'medium' ? '🟡' : '🟢';
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${pred.industry_name}</td>
+                    <td>${pred.industry_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
+                    <td>${pred.current_emissions} tons</td>
+                    <td>${pred.predicted_next_month} tons</td>
+                    <td>
+                        <span class="badge ${badgeClass}">${pred.suggestion}</span>
+                        ${urgencyIcon}
+                    </td>
+                    <td>
+                        <a href="/industry/${pred.industry_id}/" class="btn btn-sm btn-outline-primary">Analyze</a>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        });
+});
+</script>
+{% endblock %}

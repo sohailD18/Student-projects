@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1 style="color: var(--color-primary);">User Profiles</h1>
+        <a href="{% url 'core:profile_create' %}" class="btn btn-primary">
+            <span style="margin-right: 0.5rem;">+</span> Create New Profile
+        </a>
+    </div>
+
+    {% if profiles %}
+        <div class="grid grid-3">
+            {% for profile in profiles %}
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ profile.name }}</h3>
+                        <p class="card-subtitle">Age: {{ profile.age }} | Income: ${{ profile.annual_income|floatformat:0 }}</p>
+                    </div>
+                    <div class="card-body">
+                        <table class="table" style="margin-top: 0;">
+                            <tr>
+                                <td><strong>Employment:</strong></td>
+                                <td>{{ profile.get_employment_status_display }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Stability:</strong></td>
+                                <td>{{ profile.get_income_stability_display }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Dependents:</strong></td>
+                                <td>{{ profile.dependents }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Transactions:</strong></td>
+                                <td>{{ profile.transactions.count }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'core:profile_detail' profile.pk %}" class="btn btn-primary btn-sm">View Details</a>
+                        {% if profile.transactions.count > 0 %}
+                            <a href="{% url 'core:analyze_profile' profile.pk %}" class="btn btn-success btn-sm">Analyze</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card" style="text-align: center; padding: 3rem;">
+            <h3 style="color: var(--color-gray-500); margin-bottom: 1rem;">No Profiles Found</h3>
+            <p style="color: var(--color-gray-400); margin-bottom: 2rem;">
+                Create your first user profile to get started with financial behavior analysis.
+            </p>
+            <a href="{% url 'core:profile_create' %}" class="btn btn-primary">Create Profile</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

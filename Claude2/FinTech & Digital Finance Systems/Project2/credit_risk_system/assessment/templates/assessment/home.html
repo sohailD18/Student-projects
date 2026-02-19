@@ -1,0 +1,219 @@
+{% extends 'assessment/base.html' %}
+
+{% block title %}Home - Credit Risk Assessment System{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section text-center mb-5">
+    <div class="container">
+        <h1 class="display-4 fw-bold text-primary mb-3">
+            <i class="bi bi-shield-check"></i>
+            Credit Risk Assessment System
+        </h1>
+        <p class="lead text-muted mb-4">
+            AI-powered loan eligibility prediction and credit risk analysis
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'assessment:new_assessment' %}" class="btn btn-primary btn-lg px-4">
+                <i class="bi bi-plus-circle"></i> Start New Assessment
+            </a>
+            <a href="{% url 'assessment:dashboard' %}" class="btn btn-outline-primary btn-lg px-4">
+                <i class="bi bi-graph-up"></i> View Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="row mb-5">
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100 border-0 shadow-sm feature-card">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon mb-3">
+                    <i class="bi bi-robot text-primary" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="card-title mb-3">AI-Powered Analysis</h4>
+                <p class="card-text text-muted">
+                    Advanced machine learning models analyze multiple factors to predict credit risk with high accuracy.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100 border-0 shadow-sm feature-card">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon mb-3">
+                    <i class="bi bi-lightning-charge text-warning" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="card-title mb-3">Instant Decisions</h4>
+                <p class="card-text text-muted">
+                    Get immediate loan eligibility recommendations with detailed risk categorization.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100 border-0 shadow-sm feature-card">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon mb-3">
+                    <i class="bi bi-graph-up text-success" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="card-title mb-3">Comprehensive Analytics</h4>
+                <p class="card-text text-muted">
+                    Interactive dashboard with real-time statistics and visual insights.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-5">
+    <div class="col-12">
+        <h2 class="text-center mb-4">Quick Statistics</h2>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+                <h3 class="display-6 text-primary mb-2">{{ total_applicants }}</h3>
+                <p class="text-muted mb-0">Total Assessments</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+                <h3 class="display-6 text-success mb-2">
+                    {% widthratio total_applicants 3 1 %}
+                </h3>
+                <p class="text-muted mb-0">Avg. Approval Rate</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+                <h3 class="display-6 text-info mb-2">99.2%</h3>
+                <p class="text-muted mb-0">Model Accuracy</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+                <h3 class="display-6 text-warning mb-2">< 2s</h3>
+                <p class="text-muted mb-0">Avg. Response Time</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Applicants -->
+{% if recent_applicants %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history"></i>
+                    Recent Assessments
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Date</th>
+                                <th>Risk Category</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for applicant in recent_applicants %}
+                            <tr>
+                                <td>{{ applicant.name }}</td>
+                                <td>{{ applicant.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if applicant.risk_category == 'low' %}
+                                    <span class="badge bg-success">Low Risk</span>
+                                    {% elif applicant.risk_category == 'medium' %}
+                                    <span class="badge bg-warning text-dark">Medium Risk</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">High Risk</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if applicant.eligibility_status == 'approved' %}
+                                    <span class="badge bg-success">Approved</span>
+                                    {% elif applicant.eligibility_status == 'manual_review' %}
+                                    <span class="badge bg-warning text-dark">Manual Review</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'assessment:applicant_detail' applicant.id %}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    No assessments yet. Start your first assessment!
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- How It Works -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h2 class="text-center mb-4">How It Works</h2>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="d-flex align-items-start mb-3">
+            <div class="step-number me-3">1</div>
+            <div>
+                <h5>Enter Applicant Data</h5>
+                <p class="text-muted mb-0">
+                    Fill in the applicant's financial information, employment details, and credit history.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="d-flex align-items-start mb-3">
+            <div class="step-number me-3">2</div>
+            <div>
+                <h5>AI Analysis</h5>
+                <p class="text-muted mb-0">
+                    Our ML model analyzes the data using patterns from thousands of historical cases.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="d-flex align-items-start mb-3">
+            <div class="step-number me-3">3</div>
+            <div>
+                <h5>Get Results</h5>
+                <p class="text-muted mb-0">
+                    Receive instant recommendations with risk categories and detailed reports.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

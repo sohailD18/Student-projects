@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+
+{% block title %}Page Builder - {{ page.title }} - CMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .content-block-item {
+        border: 2px dashed #dee2e6;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 10px;
+        position: relative;
+        background: #f8f9fa;
+    }
+    .content-block-item:hover {
+        border-color: #0d6efd;
+    }
+    .block-actions {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+    }
+    .drag-handle {
+        cursor: move;
+        color: #6c757d;
+    }
+    .block-type {
+        font-weight: bold;
+        color: #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <a href="{% url 'pages:page_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+        <a href="{% url 'pages:page_detail' page.slug %}" class="btn btn-outline-primary ms-2">
+            <i class="fas fa-eye"></i> View Page
+        </a>
+    </div>
+    <div>
+        <a href="{% url 'pages:page_revisions' page.slug %}" class="btn btn-outline-info">
+            <i class="fas fa-history"></i> Revisions
+        </a>
+        <button onclick="publishPage()" class="btn btn-success">
+            <i class="fas fa-check"></i> Publish
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-9">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Page Builder: {{ page.title }}</h4>
+            </div>
+            <div class="card-body">
+                <div id="content-blocks">
+                    {% for block in content_blocks %}
+                        <div class="content-block-item" data-block-id="{{ block.id }}">
+                            <div class="block-actions">
+                                <button class="btn btn-sm btn-primary" onclick="editBlock({{ block.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteBlock({{ block.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <span class="drag-handle ms-2"><i class="fas fa-grip-vertical"></i></span>
+                            </div>
+                            <div class="block-type">{{ block.get_block_type_display }}</div>
+                            <div class="block-content">
+                                {% if block.title %}<strong>{{ block.title }}</strong>{% endif %}
+                                <div class="small text-muted">{{ block.content|truncatewords:20 }}</div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-puzzle-piece fa-3x mb-3"></i>
+                            <p>No content blocks yet. Add your first block below!</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Add Content Block</h5>
+            </div>
+            <div class="card-body">
+                <form id="add-block-form" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_block">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Block Type</label>
+                        <select name="block_type" class="form-select" required>
+                            <option value="TEXT">Text</option>
+                            <option value="HTML">HTML</option>
+                            <option value="IMAGE">Image</option>
+                            <option value="VIDEO">Video</option>
+                            <option value="QUOTE">Quote</option>
+                            <option value="DIVIDER">Divider</option>
+                            <option value="CODE">Code</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Title (optional)</label>
+                        <input type="text" name="title" class="form-control">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Content</label>
+                        <textarea name="content" class="form-control" rows="5" required></textarea>
+                        <small class="text-muted">For images/videos, enter the URL</small>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-plus"></i> Add Block
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">Page Info</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Status:</strong> <span class="badge bg-{% if page.status == 'PUBLISHED' %}success{% elif page.status == 'DRAFT' %}warning{% else %}secondary{% endif %}">{{ page.status }}</span></p>
+                <p><strong>Template:</strong> {{ page.template|default:'None' }}</p>
+                <p><strong>Author:</strong> {{ page.author.username }}</p>
+                <p><strong>Created:</strong> {{ page.created_at|date:"M d, Y" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Block Modal -->
+<div class="modal fade" id="editBlockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Content Block</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-block-form" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_block">
+                    <input type="hidden" name="block_id" id="edit-block-id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="title" id="edit-title" class="form-control">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Content</label>
+                        <textarea name="content" id="edit-content" class="form-control" rows="5"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">CSS Classes</label>
+                        <input type="text" name="css_classes" id="edit-css-classes" class="form-control">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveBlock()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let editModal;
+
+document.addEventListener('DOMContentLoaded', function() {
+    editModal = new bootstrap.Modal(document.getElementById('editBlockModal'));
+    
+    // Handle add block form
+    document.getElementById('add-block-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    });
+});
+
+function editBlock(blockId) {
+    fetch(`/api/blocks/${blockId}/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('edit-block-id').value = blockId;
+            document.getElementById('edit-title').value = data.title || '';
+            document.getElementById('edit-content').value = data.content || '';
+            document.getElementById('edit-css-classes').value = data.css_classes || '';
+            editModal.show();
+        });
+}
+
+function saveBlock() {
+    const form = document.getElementById('edit-block-form');
+    const formData = new FormData(form);
+    
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            editModal.hide();
+            location.reload();
+        }
+    });
+}
+
+function deleteBlock(blockId) {
+    if (confirm('Are you sure you want to delete this block?')) {
+        const formData = new FormData();
+        formData.append('action', 'delete_block');
+        formData.append('block_id', blockId);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+}
+
+function publishPage() {
+    fetch(`/api/pages/{{ page.slug }}/publish/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value}
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Page published successfully!');
+            location.reload();
+        }
+    });
+}
+</script>
+{% endblock %}

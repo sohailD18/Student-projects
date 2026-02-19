@@ -1,0 +1,329 @@
+{% extends 'base.html' %}
+
+{% block title %}Take Exam - {{ exam.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .question-card {
+        border-left: 4px solid #0d6efd;
+        transition: all 0.3s ease;
+    }
+    .question-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .option-label {
+        display: block;
+        padding: 12px 15px;
+        margin: 8px 0;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .option-label:hover {
+        background-color: #f8f9fa;
+        border-color: #0d6efd;
+    }
+    .option-label.selected {
+        background-color: #e7f1ff;
+        border-color: #0d6efd;
+    }
+    .timer-display {
+        font-size: 2rem;
+        font-weight: bold;
+        color: {% if time_remaining < 300 %}#dc3545{% else %}#0d6efd{% endif %};
+    }
+    .question-nav-btn {
+        width: 45px;
+        height: 45px;
+        margin: 5px;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1><i class="fas fa-file-alt text-primary me-2"></i>{{ exam.title }}</h1>
+            <div class="timer-display" id="timer">
+                <i class="fas fa-clock me-2"></i>
+                <span id="time-display">--:--</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Exam Info Bar -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h6 class="text-muted mb-1">Subject</h6>
+                        <p class="mb-0 fw-bold">{{ exam.subject.name }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted mb-1">Total Marks</h6>
+                        <p class="mb-0 fw-bold">{{ exam.total_marks }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted mb-1">Questions</h6>
+                        <p class="mb-0 fw-bold">{{ questions.count }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted mb-1">Duration</h6>
+                        <p class="mb-0 fw-bold">{{ exam.duration_minutes }} mins</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Question Panel -->
+    <div class="col-lg-9">
+        <form method="post" id="exam-form">
+            {% csrf_token %}
+
+            <div id="questions-container">
+                {% for question in questions %}
+                <div class="question-card card mb-4" id="question-{{ forloop.counter }}" data-question-id="{{ question.id }}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h5 class="card-title">
+                                <span class="badge bg-primary">Q{{ forloop.counter }}</span>
+                                {% if question.topic %}
+                                    <span class="badge bg-secondary ms-2">{{ question.topic.name }}</span>
+                                {% endif %}
+                            </h5>
+                            <span class="text-muted">{{ question.marks }} marks</span>
+                        </div>
+
+                        <p class="card-text fs-5 mb-4">{{ question.text }}</p>
+
+                        <div class="options-container">
+                            {% if question.question_type == 'mcq' %}
+                                <label class="option-label">
+                                    <input type="radio" name="question_{{ question.id }}" value="A" class="form-check-input me-2">
+                                    <strong>A)</strong> {{ question.option_a }}
+                                </label>
+
+                                <label class="option-label">
+                                    <input type="radio" name="question_{{ question.id }}" value="B" class="form-check-input me-2">
+                                    <strong>B)</strong> {{ question.option_b }}
+                                </label>
+
+                                {% if question.option_c %}
+                                <label class="option-label">
+                                    <input type="radio" name="question_{{ question.id }}" value="C" class="form-check-input me-2">
+                                    <strong>C)</strong> {{ question.option_c }}
+                                </label>
+                                {% endif %}
+
+                                {% if question.option_d %}
+                                <label class="option-label">
+                                    <input type="radio" name="question_{{ question.id }}" value="D" class="form-check-input me-2">
+                                    <strong>D)</strong> {{ question.option_d }}
+                                </label>
+                                {% endif %}
+
+                            {% elif question.question_type == 'true_false' %}
+                                <label class="option-label">
+                                    <input type="radio" name="question_{{ question.id }}" value="True" class="form-check-input me-2">
+                                    <strong>True</strong>
+                                </label>
+
+                                <label class="option-label">
+                                    <input type="radio" name="question_{{ question.id }}" value="False" class="form-check-input me-2">
+                                    <strong>False</strong>
+                                </label>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Submit Button -->
+            <div class="card bg-light">
+                <div class="card-body text-center py-4">
+                    <button type="submit" class="btn btn-success btn-lg px-5" onclick="return confirmSubmit();">
+                        <i class="fas fa-paper-plane me-2"></i>Submit Exam
+                    </button>
+                    <p class="text-muted mt-2 mb-0">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Warning: You cannot change answers after submission
+                    </p>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Question Navigation Sidebar -->
+    <div class="col-lg-3">
+        <div class="card sticky-top" style="top: 20px;">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0"><i class="fas fa-list me-2"></i>Question Navigator</h6>
+            </div>
+            <div class="card-body">
+                <div class="row" id="question-nav">
+                    {% for question in questions %}
+                    <div class="col-4">
+                        <button type="button" class="btn btn-outline-primary question-nav-btn" onclick="scrollToQuestion({{ forloop.counter }})">
+                            {{ forloop.counter }}
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <hr>
+
+                <div class="mb-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-secondary me-2">●</span>
+                        <small>Not Answered</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-success me-2">●</span>
+                        <small>Answered</small>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mb-0">
+                    <small class="mb-0">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Click question numbers to navigate. Ensure all questions are answered before submitting.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Warning Modal -->
+<div class="modal fade" id="warningModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Unanswered Questions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>You have <strong id="unanswered-count">0</strong> unanswered question(s).</p>
+                <p>Are you sure you want to submit?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Review Answers</button>
+                <button type="button" class="btn btn-warning" onclick="submitAnyway()">Submit Anyway</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Timer countdown
+let timeRemaining = {{ time_remaining }}; // in seconds
+let timerInterval;
+
+function startTimer() {
+    timerInterval = setInterval(function() {
+        timeRemaining--;
+
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+
+        document.getElementById('time-display').textContent =
+            String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+
+        // Change color when time is running out
+        if (timeRemaining < 300) { // Less than 5 minutes
+            document.getElementById('timer').style.color = '#dc3545';
+        }
+
+        // Auto-submit when time is up
+        if (timeRemaining <= 0) {
+            clearInterval(timerInterval);
+            alert('Time is up! Your exam will be submitted automatically.');
+            document.getElementById('exam-form').submit();
+        }
+    }, 1000);
+}
+
+// Scroll to question
+function scrollToQuestion(questionNum) {
+    const questionElement = document.getElementById('question-' + questionNum);
+    if (questionElement) {
+        questionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+// Track answered questions
+function updateQuestionNav() {
+    const totalQuestions = {{ questions.count }};
+    let answeredCount = 0;
+
+    for (let i = 1; i <= totalQuestions; i++) {
+        const questionCard = document.getElementById('question-' + i);
+        const selectedOption = questionCard.querySelector('input[type="radio"]:checked');
+        const navBtn = document.querySelectorAll('.question-nav-btn')[i - 1];
+
+        if (selectedOption) {
+            navBtn.classList.remove('btn-outline-primary');
+            navBtn.classList.add('btn-success');
+            answeredCount++;
+        } else {
+            navBtn.classList.remove('btn-success');
+            navBtn.classList.add('btn-outline-primary');
+        }
+    }
+
+    return answeredCount;
+}
+
+// Highlight selected options
+document.querySelectorAll('.option-label input[type="radio"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        const questionName = this.name;
+        document.querySelectorAll(`input[name="${questionName}"]`).forEach(function(otherRadio) {
+            otherRadio.closest('.option-label').classList.remove('selected');
+        });
+        this.closest('.option-label').classList.add('selected');
+        updateQuestionNav();
+    });
+});
+
+// Confirm submission
+function confirmSubmit() {
+    const totalQuestions = {{ questions.count }};
+    const answeredCount = updateQuestionNav();
+    const unansweredCount = totalQuestions - answeredCount;
+
+    if (unansweredCount > 0) {
+        document.getElementById('unanswered-count').textContent = unansweredCount;
+        const modal = new bootstrap.Modal(document.getElementById('warningModal'));
+        modal.show();
+        return false;
+    }
+
+    return confirm('Are you sure you want to submit your exam? This action cannot be undone.');
+}
+
+// Submit anyway (after warning)
+function submitAnyway() {
+    document.getElementById('warningModal').classList.remove('show');
+    document.getElementById('exam-form').submit();
+}
+
+// Start timer when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    startTimer();
+    updateQuestionNav();
+});
+</script>
+{% endblock %}

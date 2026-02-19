@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FinRisk AI{% endblock %}</title>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="{% url 'core:home' %}">
+                    <span class="logo-icon">𝚵</span>
+                    <span class="logo-text">FinRisk AI</span>
+                </a>
+                <span class="tagline">Financial Behavior & Risk Profiling</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="{% url 'core:home' %}">Home</a></li>
+                <li><a href="{% url 'core:profile_list' %}">Profiles</a></li>
+                <li><a href="{% url 'core:profile_create' %}" class="btn btn-primary">New Profile</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>FinRisk AI</h4>
+                    <p>Advanced financial behavior analysis and risk profiling system powered by AI algorithms.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Modules</h4>
+                    <ul>
+                        <li>Data Collection</li>
+                        <li>Pattern Analysis</li>
+                        <li>Risk Profiling</li>
+                        <li>Visualization</li>
+                        <li>Scenario Analysis</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>System Info</h4>
+                    <p>Version: 1.0.0</p>
+                    <p>Django Framework</p>
+                    <p>SQLite Database</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 FinRisk AI. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Custom JavaScript -->
+    <script src="/static/js/main.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

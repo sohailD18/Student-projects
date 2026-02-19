@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+
+{% block title %}Carbon Credit Analysis Report{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="display-5">Carbon Credit Analysis Report</h1>
+            <p class="text-muted">Generated on {% now "F j, Y, g:i a" %}</p>
+        </div>
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="bi bi-printer"></i> Print Report
+        </button>
+    </div>
+</div>
+
+<!-- Executive Summary -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Executive Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <h6>Industries Monitored</h6>
+                        <h2>{{ total_industries }}</h2>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h6>Total Emissions (YTD)</h6>
+                        <h2>{{ total_emissions|floatformat:0 }} tons</h2>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h6>Total Limits</h6>
+                        <h2>{{ total_limits }} tons</h2>
+                    </div>
+                    <div class="col-md-3 text-center {% if overall_surplus >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        <h6>Overall Surplus</h6>
+                        <h2>{{ overall_surplus|floatformat:0 }} tons</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Carbon Price Analysis -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Carbon Price Market Analysis (30-Day)</h5>
+            </div>
+            <div class="card-body">
+                {% if price_analysis.success %}
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="alert alert-info">
+                            <h6>Current Price</h6>
+                            <h3>${{ price_analysis.current_price }}/ton</h3>
+                            <small class="text-muted">
+                                Average: ${{ price_analysis.average_price }}/ton
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="alert {% if price_analysis.trend == 'rising' %}alert-success{% elif price_analysis.trend == 'falling' %}alert-warning{% else %}alert-info{% endif %}">
+                            <h6>Market Trend</h6>
+                            <h4>
+                                {% if price_analysis.trend == 'rising' %}📈 Rising{% elif price_analysis.trend == 'falling' %}📉 Falling{% else %}➡️ Stable{% endif %}
+                            </h4>
+                            <small>{{ price_analysis.price_change_percent|floatformat:2 }}% change</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="alert alert-light border">
+                            <h6>Market Advice</h6>
+                            <p class="mb-0">{{ price_analysis.advice }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    Price data not available.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Industry Performance Comparison -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Industry Performance Comparison</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Industry</th>
+                            <th>Type</th>
+                            <th>Emission Limit</th>
+                            <th>Current Emissions</th>
+                            <th>Surplus/Deficit</th>
+                            <th>Efficiency</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for industry in industries %}
+                        <tr>
+                            <td><a href="{% url 'industry_detail' industry.id %}">{{ industry.name }}</a></td>
+                            <td>{{ industry.get_industry_type_display }}</td>
+                            <td>{{ industry.emission_limit }} tons</td>
+                            <td>{{ industry.total_emissions|floatformat:0 }} tons</td>
+                            <td class="{% if industry.carbon_surplus >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ industry.carbon_surplus|floatformat:0 }} tons
+                            </td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar {% if industry.efficiency_score <= 80 %}bg-success{% elif industry.efficiency_score <= 100 %}bg-warning{% else %}bg-danger{% endif %}"
+                                         role="progressbar"
+                                         style="width: {% if industry.efficiency_score <= 100 %}{{ industry.efficiency_score }}{% else %}100{% endif %}%">
+                                        {{ industry.efficiency_score }}%
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if industry.carbon_surplus >= 0 %}
+                                <span class="badge bg-success">Under Limit</span>
+                                {% else %}
+                                <span class="badge bg-danger">Over Limit</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Rankings -->
+{% if performance.success %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0">🏆 Top Performers (Lowest Emission/Limit Ratio)</h6>
+            </div>
+            <div class="card-body">
+                <ol>
+                    {% for ind in performance.industries|slice:":3" %}
+                    <li>
+                        <strong>{{ ind.name }}</strong>
+                        <small class="text-muted">({{ ind.industry_type }})</small><br>
+                        {{ ind.efficiency }}% of limit used
+                    </li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h6 class="mb-0">⚠️ Industries Requiring Attention</h6>
+            </div>
+            <div class="card-body">
+                <ul>
+                    {% for ind in performance.industries|slice:"-3:" %}
+                    <li>
+                        <strong>{{ ind.name }}</strong>
+                        <small class="text-muted">({{ ind.industry_type }})</small><br>
+                        {% if ind.surplus < 0 %}
+                        <span class="text-danger">{{ ind.surplus|floatformat:0 }} tons deficit</span>
+                        {% else %}
+                        <span class="text-warning">{{ ind.efficiency }}% of limit used</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Detailed Industry Breakdown -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Detailed Industry Analysis</h5>
+            </div>
+            <div class="card-body">
+                {% for industry in industries %}
+                <div class="row mb-4 pb-3 border-bottom">
+                    <div class="col-md-12">
+                        <h6>{{ industry.name }}</h6>
+                        <p class="text-muted small">{{ industry.get_industry_type_display }}</p>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <small class="text-muted">Annual Limit</small>
+                                <p class="mb-0"><strong>{{ industry.emission_limit }}</strong> tons</p>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Current Emissions</small>
+                                <p class="mb-0"><strong>{{ industry.total_emissions|floatformat:0 }}</strong> tons</p>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Surplus/Deficit</small>
+                                <p class="mb-0">
+                                    <strong class="{% if industry.carbon_surplus >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {{ industry.carbon_surplus|floatformat:0 }}
+                                    </strong> tons
+                                </p>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Efficiency Score</small>
+                                <p class="mb-0"><strong>{{ industry.efficiency_score }}</strong>%</p>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <a href="{% url 'industry_detail' industry.id %}" class="btn btn-sm btn-outline-primary">
+                                View Detailed Analysis
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer Summary -->
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h5>Report Summary</h5>
+            <p class="mb-0">
+                This report analyzes carbon emission data across {{ total_industries }} industries.
+                The system uses AI-powered predictions to forecast future emissions and provide
+                trading recommendations. Current carbon price: ${{ price_analysis.current_price }}/ton.
+                Overall market position:
+                {% if overall_surplus >= 0 %}
+                <strong class="text-success">{{ overall_surplus|floatformat:0 }} tons surplus</strong>
+                {% else %}
+                <strong class="text-danger">{{ overall_surplus|floatformat:0 }} tons deficit</strong>
+                {% endif %}.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <a href="{% url 'home' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    .navbar, .footer, .btn, .no-print {
+        display: none !important;
+    }
+    .card {
+        border: 1px solid #ddd;
+        break-inside: avoid;
+    }
+    body {
+        font-size: 12pt;
+    }
+}
+</style>
+{% endblock %}

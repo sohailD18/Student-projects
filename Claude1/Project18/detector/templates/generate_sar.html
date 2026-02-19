@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-file-earmark-text"></i> Generate Suspicious Activity Report</h1>
+    <a href="{% url 'case_detail' case.case_number %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back to Case</a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">SAR for Case {{ case.case_number }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Important:</strong> SARs are legal documents that may be filed with regulatory authorities. Ensure all information is accurate.
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="activity_description" class="form-label">Activity Description</label>
+                        <textarea name="activity_description" id="activity_description" class="form-control" rows="6" required placeholder="Describe the suspicious activity in detail...">{{ case.description }}</textarea>
+                        <small class="form-text text-muted">Provide detailed description of the suspicious activity</small>
+                    </div>
+
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <h6>Case Information</h6>
+                            <p class="mb-1"><strong>Case Number:</strong> {{ case.case_number }}</p>
+                            <p class="mb-1"><strong>Case Title:</strong> {{ case.title }}</p>
+                            <p class="mb-1"><strong>Suspected Amount:</strong> ${{ case.suspected_amount }}</p>
+                            <p class="mb-0"><strong>Related Transactions:</strong> {{ case.related_transactions.count }}</p>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="bi bi-file-earmark-check"></i> Generate SAR
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">SAR Information</h5>
+            </div>
+            <div class="card-body">
+                <h6>What is a SAR?</h6>
+                <p>A Suspicious Activity Report is a document that financial institutions must file with regulatory authorities when they detect suspicious transactions that may indicate money laundering or fraud.</p>
+                <hr>
+                <h6>SAR Contents</h6>
+                <ul>
+                    <li>Case reference</li>
+                    <li>Filing date</li>
+                    <li>Suspicious amount</li>
+                    <li>Activity description</li>
+                    <li>Transaction date ranges</li>
+                    <li>Involved parties</li>
+                    <li>Fraud type indicators</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

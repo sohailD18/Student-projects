@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Employee Performance Analysis and Decision Support System">
+    <title>{% block title %}AI Performance Analyst{% endblock %}</title>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'performance/css/styles.css' %}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="{% url 'dashboard' %}" class="logo">
+                    <div class="logo-icon">📊</div>
+                    AI Performance Analyst
+                </a>
+                <nav class="nav">
+                    <a href="{% url 'dashboard' %}" class="nav-link">
+                        <span>🏠</span> Dashboard
+                    </a>
+                    <a href="{% url 'employee_list' %}" class="nav-link">
+                        <span>👥</span> Employees
+                    </a>
+                    <a href="{% url 'add_record' %}" class="nav-link">
+                        <span>➕</span> Add Record
+                    </a>
+                    <a href="{% url 'add_employee' %}" class="nav-link">
+                        <span>👤</span> Add Employee
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Messages -->
+        {% if messages %}
+            <div class="container">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        <span>
+                            {% if message.tags == 'success' %}✅{% elif message.tags == 'error' %}❌{% elif message.tags == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+                        </span>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">
+                AI Performance Analyst &copy; {% now "Y" %} | Employee Performance Analysis and Decision Support System
+            </p>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

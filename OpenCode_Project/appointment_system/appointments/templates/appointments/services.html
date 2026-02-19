@@ -1,0 +1,28 @@
+{% extends 'appointments/base.html' %}
+
+{% block title %}Services - Appointment System{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Our Services</h2>
+<div class="row">
+    {% for service in services %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ service.name }}</h5>
+                <p class="card-text">{{ service.description }}</p>
+                <ul class="list-unstyled">
+                    <li><strong>Duration:</strong> {{ service.duration }} minutes</li>
+                    <li><strong>Price:</strong> ${{ service.price }}</li>
+                </ul>
+                <a href="{% url 'provider_list' %}?service={{ service.id }}" class="btn btn-primary">View Providers</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <p class="text-center text-muted">No services available at the moment.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

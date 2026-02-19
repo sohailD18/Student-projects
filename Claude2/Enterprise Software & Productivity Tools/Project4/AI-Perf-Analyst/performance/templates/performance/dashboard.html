@@ -1,0 +1,198 @@
+{% extends 'performance/base.html' %}
+
+{% block title %}Dashboard - AI Performance Analyst{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h1 class="card-title">🎯 Performance Dashboard</h1>
+                <p class="card-subtitle">Overview of Employee Performance Metrics</p>
+            </div>
+            <div class="btn-group">
+                <a href="{% url 'add_employee' %}" class="btn btn-primary">Add Employee</a>
+                <a href="{% url 'add_record' %}" class="btn btn-success">Add Record</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total Employees</div>
+            <div class="stat-value">{{ stats.total_employees }}</div>
+            <div class="stat-subtext">Active in system</div>
+        </div>
+
+        <div class="stat-card success">
+            <div class="stat-label">Average Efficiency</div>
+            <div class="stat-value">{{ stats.avg_efficiency|floatformat:2 }}<span style="font-size: 1.5rem;">/10</span></div>
+            <div class="stat-subtext">Across all records</div>
+        </div>
+
+        <div class="stat-card info">
+            <div class="stat-label">Average Quality</div>
+            <div class="stat-value">{{ stats.avg_quality|floatformat:2 }}<span style="font-size: 1.5rem;">/10</span></div>
+            <div class="stat-subtext">Work quality rating</div>
+        </div>
+
+        <div class="stat-card warning">
+            <div class="stat-label">Total Records</div>
+            <div class="stat-value">{{ stats.total_records }}</div>
+            <div class="stat-subtext">Performance entries</div>
+        </div>
+    </div>
+
+    <div class="grid grid-2">
+        <!-- Top Performers -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🏆 Top Performers</h2>
+            </div>
+            <div class="card-body">
+                {% if stats.top_performers %}
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Employee</th>
+                                    <th>Role</th>
+                                    <th>Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for employee in stats.top_performers %}
+                                <tr>
+                                    <td>
+                                        {% if forloop.counter == 1 %}🥇
+                                        {% elif forloop.counter == 2 %}🥈
+                                        {% elif forloop.counter == 3 %}🥉
+                                        {% else %}{{ forloop.counter }}{% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'employee_detail' employee.id %}" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                                            {{ employee.name }}
+                                        </a>
+                                        <div style="font-size: 0.75rem; color: var(--gray-500);">{{ employee.department }}</div>
+                                    </td>
+                                    <td>{{ employee.role }}</td>
+                                    <td>
+                                        <span class="badge badge-success">{{ employee.overall_score|floatformat:2 }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📊</div>
+                        <div class="empty-state-title">No Performance Data Yet</div>
+                        <div class="empty-state-text">Add employees and performance records to see top performers.</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Performance Category Distribution -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📈 Category Distribution</h2>
+            </div>
+            <div class="card-body">
+                {% if stats.category_distribution %}
+                    <div style="margin-top: 1.5rem;">
+                        {% for label, count in stats.category_distribution.items %}
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span style="font-weight: 600;">{{ label }}</span>
+                                <span style="color: var(--gray-500);">{{ count }} employee{{ count|pluralize }}</span>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden;">
+                                {% widthratio count stats.total_employees 100 as percentage %}
+                                <div style="width: {% if stats.total_employees > 0 %}{{ percentage }}{% else %}0{% endif %}%; height: 100%; background: var(--primary-color); border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📊</div>
+                        <div class="empty-state-title">No Categories Yet</div>
+                        <div class="empty-state-text">Categories will be assigned as performance data is analyzed.</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Department Statistics -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🏢 Department Statistics</h2>
+            </div>
+            <div class="card-body">
+                {% if stats.department_stats %}
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Department</th>
+                                    <th>Employees</th>
+                                    <th>Avg Efficiency</th>
+                                    <th>Avg Quality</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dept, dept_stats in stats.department_stats.items %}
+                                <tr>
+                                    <td><strong>{{ dept }}</strong></td>
+                                    <td>{{ dept_stats.employee_count }}</td>
+                                    <td>
+                                        <span class="badge {% if dept_stats.avg_efficiency >= 7 %}badge-success{% elif dept_stats.avg_efficiency >= 5 %}badge-warning{% else %}badge-danger{% endif %}">
+                                            {{ dept_stats.avg_efficiency|floatformat:2 }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if dept_stats.avg_quality >= 7 %}badge-success{% elif dept_stats.avg_quality >= 5 %}badge-warning{% else %}badge-danger{% endif %}">
+                                            {{ dept_stats.avg_quality|floatformat:2 }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🏢</div>
+                        <div class="empty-state-title">No Departments Yet</div>
+                        <div class="empty-state-text">Add employees with departments to see statistics.</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">⚡ Quick Actions</h2>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <a href="{% url 'employee_list' %}" class="btn btn-primary" style="width: 100%;">
+                        <span>👥</span> View All Employees
+                    </a>
+                    <a href="{% url 'add_employee' %}" class="btn btn-success" style="width: 100%;">
+                        <span>➕</span> Add New Employee
+                    </a>
+                    <a href="{% url 'add_record' %}" class="btn btn-outline" style="width: 100%;">
+                        <span>📝</span> Log Performance Record
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

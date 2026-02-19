@@ -1,0 +1,41 @@
+{% extends 'analytics/base.html' %}
+
+{% block title %}Reports - Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Reports</h1>
+    </div>
+
+    {% if reports %}
+    <div class="reports-grid">
+        {% for report in reports %}
+        <div class="card report-card">
+            <h2>{{ report.name }}</h2>
+            <div class="report-details">
+                <span class="badge">{{ report.get_report_type_display }}</span>
+                <span class="badge">{{ report.get_schedule_display }}</span>
+                <span class="badge">{{ report.get_format_display|upper }}</span>
+            </div>
+            <div class="report-meta">
+                {% if report.is_active %}
+                <span class="badge badge-success">Active</span>
+                {% else %}
+                <span class="badge">Inactive</span>
+                {% endif %}
+                {% if report.last_generated %}
+                <span>Last Generated: {{ report.last_generated|date:"M d, Y" }}</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h2>No reports yet</h2>
+        <p>Reports will appear here once you create them.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

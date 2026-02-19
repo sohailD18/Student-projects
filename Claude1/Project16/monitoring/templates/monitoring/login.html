@@ -1,0 +1,362 @@
+{% extends 'monitoring/base.html' %}
+
+{% block content %}
+<style>
+    .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+    }
+
+    .login-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        max-width: 1000px;
+        width: 100%;
+        display: flex;
+    }
+
+    .login-left {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 60px 40px;
+        color: white;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .login-left h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+
+    .login-left .subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 40px;
+    }
+
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .feature-list li {
+        padding: 12px 0;
+        display: flex;
+        align-items: center;
+        font-size: 0.95rem;
+    }
+
+    .feature-list li i {
+        margin-right: 12px;
+        font-size: 1.2rem;
+        background: rgba(255, 255, 255, 0.2);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .login-right {
+        flex: 1;
+        padding: 60px 40px;
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .login-header .logo {
+        font-size: 3rem;
+        color: #667eea;
+        margin-bottom: 15px;
+    }
+
+    .login-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .login-header p {
+        color: #6b7280;
+        font-size: 0.95rem;
+    }
+
+    .input-group {
+        margin-bottom: 24px;
+        position: relative;
+    }
+
+    .input-group label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+    .input-wrapper i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        font-size: 1.2rem;
+    }
+
+    .input-wrapper input {
+        padding-left: 48px;
+    }
+
+    .form-control {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 14px 16px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .login-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 16px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: white;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+
+    .demo-credentials {
+        margin-top: 30px;
+        padding: 20px;
+        background: #f9fafb;
+        border-radius: 12px;
+        border: 1px dashed #d1d5db;
+    }
+
+    .demo-credentials h6 {
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: #6b7280;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .demo-students {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .demo-badge {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        color: #374151;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+        min-width: 100px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .demo-badge:hover {
+        border-color: #667eea;
+        color: #667eea;
+        background: #f5f3ff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+
+    .demo-badge i {
+        font-size: 1.5rem;
+        margin-bottom: 4px;
+    }
+
+    @media (max-width: 768px) {
+        .login-card {
+            flex-direction: column;
+        }
+
+        .login-left {
+            padding: 40px 30px;
+        }
+
+        .login-right {
+            padding: 40px 30px;
+        }
+    }
+</style>
+
+<div class="login-container">
+    <div class="login-card">
+        <!-- Left Side - Branding -->
+        <div class="login-left">
+            <h2>EduProctor</h2>
+            <p class="subtitle">Online Examination Monitoring & Integrity System</p>
+
+            <ul class="feature-list">
+                <li>
+                    <i class="bi bi-shield-check"></i>
+                    <span>AI-powered proctoring</span>
+                </li>
+                <li>
+                    <i class="bi bi-camera-video"></i>
+                    <span>Real-time monitoring</span>
+                </li>
+                <li>
+                    <i class="bi bi-graph-up"></i>
+                    <span>Detailed integrity reports</span>
+                </li>
+                <li>
+                    <i class="bi bi-clock-history"></i>
+                    <span>Session recording & analysis</span>
+                </li>
+                <li>
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <span>Violation detection & scoring</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Right Side - Login Form -->
+        <div class="login-right">
+            <div class="login-header">
+                <div class="logo">
+                    <i class="bi bi-shield-fill-check"></i>
+                </div>
+                <h1>Student Login</h1>
+                <p>Enter your credentials to access the exam portal</p>
+            </div>
+
+            <form method="post" id="loginForm">
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <label for="student_id" class="form-label fw-semibold" style="color: #374151; font-size: 0.95rem;">
+                        <i class="bi bi-credit-card me-2" style="color: #667eea;"></i>Student ID
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="background: #f9fafb; border: 2px solid #e5e7eb; border-right: none;">
+                            <i class="bi bi-credit-card text-muted"></i>
+                        </span>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="student_id"
+                            name="student_id"
+                            placeholder="Enter your Student ID (e.g., STU001)"
+                            style="border-left: none; border: 2px solid #e5e7eb; padding: 14px 16px;"
+                            required
+                            autofocus
+                        >
+                    </div>
+                    <small class="text-muted" style="font-size: 0.85rem;">Enter your Student ID (e.g., STU001)</small>
+                </div>
+
+                <div class="mb-4">
+                    <label for="name" class="form-label fw-semibold" style="color: #374151; font-size: 0.95rem;">
+                        <i class="bi bi-person me-2" style="color: #667eea;"></i>Full Name
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="background: #f9fafb; border: 2px solid #e5e7eb; border-right: none;">
+                            <i class="bi bi-person text-muted"></i>
+                        </span>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="name"
+                            name="name"
+                            placeholder="Enter your full name"
+                            style="border-left: none; border: 2px solid #e5e7eb; padding: 14px 16px;"
+                            required
+                        >
+                    </div>
+                    <small class="text-muted" style="font-size: 0.85rem;">Enter your full name as registered</small>
+                </div>
+
+                <div class="d-grid gap-2 mt-5">
+                    <button type="submit" class="login-btn">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Login to Exam Portal
+                    </button>
+                </div>
+            </form>
+
+            <!-- Demo Credentials -->
+            <div class="demo-credentials">
+                <h6 class="fw-semibold" style="color: #6b7280; font-size: 0.85rem;">
+                    <i class="bi bi-info-circle me-1" style="color: #667eea;"></i>Demo Credentials
+                </h6>
+                <p class="text-muted mb-3" style="font-size: 0.9rem;">Click any student badge to auto-fill login:</p>
+                <div class="demo-students">
+                    <button type="button" class="demo-badge" onclick="fillCredentials('STU001', 'John Doe')">
+                        <i class="bi bi-person-circle me-1"></i>STU001
+                        <small style="display: block; font-size: 0.75rem; opacity: 0.8;">John Doe</small>
+                    </button>
+                    <button type="button" class="demo-badge" onclick="fillCredentials('STU002', 'Jane Smith')">
+                        <i class="bi bi-person-circle me-1"></i>STU002
+                        <small style="display: block; font-size: 0.75rem; opacity: 0.8;">Jane Smith</small>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function fillCredentials(studentId, name) {
+        document.getElementById('student_id').value = studentId;
+        document.getElementById('name').value = name;
+    }
+
+    // Add smooth animations
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginCard = document.querySelector('.login-card');
+        loginCard.style.opacity = '0';
+        loginCard.style.transform = 'translateY(20px)';
+
+        setTimeout(() => {
+            loginCard.style.transition = 'all 0.6s ease';
+            loginCard.style.opacity = '1';
+            loginCard.style.transform = 'translateY(0)';
+        }, 100);
+    });
+</script>
+{% endblock %}

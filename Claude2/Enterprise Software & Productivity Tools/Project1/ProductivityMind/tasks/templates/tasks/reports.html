@@ -1,0 +1,423 @@
+{% extends "tasks/base.html" %}
+
+{% block page_title %}Productivity Reports{% endblock %}
+
+{% block content %}
+<div class="reports-container">
+    <!-- Period Selector -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div class="card-body">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                <div>
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.25rem;">Productivity Report</h3>
+                    <p style="color: var(--gray-500); font-size: 0.875rem;">Analyze team performance and productivity trends</p>
+                </div>
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <label style="font-size: 0.875rem; font-weight: 500;">Period:</label>
+                    <select id="periodSelect" class="form-select" style="width: auto;">
+                        <option value="7">Last 7 Days</option>
+                        <option value="14">Last 14 Days</option>
+                        <option value="30" selected>Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="ReportsView.loadReport()">
+                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                            <path d="M4 2v1h2M4 2h16M4 2a2 2 0 00-2 2v2m18-4v1m0-1h-2m2 0a2 2 0 012 2v2M2 8h16M2 8a2 2 0 00-2 2v8a2 2 0 002 2h16a2 2 0 002-2v-8a2 2 0 00-2-2m0 0V6a2 2 0 00-2-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        Generate Report
+                    </button>
+                    <button class="btn btn-primary" onclick="ReportsView.exportReport()">
+                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="stats-grid" id="summaryStats" style="margin-bottom: 1.5rem;">
+        <div class="skeleton" style="height: 120px;"></div>
+        <div class="skeleton" style="height: 120px;"></div>
+        <div class="skeleton" style="height: 120px;"></div>
+        <div class="skeleton" style="height: 120px;"></div>
+    </div>
+
+    <!-- Charts Row -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+        <!-- Tasks by Status -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Tasks by Status</h3>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="statusChartCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks by Priority -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Tasks by Priority</h3>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="priorityChartCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completion Trend -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div class="card-header">
+            <h3 class="card-title">Task Completion Trend</h3>
+        </div>
+        <div class="card-body">
+            <div class="chart-container lg">
+                <canvas id="trendChartCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations & Insights -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+        <!-- AI Recommendations -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: var(--primary-500); margin-right: 0.5rem;">
+                        <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
+                    </svg>
+                    AI Recommendations
+                </h3>
+            </div>
+            <div class="card-body">
+                <div id="recommendations">
+                    <div class="skeleton" style="height: 60px; margin-bottom: 0.75rem;"></div>
+                    <div class="skeleton" style="height: 60px; margin-bottom: 0.75rem;"></div>
+                    <div class="skeleton" style="height: 60px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottlenecks -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: var(--danger-500); margin-right: 0.5rem;">
+                        <path fill-rule="evenodd" d="M2.5 12a.5.5 0 01.5-.5h10a.5.5 0 010 1H3a.5.5 0 01-.5-.5zm0-4a.5.5 0 01.5-.5h8a.5.5 0 010 1H3a.5.5 0 01-.5-.5zm0-4a.5.5 0 01.5-.5h6a.5.5 0 010 1H3a.5.5 0 01-.5-.5zm11 5a3.5 3.5 0 01-3.5 3.5v-7a3.5 3.5 0 013.5 3.5z" clip-rule="evenodd"/>
+                    </svg>
+                    Task Bottlenecks
+                </h3>
+            </div>
+            <div class="card-body">
+                <div id="bottlenecks">
+                    <div class="skeleton" style="height: 80px;"></div>
+                    <div class="skeleton" style="height: 80px;"></div>
+                    <div class="skeleton" style="height: 80px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Performers -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: var(--warning-500); margin-right: 0.5rem;">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                </svg>
+                Top Performers
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>User</th>
+                            <th>Tasks Completed</th>
+                            <th>Hours Logged</th>
+                            <th>Avg Hours/Task</th>
+                        </tr>
+                    </thead>
+                    <tbody id="performersBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center;">
+                                <div class="skeleton" style="height: 40px;"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Reports View Controller
+const ReportsView = {
+    reportData: null,
+    charts: {},
+
+    async init() {
+        document.getElementById('periodSelect').addEventListener('change', () => this.loadReport());
+        await this.loadReport();
+    },
+
+    async loadReport() {
+        const days = parseInt(document.getElementById('periodSelect').value);
+
+        try {
+            this.reportData = await API.reports.getSummary(days);
+            this.renderSummary();
+            this.renderCharts();
+            this.renderRecommendations();
+            this.renderBottlenecks();
+            this.renderPerformers();
+            Toast.success(`Report generated for last ${days} days`);
+        } catch (error) {
+            console.error('Report error:', error);
+            Toast.error('Failed to generate report');
+        }
+    },
+
+    renderSummary() {
+        const summary = this.reportData.report.summary;
+        const period = this.reportData.report.period;
+
+        const summaryStats = document.getElementById('summaryStats');
+        summaryStats.innerHTML = `
+            <div class="stat-card">
+                <div class="stat-icon primary">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Tasks Completed</div>
+                    <div class="stat-value">${Format.number(summary.total_tasks_completed)}</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon success">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Hours Logged</div>
+                    <div class="stat-value">${Format.number(summary.total_hours_logged)}h</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon warning">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Avg Hours/Task</div>
+                    <div class="stat-value">${Format.number(summary.average_completion_time)}h</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon ${summary.on_time_completion_rate >= 80 ? 'success' : summary.on_time_completion_rate >= 60 ? 'warning' : 'danger'}">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">On-Time Rate</div>
+                    <div class="stat-value">${Format.percentage(summary.on_time_completion_rate / 100)}</div>
+                </div>
+            </div>
+        `;
+    },
+
+    renderCharts() {
+        const metrics = this.reportData.report.metrics;
+
+        // Status Distribution Chart
+        const statusData = metrics.tasks_by_status;
+        const statusLabels = Object.keys(statusData);
+        const statusValues = Object.values(statusData);
+
+        const statusCtx = document.getElementById('statusChartCanvas').getContext('2d');
+        if (this.charts.status) this.charts.status.destroy();
+        this.charts.status = new Chart(statusCtx, ChartConfig.createDoughnut(statusValues, statusLabels));
+
+        // Priority Distribution Chart
+        const priorityData = metrics.tasks_by_priority;
+        const priorityLabels = priorityData.map(p => {
+            const labels = { low: 'Low', medium: 'Medium', high: 'High', critical: 'Critical' };
+            return labels[p.priority] || p.priority;
+        });
+        const priorityValues = priorityData.map(p => p.count);
+
+        const priorityCtx = document.getElementById('priorityChartCanvas').getContext('2d');
+        if (this.charts.priority) this.charts.priority.destroy();
+        this.charts.priority = new Chart(priorityCtx, ChartConfig.createBar(priorityValues, priorityLabels, 'Tasks'));
+
+        // Completion Trend Chart
+        const trendData = metrics.completion_by_day;
+        const trendLabels = trendData.map(d => {
+            const date = new Date(d.date);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        });
+        const trendValues = trendData.map(d => d.count);
+
+        const trendCtx = document.getElementById('trendChartCanvas').getContext('2d');
+        if (this.charts.trend) this.charts.trend.destroy();
+        this.charts.trend = new Chart(trendCtx, ChartConfig.createLine(trendValues, trendLabels, 'Tasks Completed'));
+    },
+
+    renderRecommendations() {
+        const recommendations = this.reportData.report.recommendations;
+        const container = document.getElementById('recommendations');
+
+        if (recommendations.length === 0) {
+            container.innerHTML = '<p class="text-muted text-center">No recommendations at this time</p>';
+            return;
+        }
+
+        container.innerHTML = recommendations.map(rec => {
+            const iconClass = rec.type === 'warning' ? 'danger' : rec.type === 'info' ? 'info' : 'warning';
+            const icon = rec.type === 'warning'
+                ? '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>'
+                : '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>';
+
+            return `
+                <div class="card" style="padding: 1rem; margin-bottom: 0.75rem; border-left: 4px solid var(--${iconClass}-500);">
+                    <div style="display: flex; gap: 0.75rem;">
+                        <div style="color: var(--${iconClass}-500); flex-shrink: 0;">${icon}</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500; margin-bottom: 0.25rem;">${rec.type === 'warning' ? 'Warning' : 'Insight'}</div>
+                            <div style="font-size: 0.875rem; color: var(--gray-600);">${rec.message}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    renderBottlenecks() {
+        const bottlenecks = this.reportData.report.bottlenecks;
+        const container = document.getElementById('bottlenecks');
+
+        if (bottlenecks.length === 0) {
+            container.innerHTML = '<p class="text-muted text-center">No bottlenecks detected</p>';
+            return;
+        }
+
+        container.innerHTML = bottlenecks.map(task => {
+            const scoreClass = task.smart_priority_score >= 70 ? 'score-high' :
+                              task.smart_priority_score >= 40 ? 'score-medium' : 'score-low';
+
+            return `
+                <div class="task-card" style="cursor: pointer;" onclick="window.location.href='/tasks/${task.id}/'">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 600; margin-bottom: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${task.title}</div>
+                            <div style="font-size: 0.75rem; color: var(--gray-500);">
+                                Blocking <strong>${task.blocking_count}</strong> tasks • ${StatusHelper.getBadge(task.status_code, task.status)}
+                            </div>
+                        </div>
+                        <div class="score-badge ${scoreClass}">${task.smart_priority_score}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    renderPerformers() {
+        const performers = this.reportData.report.top_performers;
+        const tbody = document.getElementById('performersBody');
+
+        if (performers.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No performer data available</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = performers.map((user, index) => {
+            const avgHours = user.hours_logged > 0 && user.tasks_completed > 0
+                ? (user.hours_logged / user.tasks_completed).toFixed(1)
+                : '0';
+
+            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+
+            return `
+                <tr>
+                    <td><strong>${medal}</strong></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 32px; height: 32px; background: linear-gradient(135deg, var(--primary-400), var(--primary-600)); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.75rem;">
+                                ${(user.username || 'U')[0].toUpperCase()}
+                            </div>
+                            <span style="font-weight: 500;">${user.username || 'Unknown'}</span>
+                        </div>
+                    </td>
+                    <td><strong>${user.tasks_completed}</strong></td>
+                    <td>${Format.hours(user.hours_logged)}</td>
+                    <td>${avgHours}h</td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    exportReport() {
+        if (!this.reportData) {
+            Toast.error('No report data to export');
+            return;
+        }
+
+        // Simple text export
+        const report = this.reportData.report;
+        const text = `
+PRODUCTIVITY REPORT
+===================
+Period: Last ${report.period.days} days
+Generated: ${new Date().toLocaleString()}
+
+SUMMARY
+-------
+Tasks Completed: ${report.summary.total_tasks_completed}
+Total Hours Logged: ${report.summary.total_hours_logged}
+Average Hours/Task: ${report.summary.average_completion_time}
+On-Time Completion Rate: ${report.summary.on_time_completion_rate}%
+
+TOP PERFORMERS
+--------------
+${report.top_performers.map((p, i) => `${i + 1}. ${p.username}: ${p.tasks_completed} tasks, ${p.hours_logged}h`).join('\n')}
+
+RECOMMENDATIONS
+---------------
+${report.recommendations.map(r => `- ${r.message}`).join('\n')}
+        `.trim();
+
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `productivity-report-${new Date().toISOString().split('T')[0]}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        Toast.success('Report exported');
+    }
+};
+
+// Initialize reports view
+document.addEventListener('DOMContentLoaded', () => {
+    ReportsView.init();
+});
+</script>
+{% endblock %}

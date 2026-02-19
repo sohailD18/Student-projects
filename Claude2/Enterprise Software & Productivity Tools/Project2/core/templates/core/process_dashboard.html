@@ -1,0 +1,260 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ process.name }} - Process Dashboard - OptiFlow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="bi bi-speedometer2"></i> {{ process.name }} - Dashboard</h1>
+                <p class="text-muted mb-0">{{ process.description|default:"No description" }}</p>
+            </div>
+            <div class="btn-group">
+                <a href="{% url 'core:process_detail' process.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-diagram-2"></i> Details
+                </a>
+                <a href="{% url 'core:process_analysis' process.id %}" class="btn btn-outline-success">
+                    <i class="bi bi-graph-up"></i> Analyze
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Metrics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="display-6">{{ process.get_completion_rate }}%</h3>
+                <p class="text-muted mb-0">Completion Rate</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="display-6">{{ process.get_average_cycle_time|floatformat:1 }}</h3>
+                <p class="text-muted mb-0">Avg Cycle Time (min)</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="display-6">{{ process.logs.count }}</h3>
+                <p class="text-muted mb-0">Total Executions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="display-6">{{ process.target_cycle_time|default:"-" }}</h3>
+                <p class="text-muted mb-0">Target Time (min)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Execution Trend Chart -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Execution Trend</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="executionTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Step Performance -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Step Performance</h5>
+            </div>
+            <div class="card-body">
+                {% if step_metrics %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Order</th>
+                                <th>Step Name</th>
+                                <th>Type</th>
+                                <th>Avg Time</th>
+                                <th>Estimated</th>
+                                <th>Executions</th>
+                                <th>Failure Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for metric in step_metrics %}
+                            <tr>
+                                <td><span class="badge bg-secondary">#{{ metric.order }}</span></td>
+                                <td><strong>{{ metric.name }}</strong></td>
+                                <td>
+                                    <span class="badge bg-{{ metric.type|yesno:'primary,info,warning,success,dark' }}">
+                                        {{ metric.type }}
+                                    </span>
+                                </td>
+                                <td>{{ metric.avg_time }} min</td>
+                                <td>{{ metric.estimated_duration|default:"-" }} min</td>
+                                <td>{{ metric.total_executions }}</td>
+                                <td>
+                                    {% if metric.failure_rate > 0 %}
+                                        <span class="text-danger">{{ metric.failure_rate }}%</span>
+                                    {% else %}
+                                        <span class="text-success">0%</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No step data available yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Executions & Recommendations -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Executions</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_executions %}
+                <div class="list-group list-group-flush">
+                    {% for log in recent_executions %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ log.run_id }}</strong><br>
+                                <small class="text-muted">
+                                    {{ log.step.name|default:"Process Level" }} - {{ log.created_at|date:"M d, H:i" }}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-{{ log.status|yesno:'success,info,warning,danger,secondary' }}">
+                                    {{ log.get_status_display }}
+                                </span>
+                                {% if log.execution_time %}
+                                <br><small>{{ log.execution_time|floatformat:1 }} min</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No executions recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-warning bg-opacity-10">
+                <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Recommendations</h5>
+            </div>
+            <div class="card-body">
+                {% if recommendations %}
+                <div class="list-group list-group-flush">
+                    {% for rec in recommendations %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ rec.title|truncatewords:8 }}</h6>
+                                <small class="text-muted">{{ rec.category|title }}</small>
+                            </div>
+                            <span class="badge priority-{{ rec.priority }}">{{ rec.priority }}</span>
+                        </div>
+                        <small class="text-muted">Impact: {{ rec.impact_score|floatformat:0 }}/100</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                <a href="{% url 'core:recommendation_list' %}" class="btn btn-sm btn-outline-primary w-100 mt-2">
+                    View All Recommendations
+                </a>
+                {% else %}
+                <p class="text-muted">No recommendations yet.</p>
+                <a href="{% url 'core:process_analysis' process.id %}" class="btn btn-sm btn-primary">
+                    Run Analysis
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Execution Trend Chart
+const trendCtx = document.getElementById('executionTrendChart').getContext('2d');
+const trendData = {{ trend_data|safe }};
+
+// Group data by date for cleaner visualization
+const dateGroups = {};
+trendData.forEach(point => {
+    const date = point.date.split(' ')[0]; // Get just the date part
+    if (!dateGroups[date]) {
+        dateGroups[date] = [];
+    }
+    dateGroups[date].push(point.time);
+});
+
+const labels = Object.keys(dateGroups).sort();
+const avgTimes = labels.map(date => {
+    const times = dateGroups[date];
+    return times.reduce((a, b) => a + b, 0) / times.length;
+});
+
+new Chart(trendCtx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Avg Execution Time (min)',
+            data: avgTimes,
+            borderColor: '#4361ee',
+            backgroundColor: 'rgba(67, 97, 238, 0.1)',
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Time (minutes)'
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'top'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

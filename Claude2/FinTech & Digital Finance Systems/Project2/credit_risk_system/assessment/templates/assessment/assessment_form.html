@@ -1,0 +1,303 @@
+{% extends 'assessment/base.html' %}
+
+{% block title %}New Assessment - Credit Risk Assessment System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">
+                    <i class="bi bi-file-earmark-plus text-primary"></i>
+                    New Credit Assessment
+                </h2>
+                <p class="text-muted mb-0">Fill in the applicant's financial and credit information</p>
+            </div>
+            <a href="{% url 'assessment:home' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+
+        <form method="post" id="assessmentForm" novalidate>
+            {% csrf_token %}
+
+            <!-- Personal Information Section -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person"></i>
+                        Personal Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">
+                                {{ form.name.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.name.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">
+                                {{ form.email.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.email.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.phone.id_for_label }}" class="form-label">
+                                {{ form.phone.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.phone.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Information Section -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-cash-stack"></i>
+                        Financial Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.annual_income.id_for_label }}" class="form-label">
+                                {{ form.annual_income.label }} <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                {{ form.annual_income }}
+                            </div>
+                            {% if form.annual_income.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.annual_income.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Annual gross income before taxes</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.debt_to_income_ratio.id_for_label }}" class="form-label">
+                                {{ form.debt_to_income_ratio.label }} <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                {{ form.debt_to_income_ratio }}
+                                <span class="input-group-text">%</span>
+                            </div>
+                            {% if form.debt_to_income_ratio.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.debt_to_income_ratio.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Monthly debt payments / Monthly income × 100</small>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.employment_status.id_for_label }}" class="form-label">
+                                {{ form.employment_status.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.employment_status }}
+                            {% if form.employment_status.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.employment_status.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.years_employed.id_for_label }}" class="form-label">
+                                {{ form.years_employed.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.years_employed }}
+                            {% if form.years_employed.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.years_employed.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Years at current employment</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Credit History Section -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-credit-card"></i>
+                        Credit History
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.credit_score.id_for_label }}" class="form-label">
+                                {{ form.credit_score.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.credit_score }}
+                            {% if form.credit_score.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.credit_score.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">FICO Score range: 300-850</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.home_ownership_status.id_for_label }}" class="form-label">
+                                {{ form.home_ownership_status.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.home_ownership_status }}
+                            {% if form.home_ownership_status.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.home_ownership_status.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.num_open_loans.id_for_label }}" class="form-label">
+                                {{ form.num_open_loans.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.num_open_loans }}
+                            {% if form.num_open_loans.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.num_open_loans.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.num_credit_lines.id_for_label }}" class="form-label">
+                                {{ form.num_credit_lines.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.num_credit_lines }}
+                            {% if form.num_credit_lines.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.num_credit_lines.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.late_payments.id_for_label }}" class="form-label">
+                                {{ form.late_payments.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.late_payments }}
+                            {% if form.late_payments.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.late_payments.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">In last 2 years</small>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.total_credit_limit.id_for_label }}" class="form-label">
+                                {{ form.total_credit_limit.label }}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                {{ form.total_credit_limit }}
+                            </div>
+                            {% if form.total_credit_limit.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.total_credit_limit.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Optional - Across all credit cards</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.credit_utilization.id_for_label }}" class="form-label">
+                                {{ form.credit_utilization.label }}
+                            </label>
+                            <div class="input-group">
+                                {{ form.credit_utilization }}
+                                <span class="input-group-text">%</span>
+                            </div>
+                            {% if form.credit_utilization.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.credit_utilization.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Optional - Credit used / Credit limit × 100</small>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <div class="form-check">
+                                {{ form.bankruptcies }}
+                                <label class="form-check-label" for="{{ form.bankruptcies.id_for_label }}">
+                                    {{ form.bankruptcies.label }}
+                                </label>
+                                {% if form.bankruptcies.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.bankruptcies.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'assessment:home' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle"></i> Run Assessment
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Form validation
+(function() {
+    'use strict';
+
+    // Fetch all forms that need validation
+    var forms = document.querySelectorAll('#assessmentForm');
+
+    // Loop over them and prevent submission
+    Array.prototype.slice.call(forms)
+        .forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+
+                form.classList.add('was-validated');
+            }, false);
+        });
+})();
+</script>
+{% endblock %}

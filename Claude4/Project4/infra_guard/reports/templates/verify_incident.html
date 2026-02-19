@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Incident - InfraGuard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Verify Incident #{{ incident.id }}</h1>
+        <a href="{% url 'reports:admin_dashboard' %}" class="btn btn-secondary">← Back to Dashboard</a>
+    </div>
+
+    <!-- Incident Details -->
+    <div class="card incident-detail">
+        <h3>Incident Information</h3>
+
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">Type:</span>
+                <span class="incident-type-badge type-{{ incident.incident_type }}">
+                    {{ incident.get_incident_type_display }}
+                </span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Location:</span>
+                <span>{{ incident.location }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Severity Score:</span>
+                <span class="severity-badge {{ incident.get_severity_color }}">
+                    {{ incident.severity_score }} / 100 ({{ incident.get_severity_level }})
+                </span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Reported by:</span>
+                <span>{{ incident.reported_by.username }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Date:</span>
+                <span>{{ incident.timestamp|date:"F d, Y H:i" }}</span>
+            </div>
+            {% if incident.latitude and incident.longitude %}
+                <div class="detail-item">
+                    <span class="detail-label">Coordinates:</span>
+                    <span>{{ incident.latitude|floatformat:4 }}, {{ incident.longitude|floatformat:4 }}</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="detail-description">
+            <h4>Description:</h4>
+            <p>{{ incident.description }}</p>
+        </div>
+
+        {% if incident.image %}
+            <div class="detail-image">
+                <h4>Evidence Image:</h4>
+                <a href="{{ incident.image.url }}" target="_blank" class="image-link">
+                    <img src="{{ incident.image.url }}" alt="Incident image">
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Verification Form -->
+    <div class="card form-card">
+        <h3>Verification Decision</h3>
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>Action Required:</label>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="action" value="verify" required>
+                        <span class="radio-label radio-success">
+                            <strong>✅ Verify Incident</strong>
+                            <small>Confirm this is a valid infrastructure issue</small>
+                        </span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="action" value="resolve">
+                        <span class="radio-label radio-primary">
+                            <strong>🔧 Mark as Resolved</strong>
+                            <small>Issue has been fixed</small>
+                        </span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="action" value="reject">
+                        <span class="radio-label radio-danger">
+                            <strong>❌ Reject Incident</strong>
+                            <small>This report is invalid or false</small>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Authority Notes (Optional):</label>
+                <textarea name="notes" id="notes" class="form-control"
+                          placeholder="Add notes explaining your decision..." rows="3"></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-large">Submit Decision</button>
+                <a href="{% url 'reports:admin_dashboard' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

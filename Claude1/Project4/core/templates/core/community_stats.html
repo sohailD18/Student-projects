@@ -1,0 +1,298 @@
+{% extends "core/base.html" %}
+
+{% block title %}Community Statistics - EcoTrack{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 style="color: white; margin-bottom: 0.5rem;">📊 Community Statistics</h1>
+    <p style="color: rgba(255,255,255,0.9);">Staff-only dashboard: Track our collective environmental impact</p>
+</div>
+
+<!-- Community Overview Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>👥 Total Users</h3>
+        <div class="value">{{ total_users }}</div>
+        <p style="color: #666; margin-top: 0.5rem;">Active participants</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>🌍 Total Carbon Tracked</h3>
+        <div class="value">{{ total_carbon|floatformat:1 }}</div>
+        <p style="color: #666; margin-top: 0.5rem;">kg CO₂ community-wide</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>⭐ Total Points Earned</h3>
+        <div class="value">{{ total_points }}</div>
+        <p style="color: #666; margin-top: 0.5rem;">All user points combined</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>📈 Average Points</h3>
+        <div class="value">{{ avg_points|floatformat:0 }}</div>
+        <p style="color: #666; margin-top: 0.5rem;">Per user</p>
+    </div>
+</div>
+
+<!-- Community Emissions Chart -->
+<div class="card">
+    <h2>📈 Community Carbon Trend (Last 7 Days)</h2>
+    <div style="position: relative; height: 350px;">
+        <canvas id="carbonChart"></canvas>
+    </div>
+    <p style="text-align: center; color: #666; margin-top: 1rem; font-size: 0.9rem;">
+        Community-wide daily carbon footprint in kg CO₂
+    </p>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+    <!-- Activity Breakdown -->
+    <div class="card">
+        <h2>📋 Community Activity Breakdown</h2>
+        <ul class="activity-list" style="margin-top: 1rem;">
+            {% for type, stats in activity_breakdown.items %}
+                <li class="activity-item" style="flex-direction: column; align-items: flex-start;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <span style="font-size: 1.5rem;">
+                            {% if type == 'Travel' %}🚗
+                            {% elif type == 'Energy' %}⚡
+                            {% elif type == 'Diet' %}🥗
+                            {% endif %}
+                        </span>
+                        <h4 style="color: #2d5016; margin: 0; font-size: 1.2rem;">{{ type }}</h4>
+                    </div>
+                    <div style="display: flex; gap: 2rem; color: #666;">
+                        <span><strong>{{ stats.count }}</strong> activities</span>
+                        <span><strong>{{ stats.carbon|floatformat:1 }}</strong> kg CO₂</span>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Top Users -->
+    <div class="card">
+        <h2>🏆 Top 5 Eco Warriors</h2>
+        <ul class="activity-list" style="margin-top: 1rem;">
+            {% for profile in top_users %}
+                <li class="activity-item">
+                    <div>
+                        <h4 style="color: #2d5016; margin: 0;">{{ profile.user.username }}</h4>
+                        <p style="color: #666; margin: 0.25rem 0 0;">{{ profile.total_points }} points</p>
+                    </div>
+                    <div style="font-size: 1.5rem;">
+                        {% if forloop.counter == 1 %}🥇
+                        {% elif forloop.counter == 2 %}🥈
+                        {% elif forloop.counter == 3 %}🥉
+                        {% else %}⭐{% endif %}
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<!-- Popular Badges & Recent Activity -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+    <!-- Popular Badges -->
+    <div class="card">
+        <h2>🎖️ Most Popular Badges</h2>
+        <p style="color: #666; margin-bottom: 1rem;">{{ total_badges_awarded }} total badges awarded</p>
+        <ul class="activity-list" style="margin-top: 1rem;">
+            {% for badge in popular_badges %}
+                <li class="activity-item">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="font-size: 2rem;">{{ badge.badge__icon }}</span>
+                        <div>
+                            <h4 style="color: #2d5016; margin: 0;">{{ badge.badge__name }}</h4>
+                            <p style="color: #666; margin: 0.25rem 0 0;">Awarded {{ badge.count }} times</p>
+                        </div>
+                    </div>
+                </li>
+            {% empty %}
+                <div class="empty-state">
+                    <p>No badges awarded yet</p>
+                </div>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Recent Community Activities -->
+    <div class="card">
+        <h2>🕐 Recent Community Activity</h2>
+        <ul class="activity-list" style="margin-top: 1rem;">
+            {% for activity in recent_activities %}
+                <li class="activity-item" style="align-items: flex-start;">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <span style="font-size: 1.5rem;">
+                                {% if activity.activity_type == 'Travel' %}🚗
+                                {% elif activity.activity_type == 'Energy' %}⚡
+                                {% elif activity.activity_type == 'Diet' %}🥗
+                                {% endif %}
+                            </span>
+                            <h4 style="color: #2d5016; margin: 0;">{{ activity.user.username }}</h4>
+                            <span style="font-size: 0.85rem; color: #666;">{{ activity.activity_type }}</span>
+                        </div>
+                        <p style="color: #666; margin: 0; font-size: 0.9rem;">
+                            {{ activity.calculated_carbon|floatformat:1 }} kg CO₂
+                        </p>
+                    </div>
+                    <div style="text-align: right; min-width: 80px;">
+                        <p style="color: #666; margin: 0; font-size: 0.85rem;">
+                            {{ activity.created_at|date:"M d" }}
+                        </p>
+                        <p style="color: #999; margin: 0; font-size: 0.8rem;">
+                            {{ activity.created_at|date:"H:i" }}
+                        </p>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+    <h2>⚡ Admin Quick Actions</h2>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">← Back to Dashboard</a>
+        <a href="/admin/" class="btn btn-secondary">🔧 Django Admin</a>
+    </div>
+</div>
+
+<style>
+    .dashboard-header h1 {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+
+    .dashboard-header p {
+        font-size: 1.1rem;
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-header h1 {
+            font-size: 1.8rem;
+        }
+
+        div[style*="grid-template-columns: repeat(auto-fit"] {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('carbonChart').getContext('2d');
+
+        const chartLabels = {{ chart_labels|safe }};
+        const chartData = {{ chart_data|safe }};
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Community Carbon Emissions (kg CO₂)',
+                    data: chartData,
+                    borderColor: '#4a7c23',
+                    backgroundColor: 'rgba(74, 124, 35, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#4a7c23',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    pointHoverBackgroundColor: '#2d5016',
+                    pointHoverBorderColor: '#ffffff',
+                    pointHoverBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 14,
+                                family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                            },
+                            color: '#2d5016',
+                            padding: 15,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(45, 80, 22, 0.9)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: '#4a7c23',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + ' kg CO₂';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(74, 124, 35, 0.1)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#666',
+                            font: {
+                                size: 12
+                            },
+                            callback: function(value) {
+                                return value + ' kg';
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Carbon Emissions (kg CO₂)',
+                            color: '#2d5016',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#666',
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

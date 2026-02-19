@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}My Tasks - TimeBank{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1><i class="fas fa-tasks"></i> My Tasks</h1>
+
+    <ul class="nav nav-tabs mt-4" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="created-tab" data-bs-toggle="tab" data-bs-target="#created" type="button">
+                <i class="fas fa-plus-circle"></i> Created by Me ({{ created_tasks.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="assigned-tab" data-bs-toggle="tab" data-bs-target="#assigned" type="button">
+                <i class="fas fa-hand-paper"></i> Assigned to Me ({{ assigned_tasks.count }})
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-3" id="myTabContent">
+        <div class="tab-pane fade show active" id="created" role="tabpanel">
+            <div class="row">
+                {% for task in created_tasks %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card task-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h5 class="card-title">{{ task.title }}</h5>
+                                    <span class="badge {% if task.status == 'Open' %}bg-success{% elif task.status == 'In Progress' %}bg-warning{% elif task.status == 'Assigned' %}bg-info{% else %}bg-secondary{% endif %}">
+                                        {{ task.status }}
+                                    </span>
+                                </div>
+                                <p class="card-text text-muted small">
+                                    <i class="fas fa-clock"></i> {{ task.estimated_duration }} hours
+                                    <span class="ms-2"><i class="fas fa-calendar"></i> {{ task.created_at|date:"M d, Y" }}</span>
+                                </p>
+                                <p class="card-text">{{ task.description|truncatewords:15 }}</p>
+                                <div class="mb-2">
+                                    {% for skill in task.get_skills_list|slice:":3" %}
+                                        <span class="badge-skill">{{ skill }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% if task.assigned_to %}
+                                    <p class="small mb-2">
+                                        <strong>Assigned to:</strong> {{ task.assigned_to.username }}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer">
+                                <a href="{% url 'task_detail' task.id %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-eye"></i> View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="fas fa-inbox"></i> You haven't created any tasks yet.
+                            <a href="{% url 'create_task' %}">Create your first task!</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="assigned" role="tabpanel">
+            <div class="row">
+                {% for task in assigned_tasks %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card task-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h5 class="card-title">{{ task.title }}</h5>
+                                    <span class="badge {% if task.status == 'Open' %}bg-success{% elif task.status == 'In Progress' %}bg-warning{% elif task.status == 'Assigned' %}bg-info{% else %}bg-secondary{% endif %}">
+                                        {{ task.status }}
+                                    </span>
+                                </div>
+                                <p class="card-text text-muted small">
+                                    <i class="fas fa-user"></i> Posted by {{ task.created_by.username }}
+                                    <span class="ms-2"><i class="fas fa-clock"></i> {{ task.estimated_duration }} hours</span>
+                                </p>
+                                <p class="card-text">{{ task.description|truncatewords:15 }}</p>
+                                <div class="mb-2">
+                                    {% for skill in task.get_skills_list|slice:":3" %}
+                                        <span class="badge-skill">{{ skill }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <a href="{% url 'task_detail' task.id %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-eye"></i> View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="fas fa-inbox"></i> You haven't been assigned any tasks yet.
+                            <a href="{% url 'task_list' %}">Browse available tasks!</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

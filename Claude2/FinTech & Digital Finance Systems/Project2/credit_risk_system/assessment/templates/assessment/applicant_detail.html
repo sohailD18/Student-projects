@@ -1,0 +1,273 @@
+{% extends 'assessment/base.html' %}
+
+{% block title %}Applicant Details - {{ applicant.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">
+                    <i class="bi bi-person text-primary"></i>
+                    {{ applicant.name }}
+                </h2>
+                <p class="text-muted mb-0">Applicant Details</p>
+            </div>
+            <div class="btn-group">
+                <a href="{% url 'assessment:applicant_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+                <a href="{% url 'assessment:report' applicant.id %}" class="btn btn-primary">
+                    <i class="bi bi-file-earmark-text"></i> Generate Report
+                </a>
+            </div>
+        </div>
+
+        <!-- Status Banner -->
+        <div class="alert alert-{{ risk_details.color == '#28a745' and 'success' or risk_details.color == '#ffc107' and 'warning' or 'danger' }} mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <div class="me-3" style="font-size: 2rem;">{{ risk_details.icon }}</div>
+                <div>
+                    <h5 class="alert-heading mb-1">{{ applicant.get_eligibility_status_display }}</h5>
+                    <p class="mb-0">{{ risk_details.label }} - Default Probability: {% if applicant.risk_probability %}{{ applicant.risk_probability|floatformat:2 }}%{% else %}N/A{% endif %}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personal Information -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">
+                    <i class="bi bi-person-fill text-primary"></i>
+                    Personal Information
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Full Name:</strong></p>
+                        <p class="text-muted">{{ applicant.name }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Email Address:</strong></p>
+                        <p class="text-muted">{{ applicant.email }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Phone Number:</strong></p>
+                        <p class="text-muted">{{ applicant.phone }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Assessment Date:</strong></p>
+                        <p class="text-muted">{{ applicant.created_at|date:"F d, Y H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Profile -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">
+                    <i class="bi bi-cash-stack text-success"></i>
+                    Financial Profile
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Annual Income:</strong></p>
+                        <p class="text-muted fs-5">${{ applicant.annual_income|floatformat:2 }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Employment Status:</strong></p>
+                        <p class="text-muted">{{ applicant.get_employment_status_display }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Years Employed:</strong></p>
+                        <p class="text-muted">{{ applicant.years_employed }} years</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Debt-to-Income Ratio:</strong></p>
+                        <p class="text-muted">{{ applicant.debt_to_income_ratio }}%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Credit History -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">
+                    <i class="bi bi-credit-card text-info"></i>
+                    Credit History
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 rounded text-center" style="background-color: #f8f9fa;">
+                            <h6 class="text-muted mb-2">Credit Score</h6>
+                            <h2 class="mb-1 {% if financial_data.credit_score >= 700 %}text-success{% elif financial_data.credit_score >= 600 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ financial_data.credit_score }}
+                            </h2>
+                            <small class="text-muted">
+                                {% if financial_data.credit_score >= 800 %}Exceptional
+                                {% elif financial_data.credit_score >= 740 %}Very Good
+                                {% elif financial_data.credit_score >= 670 %}Good
+                                {% elif financial_data.credit_score >= 580 %}Fair
+                                {% else %}Poor{% endif %}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <p class="mb-1"><strong>Number of Open Loans:</strong></p>
+                                <p class="text-muted">{{ financial_data.num_open_loans }}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <p class="mb-1"><strong>Number of Credit Lines:</strong></p>
+                                <p class="text-muted">{{ financial_data.num_credit_lines }}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <p class="mb-1"><strong>Late Payments (Last 2 Years):</strong></p>
+                                <p class="text-muted">{{ financial_data.late_payments }}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <p class="mb-1"><strong>Home Ownership:</strong></p>
+                                <p class="text-muted">{{ financial_data.get_home_ownership_status_display }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1">
+                            <strong>Bankruptcy History:</strong>
+                            {% if financial_data.bankruptcies %}
+                            <span class="badge bg-danger ms-2">Yes</span>
+                            {% else %}
+                            <span class="badge bg-success ms-2">No</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if financial_data.total_credit_limit %}
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Total Credit Limit:</strong></p>
+                        <p class="text-muted">${{ financial_data.total_credit_limit|floatformat:2 }}</p>
+                    </div>
+                    {% endif %}
+                    {% if financial_data.credit_utilization %}
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Credit Utilization:</strong></p>
+                        <p class="text-muted">{{ financial_data.credit_utilization }}%</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Assessment Results -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">
+                    <i class="bi bi-graph-up text-warning"></i>
+                    Assessment Results
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <p class="mb-1"><strong>Risk Category:</strong></p>
+                        <p>
+                            <span class="badge" style="background-color: {{ risk_details.color }}; font-size: 1rem;">
+                                {{ risk_details.label }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <p class="mb-1"><strong>Eligibility Status:</strong></p>
+                        <p class="text-muted">{{ applicant.get_eligibility_status_display }}</p>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <p class="mb-1"><strong>Default Probability:</strong></p>
+                        <p class="text-muted">
+                            {% if applicant.risk_probability %}
+                                {{ applicant.risk_probability|floatformat:2 }}%
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="alert alert-{{ risk_details.color == '#28a745' and 'success' or risk_details.color == '#ffc107' and 'warning' or 'danger' }} mb-0">
+                    <h6 class="alert-heading">Recommendation</h6>
+                    <p class="mb-2">{{ risk_details.description }}</p>
+                    <hr>
+                    <p class="mb-0"><strong>{{ risk_details.recommendation }}</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'assessment:applicant_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                    <div class="btn-group">
+                        <a href="{% url 'assessment:assessment_result' applicant.id %}" class="btn btn-outline-primary">
+                            <i class="bi bi-eye"></i> View Results
+                        </a>
+                        <a href="{% url 'assessment:report' applicant.id %}" class="btn btn-primary">
+                            <i class="bi bi-download"></i> Download Report
+                        </a>
+                        <button type="button" class="btn btn-outline-danger"
+                                onclick="confirmDelete('{{ applicant.id }}', '{{ applicant.name }}')">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the assessment for <strong id="deleteApplicantName"></strong>?</p>
+                <p class="text-muted mb-0">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(applicantId, applicantName) {
+    document.getElementById('deleteApplicantName').textContent = applicantName;
+    document.getElementById('deleteForm').action = '/applicants/' + applicantId + '/delete/';
+
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
+}
+</script>
+{% endblock %}

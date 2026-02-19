@@ -1,0 +1,229 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-1"><i class="bi bi-speedometer2 text-primary"></i> Admin Dashboard</h1>
+        <p class="text-muted mb-0">Monitor and manage the UrbanSafe platform</p>
+    </div>
+    <div>
+        <a href="{% url 'admin_incidents' %}" class="btn btn-outline-primary me-2">
+            <i class="bi bi-list-task me-1"></i>Manage Incidents
+        </a>
+        <a href="{% url 'create_safety_alert' %}" class="btn btn-primary">
+            <i class="bi bi-broadcast me-1"></i>Create Alert
+        </a>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card shadow border-start border-primary border-4">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Total Incidents</h6>
+                <h2 class="mb-0">{{ total_incidents }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow border-start border-warning border-4">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Pending</h6>
+                <h2 class="mb-0">{{ pending_incidents }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow border-start border-success border-4">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Verified</h6>
+                <h2 class="mb-0">{{ verified_incidents }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow border-start border-info border-4">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Resolved</h6>
+                <h2 class="mb-0">{{ resolved_incidents }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Severity Breakdown -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Severity Breakdown</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Critical</span>
+                    <span class="badge bg-danger">{{ critical_incidents }}</span>
+                </div>
+                <div class="progress mb-3" style="height: 8px;">
+                    <div class="progress-bar bg-danger" style="width: {% if total_incidents > 0 %}{{ critical_incidents|divide:total_incidents|multiply:100 }}{% else %}0{% endif %}%"></div>
+                </div>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span>High</span>
+                    <span class="badge bg-warning">{{ high_incidents }}</span>
+                </div>
+                <div class="progress mb-3" style="height: 8px;">
+                    <div class="progress-bar bg-warning" style="width: {% if total_incidents > 0 %}{{ high_incidents|divide:total_incidents|multiply:100 }}{% else %}0{% endif %}%"></div>
+                </div>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Medium</span>
+                    <span class="badge bg-info">{{ medium_incidents }}</span>
+                </div>
+                <div class="progress mb-3" style="height: 8px;">
+                    <div class="progress-bar bg-info" style="width: {% if total_incidents > 0 %}{{ medium_incidents|divide:total_incidents|multiply:100 }}{% else %}0{% endif %}%"></div>
+                </div>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Low</span>
+                    <span class="badge bg-success">{{ low_incidents }}</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-success" style="width: {% if total_incidents > 0 %}{{ low_incidents|divide:total_incidents|multiply:100 }}{% else %}0{% endif %}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-people me-2"></i>User Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <h3 class="text-primary mb-1">{{ total_users }}</h3>
+                        <small class="text-muted">Total Users</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h3 class="text-success mb-1">{{ active_users_today }}</h3>
+                        <small class="text-muted">Active Today</small>
+                    </div>
+                </div>
+                <hr>
+                <h6 class="mb-3">Top Contributors</h6>
+                {% if top_contributors %}
+                    <div class="list-group list-group-flush">
+                        {% for contributor in top_contributors %}
+                            <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                <span>{{ contributor.user.username }}</span>
+                                <span class="badge bg-primary">{{ contributor.incident_count }} reports</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center mb-0">No contributors yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Incidents by Category -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0"><i class="bi bi-grid me-2"></i>Incidents by Category</h5>
+    </div>
+    <div class="card-body">
+        {% if categories %}
+            <div class="row">
+                {% for category in categories %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card border">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span>
+                                        <i class="{{ category.icon }} me-2"></i>{{ category.name }}
+                                    </span>
+                                    <span class="badge rounded-pill" style="background-color: {{ category.color }};">
+                                        {{ category.incident_count }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted text-center mb-0">No categories yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recent Incidents -->
+<div class="card shadow">
+    <div class="card-header bg-light">
+        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Incidents</h5>
+    </div>
+    <div class="card-body">
+        {% if recent_incidents %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Severity</th>
+                            <th>Reported By</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for incident in recent_incidents %}
+                            <tr>
+                                <td><a href="{% url 'incident_detail' incident.pk %}">{{ incident.title }}</a></td>
+                                <td>
+                                    {% if incident.category %}
+                                        <span class="badge rounded-pill text-white" style="background-color: {{ incident.category.color }};">
+                                            {{ incident.category.name }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill
+                                        {% if incident.status == 'pending' %}bg-warning
+                                        {% elif incident.status == 'investigating' %}bg-info
+                                        {% elif incident.status == 'verified' %}bg-primary
+                                        {% elif incident.status == 'resolved' %}bg-success
+                                        {% endif %}">
+                                        {{ incident.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill
+                                        {% if incident.severity == 'critical' %}bg-danger
+                                        {% elif incident.severity == 'high' %}bg-warning
+                                        {% elif incident.severity == 'medium' %}bg-info
+                                        {% else %}bg-success
+                                        {% endif %}">
+                                        {{ incident.get_severity_display }}
+                                    </span>
+                                </td>
+                                <td>{{ incident.user.username }}</td>
+                                <td>{{ incident.created_at|timesince }} ago</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted text-center mb-0">No incidents reported yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

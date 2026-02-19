@@ -1,0 +1,432 @@
+{% extends "tasks/base.html" %}
+
+{% block page_title %}{{ task.title }}{% endblock %}
+
+{% block content %}
+<div class="task-detail-container">
+    <!-- Quick Actions Bar -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div class="card-body" style="padding: 1rem 1.25rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <a href="{% url 'tasks:tasks' %}" class="btn-icon" title="Back to Tasks">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M15 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </a>
+                    <div>
+                        <h1 style="font-size: 1.5rem; font-weight: 700; margin: 0;">{{ task.title }}</h1>
+                        <div style="font-size: 0.875rem; color: var(--gray-500); margin-top: 0.25rem;">
+                            {% if task.project %}{{ task.project.name }} • {% endif %}
+                            Created {{ task.created_at|timesince }} ago
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-sm btn-secondary" onclick="TaskDetail.quickStatus('todo')">To Do</button>
+                    <button class="btn btn-sm btn-primary" onclick="TaskDetail.quickStatus('in_progress')">In Progress</button>
+                    <button class="btn btn-sm btn-success" onclick="TaskDetail.quickStatus('done')">Done</button>
+                    <button class="btn btn-sm btn-secondary" onclick="TaskDetail.showLogTimeModal()">
+                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="margin-right: 0.25rem;">
+                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Log Time
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="TaskDetail.recalculateAI()">
+                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="margin-right: 0.25rem;">
+                            <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Refresh AI
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 350px; gap: 1.5rem; align-items: start;">
+        <!-- Main Content -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <!-- Task Details Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Task Details</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Description -->
+                    <div style="margin-bottom: 2rem;">
+                        <div style="font-size: 0.875rem; font-weight: 600; color: var(--gray-700); margin-bottom: 0.75rem;">
+                            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="vertical-align: text-bottom; margin-right: 0.5rem; color: var(--gray-400);">
+                                <path d="M4 4h12M4 8h12M4 12h12M4 16h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Description
+                        </div>
+                        <div style="color: var(--gray-600); line-height: 1.7; white-space: pre-wrap;">{{ task.description|default:"No description provided." }}</div>
+                    </div>
+
+                    <!-- Metadata Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                        <div>
+                            <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--gray-500); margin-bottom: 0.5rem;">Status</div>
+                            {% with task_status=task.get_status_display %}
+                                {% if task.status == 'todo' %}<span class="badge badge-gray">{{ task_status }}</span>
+                                {% elif task.status == 'in_progress' %}<span class="badge badge-primary">{{ task_status }}</span>
+                                {% elif task.status == 'done' %}<span class="badge badge-success">{{ task_status }}</span>
+                                {% else %}<span class="badge badge-danger">{{ task_status }}</span>{% endif %}
+                            {% endwith %}
+                        </div>
+
+                        <div>
+                            <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--gray-500); margin-bottom: 0.5rem;">Priority</div>
+                            {% with task_priority=task.get_priority_display %}
+                                {% if task.priority == 'low' %}<span class="text-success" style="font-weight: 500;">{{ task_priority }}</span>
+                                {% elif task.priority == 'medium' %}<span class="text-warning" style="font-weight: 500;">{{ task_priority }}</span>
+                                {% else %}<span class="text-danger" style="font-weight: 500;">{{ task_priority }}</span>{% endif %}
+                            {% endwith %}
+                        </div>
+
+                        <div>
+                            <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--gray-500); margin-bottom: 0.5rem;">AI Priority Score</div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                {% with score=task.smart_priority_score %}
+                                    <div class="score-badge {% if score >= 70 %}score-high{% elif score >= 40 %}score-medium{% else %}score-low{% endif %}" style="width: 40px; height: 40px; font-size: 0.875rem;">{{ score }}</div>
+                                    <span style="font-size: 0.875rem; color: var(--gray-600);">{% if score >= 70 %}High Priority{% elif score >= 40 %}Medium Priority{% else %}Low Priority{% endif %}</span>
+                                {% endwith %}
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--gray-500); margin-bottom: 0.5rem;">Risk Assessment</div>
+                            {% with risk=task.get_risk_level_display %}
+                                {% if task.risk_level == 'none' %}<span class="badge badge-gray">{{ risk }}</span>
+                                {% elif task.risk_level == 'low' %}<span class="badge badge-primary">{{ risk }}</span>
+                                {% elif task.risk_level == 'medium' %}<span class="badge badge-warning">{{ risk }}</span>
+                                {% else %}<span class="badge badge-danger">{{ risk }}</span>{% endif %}
+                            {% endwith %}
+                        </div>
+
+                        <div>
+                            <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--gray-500); margin-bottom: 0.5rem;">Due Date</div>
+                            <div style="font-size: 0.875rem; color: var(--gray-600);">
+                                {% if task.due_date %}{{ task.due_date|date:"M d, Y H:i" }}{% else %}<span style="color: var(--gray-400);">Not set</span>{% endif %}
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--gray-500); margin-bottom: 0.5rem;">Time Tracking</div>
+                            <div style="font-size: 0.875rem; color: var(--gray-600);">
+                                Est: {{ task.estimated_hours|default:"—" }}h / Actual: {{ task.actual_hours|default:"0" }}h
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dependencies -->
+                    {% if task.blocked_by.count > 0 or task.blocking.count > 0 %}
+                    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);">
+                        <div style="font-size: 0.875rem; font-weight: 600; color: var(--gray-700); margin-bottom: 1rem;">
+                            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="vertical-align: text-bottom; margin-right: 0.5rem; color: var(--gray-400);">
+                                <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Dependencies
+                        </div>
+
+                        {% if task.blocked_by.count > 0 %}
+                        <div style="margin-bottom: 1rem;">
+                            <div style="font-size: 0.75rem; color: var(--gray-500); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.25rem;">
+                                <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="color: var(--warning-500);">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                </svg>
+                                Blocked by ({{ task.blocked_by.count }})
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                {% for dep in task.blocked_by.all %}
+                                <a href="{% url 'tasks:task_detail' dep.id %}" class="badge badge-gray" style="text-decoration: none;">{{ dep.title }}</a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if task.blocking.count > 0 %}
+                        <div>
+                            <div style="font-size: 0.75rem; color: var(--gray-500); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.25rem;">
+                                <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="color: var(--info-500);">
+                                    <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Blocking ({{ task.blocking.count }})
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                {% for dep in task.blocking.all %}
+                                <a href="{% url 'tasks:task_detail' dep.id %}" class="badge badge-warning" style="text-decoration: none;">{{ dep.title }}</a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Tags -->
+                    {% if task.tags.all %}
+                    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);">
+                        <div style="font-size: 0.875rem; font-weight: 600; color: var(--gray-700); margin-bottom: 0.75rem;">Tags</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                            {% for tag in task.tags.all %}
+                            <span class="badge" style="background: {{ tag.color }}; color: white;">{{ tag.name }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Work Logs -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Work Logs</h3>
+                    <button class="btn btn-sm btn-primary" onclick="TaskDetail.showLogTimeModal()">
+                        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="margin-right: 0.25rem;">
+                            <path d="M10 5v10M5 10h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        Add Entry
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="workLogsList">
+                        <div class="skeleton" style="height: 60px; margin-bottom: 0.75rem;"></div>
+                        <div class="skeleton" style="height: 60px; margin-bottom: 0.75rem;"></div>
+                        <div class="skeleton" style="height: 60px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <!-- Assignee Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title" style="font-size: 1rem;">Assignee</h3>
+                </div>
+                <div class="card-body">
+                    {% if task.assignee %}
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--primary-400), var(--primary-600)); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 1.25rem;">
+                            {{ task.assignee.username|first|upper }}
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 600;">{{ task.assignee.get_full_name|default:task.assignee.username }}</div>
+                            <div style="font-size: 0.75rem; color: var(--gray-500);">@{{ task.assignee.username }}</div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div style="text-align: center; color: var(--gray-500); font-size: 0.875rem;">
+                        No assignee
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title" style="font-size: 1rem;">Quick Stats</h3>
+                </div>
+                <div class="card-body">
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem; color: var(--gray-600);">Can Start</span>
+                            <span class="badge {% if task.can_start %}badge-success{% else %}badge-warning{% endif %}">
+                                {% if task.can_start %}Yes{% else %}Blocked{% endif %}
+                            </span>
+                        </div>
+
+                        {% if task.completed_at %}
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem; color: var(--gray-600);">Completed</span>
+                            <span style="font-size: 0.75rem; color: var(--gray-500);">{{ task.completed_at|date:"M d, Y" }}</span>
+                        </div>
+                        {% endif %}
+
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem; color: var(--gray-600);">Total Logs</span>
+                            <span style="font-weight: 600;" id="totalLogsCount">—</span>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem; color: var(--gray-600);">Total Hours</span>
+                            <span style="font-weight: 600;" id="totalHoursCount">—</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress -->
+            {% if task.estimated_hours %}
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title" style="font-size: 1rem;">Progress</h3>
+                </div>
+                <div class="card-body">
+                    {% with progress=task.actual_hours|default:0|floatformat:1 %}
+                        {% widthratio progress task.estimated_hours 100 as percentage %}
+                        <div style="margin-bottom: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 0.25rem;">
+                                <span style="color: var(--gray-600);">{{ progress }}h / {{ task.estimated_hours }}h</span>
+                                <span style="font-weight: 600;">{% if percentage > 100 %}100{% else %}{{ percentage }}{% endif %}%</span>
+                            </div>
+                            <div style="height: 8px; background: var(--gray-200); border-radius: var(--radius-full); overflow: hidden;">
+                                <div style="height: 100%; background: {% if percentage >= 100 %}var(--success-500){% elif percentage >= 75 %}var(--primary-500){% elif percentage >= 50 %}var(--warning-500){% else %}var(--danger-500){% endif %}; width: {% if percentage > 100 %}100{% else %}{{ percentage }}{% endif %}%; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                    {% endwith %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const TaskDetail = {
+    taskId: {{ task.id }},
+
+    async init() {
+        await this.loadWorkLogs();
+    },
+
+    async loadWorkLogs() {
+        try {
+            const response = await API.workLogs.list({ task: this.taskId, limit: 50 });
+            this.renderWorkLogs(response.work_logs);
+        } catch (error) {
+            console.error('Error loading work logs:', error);
+        }
+    },
+
+    renderWorkLogs(workLogs) {
+        const container = document.getElementById('workLogsList');
+
+        if (workLogs.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--gray-500);">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="color: var(--gray-300); margin-bottom: 1rem;">
+                        <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <p>No work logs yet</p>
+                    <button class="btn btn-sm btn-primary" style="margin-top: 1rem;" onclick="TaskDetail.showLogTimeModal()">
+                        Log Time
+                    </button>
+                </div>
+            `;
+            document.getElementById('totalLogsCount').textContent = '0';
+            document.getElementById('totalHoursCount').textContent = '0h';
+            return;
+        }
+
+        let totalHours = 0;
+
+        container.innerHTML = workLogs.map(log => {
+            totalHours += parseFloat(log.hours);
+
+            return `
+                <div class="card" style="padding: 1rem; margin-bottom: 0.75rem; border: 1px solid var(--gray-200);">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 32px; height: 32px; background: var(--primary-50); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; color: var(--primary-500); font-weight: 600; font-size: 0.75rem;">
+                                ${(log.user.username || 'U')[0].toUpperCase()}
+                            </div>
+                            <div>
+                                <div style="font-weight: 500;">${log.user.username || 'Unknown'}</div>
+                                <div style="font-size: 0.75rem; color: var(--gray-500);">${Format.dateTime(log.logged_at)}</div>
+                            </div>
+                        </div>
+                        <div class="badge badge-primary" style="font-size: 0.875rem;">${parseFloat(log.hours).toFixed(1)}h</div>
+                    </div>
+                    ${log.notes ? `<div style="font-size: 0.875rem; color: var(--gray-600); line-height: 1.5;">${log.notes}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('totalLogsCount').textContent = workLogs.length;
+        document.getElementById('totalHoursCount').textContent = totalHours.toFixed(1) + 'h';
+    },
+
+    showLogTimeModal() {
+        const formHtml = `
+            <form id="logTimeForm" onsubmit="event.preventDefault(); TaskDetail.submitWorkLog();">
+                <div class="form-group">
+                    <label class="form-label">Hours Worked *</label>
+                    <input type="number" name="hours" class="form-input" step="0.25" min="0.25" required placeholder="e.g., 2.5" value="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" class="form-textarea" rows="3" placeholder="What did you work on?"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="Modal.hide()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Log Time</button>
+                </div>
+            </form>
+        `;
+
+        Modal.show('Log Work Time', formHtml);
+    },
+
+    async submitWorkLog() {
+        const form = document.getElementById('logTimeForm');
+        const formData = new FormData(form);
+
+        const workLogData = {
+            task: this.taskId,
+            user: {{ request.user.id }},
+            hours: parseFloat(formData.get('hours')),
+            notes: formData.get('notes') || '',
+        };
+
+        try {
+            await API.workLogs.create(workLogData);
+            Modal.hide();
+            Toast.success('Work time logged');
+            await this.loadWorkLogs();
+            // Refresh page to show updated actual hours
+            setTimeout(() => window.location.reload(), 1000);
+        } catch (error) {
+            Toast.error('Failed to log time: ' + error.message);
+        }
+    },
+
+    async quickStatus(status) {
+        try {
+            await API.tasks.update(this.taskId, { status });
+            Toast.success(`Status updated to "${status.replace('_', ' ')}"`);
+            setTimeout(() => window.location.reload(), 500);
+        } catch (error) {
+            Toast.error('Failed to update status');
+        }
+    },
+
+    async recalculateAI() {
+        const btn = event.target.closest('button');
+        btn.classList.add('loading');
+        btn.disabled = true;
+
+        try {
+            await API.ai.recalculate();
+            Toast.success('AI scores recalculated');
+            setTimeout(() => window.location.reload(), 500);
+        } catch (error) {
+            Toast.error('Failed to recalculate');
+        } finally {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+        }
+    }
+};
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    TaskDetail.init();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,318 @@
+{% extends 'shop/base.html' %}
+{% load static %}
+
+{% block title %}My Dashboard - AI E-Commerce{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="container">
+        <h1><span class="ai-icon">👤</span> Welcome, {{ request.user.username }}!</h1>
+        <p class="subtitle">Your personalized shopping dashboard</p>
+    </div>
+</div>
+
+<!-- Recent Activity Section -->
+<section class="dashboard-section">
+    <div class="container">
+        <div class="dashboard-grid">
+            <!-- Recent Views -->
+            <div class="dashboard-card">
+                <h2 class="card-title">
+                    <span class="activity-icon">👁</span> Recently Viewed
+                </h2>
+                {% if recent_views %}
+                <div class="activity-list">
+                    {% for view in recent_views %}
+                    <div class="activity-item">
+                        <div class="activity-details">
+                            <a href="{% url 'shop:product_detail' view.product.id %}" class="activity-product">{{ view.product.name }}</a>
+                            <span class="activity-meta">${{ view.product.price }} - {{ view.product.category.name }}</span>
+                        </div>
+                        <span class="activity-time">{{ view.timestamp|timesince }} ago</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="empty-state">No recent views</p>
+                {% endif %}
+            </div>
+
+            <!-- Recent Purchases -->
+            <div class="dashboard-card">
+                <h2 class="card-title">
+                    <span class="activity-icon">🛒</span> Recent Purchases
+                </h2>
+                {% if recent_purchases %}
+                <div class="activity-list">
+                    {% for purchase in recent_purchases %}
+                    <div class="activity-item">
+                        <div class="activity-details">
+                            <a href="{% url 'shop:product_detail' purchase.product.id %}" class="activity-product">{{ purchase.product.name }}</a>
+                            <span class="activity-meta">${{ purchase.product.price }} - {{ purchase.product.category.name }}</span>
+                        </div>
+                        <span class="activity-time">{{ purchase.timestamp|timesince }} ago</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="empty-state">No purchases yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Personalized Recommendations -->
+{% if recommendations %}
+<section class="recommendations-section">
+    <div class="container">
+        <h2 class="section-title">
+            <span class="ai-badge">AI</span> Recommended for You
+        </h2>
+        <p class="section-subtitle">Based on your browsing and purchase history</p>
+        <div class="products-grid">
+            {% for product in recommendations %}
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{% static 'shop/images/placeholder.jpg' %}" alt="{{ product.name }}">
+                    <span class="ai-indicator">AI Pick</span>
+                </div>
+                <div class="product-info">
+                    <span class="product-category">{{ product.category.name }}</span>
+                    <h3 class="product-name">
+                        <a href="{% url 'shop:product_detail' product.id %}">{{ product.name }}</a>
+                    </h3>
+                    <p class="product-description">{{ product.description|truncatewords:15 }}</p>
+                    <div class="product-footer">
+                        <span class="product-price">${{ product.price }}</span>
+                        <button class="btn-add-cart" onclick="addToCart({{ product.id }})">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Purchase-Based Recommendations -->
+{% if purchase_based_recommendations %}
+<section class="recommendations-section">
+    <div class="container">
+        <h2 class="section-title">
+            <span class="ai-badge">Frequently Bought</span>
+        </h2>
+        <p class="section-subtitle">Customers who purchased your items also bought</p>
+        <div class="products-grid">
+            {% for product, score in purchase_based_recommendations %}
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{% static 'shop/images/placeholder.jpg' %}" alt="{{ product.name }}">
+                    {% if score > 0 %}
+                    <span class="match-badge">{{ score }} buyers</span>
+                    {% endif %}
+                </div>
+                <div class="product-info">
+                    <span class="product-category">{{ product.category.name }}</span>
+                    <h3 class="product-name">
+                        <a href="{% url 'shop:product_detail' product.id %}">{{ product.name }}</a>
+                    </h3>
+                    <p class="product-description">{{ product.description|truncatewords:15 }}</p>
+                    <div class="product-footer">
+                        <span class="product-price">${{ product.price }}</span>
+                        <button class="btn-add-cart" onclick="addToCart({{ product.id }})">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Empty State -->
+{% if not recent_views and not recent_purchases and not recommendations %}
+<section class="empty-state-large">
+    <div class="container">
+        <div class="empty-content">
+            <span class="empty-icon">🛍️</span>
+            <h2>Welcome to Your Dashboard</h2>
+            <p>Start browsing products to see personalized recommendations here!</p>
+            <a href="{% url 'shop:home' %}" class="btn-primary">Start Shopping</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.ai-icon {
+    font-size: 1.5rem;
+}
+
+.subtitle {
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+.dashboard-section {
+    margin-bottom: 2rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+    color: #2d3748;
+}
+
+.activity-icon {
+    font-size: 1.5rem;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.activity-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f7fafc;
+    border-radius: 8px;
+}
+
+.activity-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.activity-product {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.activity-product:hover {
+    text-decoration: underline;
+}
+
+.activity-meta {
+    font-size: 0.85rem;
+    color: #718096;
+}
+
+.activity-time {
+    color: #a0aec0;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.empty-state-large {
+    padding: 4rem 0;
+}
+
+.empty-content {
+    text-align: center;
+    background: white;
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.empty-content h2 {
+    color: #2d3748;
+    margin-bottom: 1rem;
+}
+
+.empty-content p {
+    color: #718096;
+    margin-bottom: 2rem;
+}
+
+.btn-primary {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #a0aec0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .activity-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .activity-time {
+        align-self: flex-end;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addToCart(productId) {
+    alert('Product ' + productId + ' added to cart!');
+}
+</script>
+{% endblock %}

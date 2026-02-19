@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact Us - AgriSense{% endblock %}
+
+{% block content %}
+<section class="contact-section">
+    <div class="container">
+        <div class="page-header">
+            <h1>📬 Contact Us</h1>
+            <p>Have questions or feedback? We'd love to hear from you!</p>
+        </div>
+
+        <div class="contact-container">
+            <div class="contact-form-card">
+                <h2>Send Us a Message</h2>
+                <form id="contactForm" method="POST" action="{% url 'contact' %}">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label for="name">
+                            Your Name <span class="required">*</span>
+                        </label>
+                        <input type="text" id="name" name="name" required
+                               placeholder="Enter your name"
+                               minlength="2" maxlength="100"
+                               value="{{ request.POST.name|default:'' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">
+                            Email Address <span class="required">*</span>
+                        </label>
+                        <input type="email" id="email" name="email" required
+                               placeholder="Enter your email address"
+                               value="{{ request.POST.email|default:'' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">
+                            Message <span class="required">*</span>
+                        </label>
+                        <textarea id="message" name="message" required
+                                  rows="6"
+                                  minlength="10"
+                                  placeholder="Tell us what's on your mind...">{{ request.POST.message|default:'' }}</textarea>
+                        <span class="input-help">Minimum 10 characters</span>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-large">
+                            <span>📤</span> Send Message
+                        </button>
+                        <button type="reset" class="btn btn-secondary">
+                            <span>🔄</span> Reset
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="contact-info-sidebar">
+                <div class="info-card">
+                    <h3>🌱 About AgriSense</h3>
+                    <p>AgriSense is an AI-powered platform designed to help farmers make data-driven decisions for better crop yields and sustainable farming practices.</p>
+                </div>
+
+                <div class="info-card">
+                    <h3>📞 Get in Touch</h3>
+                    <div class="contact-details">
+                        <div class="contact-item">
+                            <span class="contact-icon">📧</span>
+                            <div>
+                                <strong>Email</strong>
+                                <p>support@agrisense.com</p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-icon">🕐</span>
+                            <div>
+                                <strong>Response Time</strong>
+                                <p>Usually within 24-48 hours</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3>❓ Common Topics</h3>
+                    <ul>
+                        <li>How to interpret soil analysis results</li>
+                        <li>Questions about fertilizer recommendations</li>
+                        <li>Technical support and bug reports</li>
+                        <li>Feature requests and suggestions</li>
+                        <li>Partnership inquiries</li>
+                    </ul>
+                </div>
+
+                <div class="info-card highlight">
+                    <h3>💡 Did You Know?</h3>
+                    <p>We also provide agricultural consulting services. Contact us to learn more about personalized farming advice!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<span>⏳</span> Sending...';
+    submitBtn.disabled = true;
+});
+</script>
+{% endblock %}

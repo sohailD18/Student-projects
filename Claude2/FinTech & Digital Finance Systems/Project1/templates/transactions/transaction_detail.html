@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% load fraud_filters %}
+
+{% block title %}{{ transaction.transaction_id }} - Fraud Detection System{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <a href="/transactions/" class="btn btn-outline" style="display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12,19 5,12 12,5"/>
+        </svg>
+        Back to Transactions
+    </a>
+    <h1 class="page-title">Transaction Details</h1>
+    <p class="page-subtitle">{{ transaction.transaction_id }}</p>
+</div>
+
+<!-- Fraud Alert -->
+{% if transaction.is_fraud %}
+<div class="alert alert-danger">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <div>
+        <strong>FRAUD DETECTED</strong> - This transaction has been flagged as fraudulent.
+        {% if transaction.fraud_reason %}
+        <br><small>Reason: {{ transaction.fraud_reason }}</small>
+        {% endif %}
+    </div>
+</div>
+{% elif transaction.risk_score > 0.5 %}
+<div class="alert alert-warning">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <div>
+        <strong>HIGH RISK</strong> - This transaction has an elevated risk score of {{ transaction.risk_score|floatformat:3 }}.
+    </div>
+</div>
+{% else %}
+<div class="alert alert-success">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22,4 12,14.01 9,11.01"/>
+    </svg>
+    <div>
+        <strong>LEGITIMATE</strong> - This transaction appears to be legitimate with low risk.
+    </div>
+</div>
+{% endif %}
+
+<div class="charts-container">
+    <!-- Transaction Details -->
+    <div class="stat-card">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1.5rem;">Transaction Information</h3>
+
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+            <div>
+                <div class="form-label">Transaction ID</div>
+                <div style="font-size: 1.125rem; font-weight: 600;">{{ transaction.transaction_id }}</div>
+            </div>
+            <div>
+                <div class="form-label">Date & Time</div>
+                <div>{{ transaction.timestamp|date:"F d, Y H:i:s" }}</div>
+            </div>
+            <div>
+                <div class="form-label">Amount</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-light);">
+                    ${{ transaction.amount }}
+                </div>
+            </div>
+            <div>
+                <div class="form-label">Transaction Type</div>
+                <div>{{ transaction.transaction_type|title }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Analysis -->
+    <div class="stat-card">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1.5rem;">Risk Analysis</h3>
+
+        <div style="margin-bottom: 1.5rem;">
+            <div class="form-label">Risk Score</div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="font-size: 2.5rem; font-weight: 700;">
+                    <span style="color: {% if transaction.risk_score >= 0.7 %}var(--danger-light){% elif transaction.risk_score >= 0.4 %}var(--warning-light){% else %}var(--secondary-light){% endif %};">
+                        {{ transaction.risk_score|floatformat:3 }}
+                    </span>
+                </div>
+                <div style="flex-grow: 1;">
+                    <div style="height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                        <div style="width: {{ transaction.risk_score|multiply:100 }}%; height: 100%; background: {% if transaction.risk_score >= 0.7 %}var(--danger-light){% elif transaction.risk_score >= 0.4 %}var(--warning-light){% else %}var(--secondary-light){% endif %};"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+            <div>
+                <div class="form-label">Risk Level</div>
+                <span class="badge {% if transaction.risk_score >= 0.7 %}badge-danger{% elif transaction.risk_score >= 0.4 %}badge-warning{% else %}badge-success{% endif %}">
+                    {{ transaction.get_risk_level }}
+                </span>
+            </div>
+            <div>
+                <div class="form-label">Status</div>
+                {% if transaction.is_fraud %}
+                    <span class="badge badge-danger">Fraud</span>
+                {% elif transaction.is_flagged %}
+                    <span class="badge badge-warning">Flagged</span>
+                {% else %}
+                    <span class="badge badge-success">Clean</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="charts-container">
+    <!-- Merchant Details -->
+    <div class="stat-card">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1.5rem;">Merchant Information</h3>
+
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+            <div>
+                <div class="form-label">Merchant</div>
+                <div>{{ transaction.merchant }}</div>
+            </div>
+            <div>
+                <div class="form-label">Category</div>
+                <div>{{ transaction.merchant_category|title }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Details -->
+    <div class="stat-card">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1.5rem;">Location Information</h3>
+
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+            <div>
+                <div class="form-label">Location</div>
+                <div>{{ transaction.location }}</div>
+            </div>
+            <div>
+                <div class="form-label">Country</div>
+                <div>{{ transaction.country }}</div>
+            </div>
+            <div>
+                <div class="form-label">IP Address</div>
+                <div style="font-family: monospace;">{{ transaction.ip_address|default:"N/A" }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Account Information -->
+<div class="stat-card" style="margin-bottom: 2rem;">
+    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1.5rem;">Account Information</h3>
+
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+        <div>
+            <div class="form-label">Account ID</div>
+            <div style="font-family: monospace;">{{ transaction.account_id }}</div>
+        </div>
+        <div>
+            <div class="form-label">Card Number</div>
+            <div>**** **** **** {{ transaction.card_number_last4 }}</div>
+        </div>
+        <div>
+            <div class="form-label">Device ID</div>
+            <div style="font-family: monospace;">{{ transaction.device_id|default:"N/A" }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Related Alerts -->
+{% if alerts %}
+<div class="stat-card">
+    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Related Alerts</h3>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Alert Type</th>
+                    <th>Status</th>
+                    <th>Risk Score</th>
+                    <th>Description</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alert in alerts %}
+                <tr>
+                    <td>{{ alert.alert_type|title }}</td>
+                    <td>
+                        <span class="badge {% if alert.status == 'new' %}badge-danger{% elif alert.status == 'investigating' %}badge-warning{% else %}badge-success{% endif %}">
+                            {{ alert.status|title }}
+                        </span>
+                    </td>
+                    <td>{{ alert.risk_score|floatformat:3 }}</td>
+                    <td>{{ alert.description }}</td>
+                    <td>{{ alert.created_at|date:"M d, H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

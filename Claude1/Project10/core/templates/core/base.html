@@ -1,0 +1,435 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SkillSwap - Exchange Knowledge{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --accent-color: #ec4899;
+            --dark-bg: #1e1b4b;
+            --light-bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+        }
+
+        /* Navbar */
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .navbar-brand i {
+            color: #fbbf24;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, var(--primary-color) 50%, var(--secondary-color) 100%);
+            color: white;
+            padding: 100px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"><path fill="rgba(255,255,255,0.05)" d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25"></path><path fill="rgba(255,255,255,0.05)" d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5"></path><path fill="rgba(255,255,255,0.05)" d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z"></path></svg>') no-repeat bottom;
+            background-size: cover;
+        }
+
+        .hero-section h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .hero-section .lead {
+            font-size: 1.5rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .hero-section .btn-hero {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .hero-section .btn-hero:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        /* Cards */
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        /* Badges */
+        .badge-points {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .badge-icon {
+            font-size: 1.5rem;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark-bg);
+            color: white;
+            padding: 40px 0;
+            margin-top: 60px;
+        }
+
+        /* Messages */
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-section .lead {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'core:home' %}">
+                <i class="bi bi-lightning-charge-fill"></i> SkillSwap
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:home' %}">
+                            <i class="bi bi-house-door"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:skill_list' %}">
+                            <i class="bi bi-book"></i> Browse Skills
+                        </a>
+                    </li>
+                    {% if user.is_authenticated %}
+                        {% if user.is_staff %}
+                        <!-- Admin Navigation -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'users:admin_dashboard' %}">
+                                <i class="bi bi-speedometer2"></i> Admin Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:admin_analytics' %}">
+                                <i class="bi bi-graph-up-arrow"></i> Analytics
+                            </a>
+                        </li>
+                        {% elif user.skills_teaching.exists %}
+                        <!-- Teacher Navigation -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'users:teacher_dashboard' %}">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:teacher_sessions' %}">
+                                <i class="bi bi-calendar-check"></i> My Sessions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-light btn-sm ms-2" href="{% url 'core:create_skill' %}">
+                                <i class="bi bi-plus-circle"></i> Teach a Skill
+                            </a>
+                        </li>
+                        {% else %}
+                        <!-- Student Navigation -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'users:student_dashboard' %}">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:student_sessions' %}">
+                                <i class="bi bi-calendar-check"></i> My Sessions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-success btn-sm ms-2" href="{% url 'core:create_skill' %}">
+                                <i class="bi bi-plus-circle"></i> Start Teaching
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> {{ user.username }}
+                            <span class="badge-points ms-1">
+                                <i class="bi bi-star-fill"></i> {{ user.profile.points_earned }}
+                            </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            {% if user.is_staff %}
+                            <li><a class="dropdown-item" href="{% url 'users:admin_dashboard' %}"><i class="bi bi-shield-fill-check"></i> Admin Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:admin_analytics' %}"><i class="bi bi-graph-up-arrow"></i> Analytics</a></li>
+                            <li><a class="dropdown-item" href="{% url 'admin:index' %}" target="_blank"><i class="bi bi-gear"></i> Django Admin</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% elif user.skills_teaching.exists %}
+                            <li><a class="dropdown-item" href="{% url 'users:teacher_dashboard' %}"><i class="bi bi-mortarboard-fill"></i> Teacher Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:teacher_sessions' %}"><i class="bi bi-calendar-check"></i> My Sessions</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:create_skill' %}"><i class="bi bi-plus-circle"></i> Create Skill</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% else %}
+                            <li><a class="dropdown-item" href="{% url 'users:student_dashboard' %}"><i class="bi bi-book"></i> Student Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:student_sessions' %}"><i class="bi bi-calendar-check"></i> My Sessions</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:create_skill' %}"><i class="bi bi-plus-circle"></i> Start Teaching</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{% url 'users:profile_update' %}"><i class="bi bi-person-gear"></i> Edit Profile</a></li>
+                            <li>
+                                <form method="post" action="{% url 'users:logout' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Logout</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'users:register' %}">
+                            <i class="bi bi-person-plus"></i> Register
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-light btn-sm ms-2" href="{% url 'users:login' %}">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section (only on home page) -->
+    {% block hero %}{% endblock %}
+
+    <!-- Main Content -->
+    <main class="{% block main_class %}container my-5{% endblock %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container text-center">
+            <p class="mb-2">
+                <i class="bi bi-lightning-charge-fill"></i> SkillSwap - Exchange Knowledge, Learn Together
+            </p>
+            <p class="mb-0 text-white-50">
+                <small>&copy; 2024 SkillSwap. All rights reserved.</small>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Django Messages for SweetAlert2 -->
+    {% if messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            {% for message in messages %}
+                {% if 'error' in message.tags %}
+                Toast.fire({
+                    icon: 'error',
+                    title: '{{ message|escapejs }}',
+                    timer: 5000
+                });
+                {% elif 'warning' in message.tags %}
+                Toast.fire({
+                    icon: 'warning',
+                    title: '{{ message|escapejs }}'
+                });
+                {% elif 'success' in message.tags %}
+                Toast.fire({
+                    icon: 'success',
+                    title: '{{ message|escapejs }}'
+                });
+                {% else %}
+                Toast.fire({
+                    icon: 'info',
+                    title: '{{ message|escapejs }}'
+                });
+                {% endif %}
+            {% endfor %}
+        });
+    </script>
+    {% endif %}
+
+    <!-- Global SweetAlert2 Helper Functions -->
+    <script>
+        // Show success toast
+        function showSuccess(message) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: message,
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                background: '#d4edda',
+                color: '#155724',
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+        }
+
+        // Show error toast
+        function showError(message) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'error',
+                title: message,
+                showConfirmButton: true,
+                background: '#f8d7da',
+                color: '#721c24'
+            });
+        }
+
+        // Show warning toast
+        function showWarning(message) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'warning',
+                title: message,
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                background: '#fff3cd',
+                color: '#856404',
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+        }
+
+        // Show info toast
+        function showInfo(message) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'info',
+                title: message,
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                background: '#d1ecf1',
+                color: '#0c5460',
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+        }
+
+        // Show modal (for confirmations, etc.)
+        function showModal(options) {
+            const defaultOptions = {
+                confirmButtonColor: '#6366f1',
+                cancelButtonColor: '#6c757d'
+            };
+            return Swal.fire({...defaultOptions, ...options});
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

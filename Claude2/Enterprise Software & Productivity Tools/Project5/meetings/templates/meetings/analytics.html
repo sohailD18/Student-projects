@@ -1,0 +1,189 @@
+{% extends 'meetings/base.html' %}
+
+{% block title %}Analytics - Meeting Analyzer{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-graph-up text-primary"></i> Detailed Analytics
+        </h1>
+        <p class="text-muted">In-depth analysis of your meeting patterns and productivity</p>
+    </div>
+</div>
+
+<!-- Overview Stats -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-content">
+                <h3 class="stat-value">{{ meetings.count }}</h3>
+                <p class="stat-label">Total Meetings</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card stat-card-info">
+            <div class="stat-content">
+                <h3 class="stat-value">{{ total_duration }} min</h3>
+                <p class="stat-label">Total Meeting Time</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-content">
+                <h3 class="stat-value">{{ avg_duration }} min</h3>
+                <p class="stat-label">Avg Duration</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-content">
+                <h3 class="stat-value">{{ positive_meetings }}/{{ meetings.count }}</h3>
+                <p class="stat-label">Positive Meetings</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sentiment Breakdown -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-emoji-smile"></i> Sentiment Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <div class="sentiment-box sentiment-positive">
+                            <i class="bi bi-emoji-smile" style="font-size: 2rem;"></i>
+                            <h3>{{ positive_meetings }}</h3>
+                            <p class="mb-0">Positive</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="sentiment-box sentiment-neutral">
+                            <i class="bi bi-emoji-neutral" style="font-size: 2rem;"></i>
+                            <h3>{{ neutral_meetings }}</h3>
+                            <p class="mb-0">Neutral</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="sentiment-box sentiment-negative">
+                            <i class="bi bi-emoji-frown" style="font-size: 2rem;"></i>
+                            <h3>{{ negative_meetings }}</h3>
+                            <p class="mb-0">Negative</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Productive Meetings -->
+{% if top_productive %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-trophy"></i> Top Productive Meetings
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Meeting Title</th>
+                                <th>Date</th>
+                                <th>Productivity Score</th>
+                                <th>Action Items</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for analysis in top_productive %}
+                            <tr>
+                                <td><span class="badge bg-primary">#{{ forloop.counter }}</span></td>
+                                <td><strong>{{ analysis.meeting.title }}</strong></td>
+                                <td>{{ analysis.meeting.date|date:"M d, Y" }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1 me-2" style="height: 20px;">
+                                            <div class="progress-bar bg-success"
+                                                 style="width: {{ analysis.productivity_score }}%">
+                                                {{ analysis.productivity_score }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ analysis.action_items_extracted }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clock-history"></i> Recent Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_meetings %}
+                    <div class="timeline">
+                        {% for meeting in recent_meetings %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">
+                                    <a href="{% url 'meetings:meeting_detail' meeting.pk %}">
+                                        {{ meeting.title }}
+                                    </a>
+                                </h6>
+                                <p class="text-muted small mb-2">
+                                    {{ meeting.created_at|timesince }} ago
+                                    | {{ meeting.date|date:"M d, Y" }}
+                                </p>
+                                {% if meeting.analysis_result %}
+                                <div>
+                                    {% if meeting.analysis_result.sentiment == 'Positive' %}
+                                        <span class="badge bg-success">{{ meeting.analysis_result.sentiment }}</span>
+                                    {% elif meeting.analysis_result.sentiment == 'Negative' %}
+                                        <span class="badge bg-danger">{{ meeting.analysis_result.sentiment }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ meeting.analysis_result.sentiment }}</span>
+                                    {% endif %}
+                                    <span class="badge bg-info">
+                                        Score: {{ meeting.analysis_result.productivity_score }}
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No recent activity to display.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

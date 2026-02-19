@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}About Us - GovExamPortal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item active">About</li>
+                </ol>
+            </nav>
+
+            <h1 class="mb-4">
+                <i class="bi bi-info-circle-fill"></i> About GovExamPortal
+            </h1>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title">Our Mission</h3>
+                    <p class="card-text">
+                        GovExamPortal is a comprehensive platform designed to support government job aspirants
+                        by providing accurate, up-to-date information about various government examinations
+                        across India.
+                    </p>
+                    <p class="card-text">
+                        We aim to simplify the exam discovery process through smart recommendations based on
+                        individual eligibility, qualifications, and preferences.
+                    </p>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <i class="bi bi-database-fill text-primary" style="font-size: 3rem;"></i>
+                            <h5 class="card-title mt-3">Comprehensive Database</h5>
+                            <p class="card-text">
+                                Access information on UPSC, SSC, Banking, Railways, State PSC, and Defence exams
+                                in one place.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <i class="bi bi-robot text-success" style="font-size: 3rem;"></i>
+                            <h5 class="card-title mt-3">Smart Recommendations</h5>
+                            <p class="card-text">
+                                Our AI-powered system analyzes your profile to recommend exams that match your
+                                eligibility and preferences.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <i class="bi bi-bell-fill text-warning" style="font-size: 3rem;"></i>
+                            <h5 class="card-title mt-3">Timely Updates</h5>
+                            <p class="card-text">
+                                Stay informed about application deadlines, exam dates, and important notifications
+                                for your targeted exams.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title">Features</h3>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <strong>Advanced Search:</strong> Filter exams by type, qualification, and age limit
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <strong>Eligibility Checker:</strong> Automatically verify if you meet the criteria
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <strong>Personal Dashboard:</strong> Track your recommended exams and deadlines
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <strong>Detailed Syllabus:</strong> Access complete syllabus and exam patterns
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <strong>Mobile Responsive:</strong> Access on any device, anywhere
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h4 class="card-title">Get Started</h4>
+                    <p class="card-text mb-3">
+                        Ready to find your next government examination opportunity?
+                    </p>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-speedometer2"></i> Go to Dashboard
+                    </a>
+                    {% else %}
+                    <a href="{% url 'register' %}" class="btn btn-primary btn-lg me-2">
+                        <i class="bi bi-person-plus"></i> Create Account
+                    </a>
+                    <a href="{% url 'exam_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-search"></i> Browse Exams
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

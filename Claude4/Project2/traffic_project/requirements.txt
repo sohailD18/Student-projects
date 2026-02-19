@@ -1,0 +1,14 @@
+# Traffic Prediction System - Python Dependencies
+# BCA Final Year Project - AI-Based Traffic Congestion Prediction
+
+# Django Web Framework
+Django>=4.2.0,<5.0.0
+
+# Machine Learning Libraries
+scikit-learn>=1.3.0
+pandas>=2.0.0
+numpy>=1.24.0
+joblib>=1.3.0
+
+# (Optional) Additional utilities
+python-decouple>=3.8  # For environment variable management

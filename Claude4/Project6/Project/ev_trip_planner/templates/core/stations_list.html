@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}Charging Stations - EV Trip Planner{% endblock %}
+
+{% block content %}
+<section class="stations-section">
+    <div class="container">
+        <div class="section-header">
+            <h1>Charging Stations</h1>
+            <div class="header-actions">
+                <a href="{% url 'core:stations_map' %}" class="btn btn-secondary">Map View</a>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-bar">
+            <form method="get" class="filters-form">
+                <div class="filter-group">
+                    <input type="text" name="search_query" placeholder="Search location..." class="form-control" value="{{ form.search_query.value|default:'' }}">
+                </div>
+
+                <div class="filter-group">
+                    <select name="connector_type" class="form-control">
+                        <option value="">All Connectors</option>
+                        {% for value, label in form.fields.connector_type.choices %}
+                            {% if value %}
+                                <option value="{{ value }}" {% if form.connector_type.value == value %}selected{% endif %}>{{ label }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <select name="fast_charging" class="form-control">
+                        <option value="">All Stations</option>
+                        <option value="fast" {% if form.fast_charging.value == 'fast' %}selected{% endif %}>Fast Charging Only</option>
+                        <option value="available" {% if form.fast_charging.value == 'available' %}selected{% endif %}>Available Now</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <input type="number" name="max_price" placeholder="Max price/kWh" class="form-control" step="0.01" value="{{ form.max_price.value|default:'' }}">
+                </div>
+
+                <button type="submit" class="btn btn-secondary">Filter</button>
+                <a href="{% url 'core:stations_list' %}" class="btn btn-link">Clear</a>
+            </form>
+        </div>
+
+        <!-- Station List -->
+        <div class="stations-list-page">
+            <h3>{{ stations.count }} Stations Found</h3>
+
+            <div class="stations-grid-list">
+                {% for station in stations %}
+                    <div class="station-card-large">
+                        <div class="station-card-header">
+                            <div>
+                                <h3>{{ station.name }}</h3>
+                                <p class="station-location-text">📍 {{ station.location }}</p>
+                            </div>
+                            <div class="station-badges">
+                                {% if station.fast_charging %}
+                                    <span class="badge badge-fast">Fast Charging</span>
+                                {% endif %}
+                                {% if not station.is_available %}
+                                    <span class="badge badge-unavailable">Unavailable</span>
+                                {% else %}
+                                    <span class="badge badge-success">Available</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="station-card-body">
+                            <div class="station-info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">Connector Type</span>
+                                    <span class="info-value">{{ station.get_connector_type_display }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Power Output</span>
+                                    <span class="info-value">{{ station.power_kw }} kW</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Price</span>
+                                    <span class="info-value">${{ station.price_per_kwh }}/kWh</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Available Ports</span>
+                                    <span class="info-value">{{ station.available_ports }}/{{ station.total_ports }}</span>
+                                </div>
+                            </div>
+
+                            <p class="station-address">{{ station.address }}</p>
+
+                            {% if station.amenities %}
+                                <div class="station-amenities">
+                                    <strong>Amenities:</strong>
+                                    <span>{{ station.amenities }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="station-card-footer">
+                            <a href="{% url 'core:station_detail' station.pk %}" class="btn btn-primary">View Details</a>
+                            <a href="https://www.google.com/maps/dir/?api=1&destination={{ station.latitude }},{{ station.longitude }}"
+                               target="_blank"
+                               class="btn btn-secondary">Get Directions</a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="empty-state-large">
+                        <div class="empty-icon">🔌</div>
+                        <h2>No Charging Stations Found</h2>
+                        <p>Try adjusting your filters or search criteria.</p>
+                        <a href="{% url 'core:stations_list' %}" class="btn btn-primary">Clear Filters</a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

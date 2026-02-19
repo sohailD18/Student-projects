@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}File Claim - InfraGuard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>File Compensation Claim</h1>
+        <p>Submit a claim for the verified incident</p>
+        <a href="{% url 'reports:citizen_dashboard' %}" class="btn btn-secondary">← Back to Dashboard</a>
+    </div>
+
+    <!-- Incident Details -->
+    <div class="card incident-summary">
+        <h3>Incident Details</h3>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <span class="summary-label">Type:</span>
+                <span class="incident-type-badge type-{{ incident.incident_type }}">
+                    {{ incident.get_incident_type_display }}
+                </span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Location:</span>
+                <span>{{ incident.location }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Date Reported:</span>
+                <span>{{ incident.timestamp|date:"F d, Y" }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Severity Score:</span>
+                <span class="severity-badge {{ incident.get_severity_color }}">
+                    {{ incident.severity_score }} ({{ incident.get_severity_level }})
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Claim Form -->
+    <div class="card form-card">
+        <h3>Claim Information</h3>
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="{{ form.victim_name.id_for_label }}">
+                    Victim/Claimant Name <span class="required">*</span>
+                </label>
+                {{ form.victim_name }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.claim_amount.id_for_label }}">
+                    Claim Amount <span class="required">*</span>
+                </label>
+                <div class="currency-input">
+                    <span class="currency-symbol">$</span>
+                    {{ form.claim_amount }}
+                </div>
+                <small class="form-help">Enter the amount you are claiming for damages/compensation</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.evidence_description.id_for_label }}">
+                    Evidence Description <span class="required">*</span>
+                </label>
+                {{ form.evidence_description }}
+                <small class="form-help">
+                    Provide detailed evidence and justification for the claim amount.
+                    Include details about damages, medical expenses (if any), property damage, etc.
+                </small>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-large">
+                    <span class="btn-icon">📋</span> Submit Claim
+                </button>
+                <a href="{% url 'reports:citizen_dashboard' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Important Notice -->
+    <div class="info-box info-warning">
+        <h4>⚠️ Important Information</h4>
+        <ul>
+            <li>Claims can only be filed for verified incidents</li>
+            <li>One claim per incident is allowed</li>
+            <li>Authorities will review your claim and may approve full or partial amount</li>
+            <li>You will be notified of the decision on your dashboard</li>
+            <li>False claims may result in account suspension</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

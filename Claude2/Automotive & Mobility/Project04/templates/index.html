@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent Route Planning & Optimization</title>
+
+    <!-- External Libraries (CDN) -->
+    <!-- Leaflet CSS for maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto; padding: 0 1rem;">
+            <div>
+                <h1 style="margin: 0;">🚗 Intelligent Route Planning & Optimization</h1>
+                <p style="margin: 0.25rem 0 0 0; opacity: 0.95;">AI-Powered Route Optimization with Real-Time Traffic Analysis</p>
+            </div>
+            <div class="auth-buttons" style="display: flex; gap: 1rem; align-items: center;">
+                {% if user.is_authenticated %}
+                    <div style="text-align: right; color: white;">
+                        <div style="font-weight: 600;">{{ user.first_name|default:user.username }}</div>
+                        <a href="{% url 'route_planner:profile' %}" style="color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.9rem;">View Profile →</a>
+                    </div>
+                    <button onclick="logout()" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        Log Out
+                    </button>
+                {% else %}
+                    <a href="{% url 'route_planner:login' %}" style="background: rgba(255,255,255,0.2); color: white; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 600; border: 2px solid white;">
+                        Log In
+                    </a>
+                    <a href="{% url 'route_planner:register' %}" style="background: white; color: #2563eb; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 600;">
+                        Sign Up
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Dashboard Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-card-number" id="stat-routes">0</div>
+                <div class="stat-card-label">Routes Calculated</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-number" id="stat-score">0</div>
+                <div class="stat-card-label">Avg Optimization Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-number" id="stat-distance">0</div>
+                <div class="stat-card-label">Total Distance (km)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-number" id="stat-fuel">0</div>
+                <div class="stat-card-label">Fuel Saved (Liters)</div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Left Panel: Input Form -->
+            <div class="left-panel">
+                <div class="card">
+                    <h2>📍 Plan Your Route</h2>
+                    <form id="route-form">
+                        <!-- Origin Input -->
+                        <div class="input-group">
+                            <label for="origin-name">Origin Location</label>
+                            <div class="location-inputs">
+                                <input type="text" id="origin-name" placeholder="Enter origin name" required>
+                                <input type="hidden" id="origin-lat">
+                                <input type="hidden" id="origin-lng">
+                            </div>
+                            <small style="color: #6b7280; font-size: 0.875rem;">
+                                💡 Click on the map to set origin
+                            </small>
+                        </div>
+
+                        <!-- Destination Input -->
+                        <div class="input-group">
+                            <label for="destination-name">Destination Location</label>
+                            <div class="location-inputs">
+                                <input type="text" id="destination-name" placeholder="Enter destination name" required>
+                                <input type="hidden" id="destination-lat">
+                                <input type="hidden" id="destination-lng">
+                            </div>
+                            <small style="color: #6b7280; font-size: 0.875rem;">
+                                💡 Click on the map again to set destination
+                            </small>
+                        </div>
+
+                        <!-- Calculate Button -->
+                        <button type="button" id="calculate-btn" class="btn btn-primary">
+                            🚀 Calculate Routes
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Route Options -->
+                <div class="card">
+                    <h2>🛣️ Route Options</h2>
+                    <div id="route-options">
+                        <div class="loading">
+                            <p>Select locations and calculate routes to see options</p>
+                        </div>
+                    </div>
+
+                    <!-- Export Section -->
+                    <div class="export-section">
+                        <button type="button" id="export-btn" class="btn btn-secondary" disabled>
+                            📄 Export Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Map -->
+            <div class="right-panel">
+                <div class="card">
+                    <h2>🗺️ Interactive Map</h2>
+                    <div id="map"></div>
+                    <div style="margin-top: 1rem; padding: 1rem; background: #f3f4f6; border-radius: 8px;">
+                        <strong style="color: #2563eb;">Instructions:</strong>
+                        <ul style="margin-top: 0.5rem; margin-left: 1.5rem; color: #6b7280;">
+                            <li>Click anywhere on the map to set the <span style="color: #2563eb; font-weight: 600;">Origin</span> (blue marker)</li>
+                            <li>Click again to set the <span style="color: #ef4444; font-weight: 600;">Destination</span> (red marker)</li>
+                            <li>Click "Calculate Routes" to see AI-optimized options</li>
+                            <li>Click on any route card to highlight it on the map</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Dashboard -->
+        <div class="card">
+            <h2>📊 Analytics Dashboard</h2>
+            <div class="analytics-grid">
+                <!-- Hourly Traffic Pattern -->
+                <div class="chart-container">
+                    <h3>Hourly Traffic Pattern</h3>
+                    <canvas id="hourly-traffic-chart"></canvas>
+                </div>
+
+                <!-- Weekly Comparison -->
+                <div class="chart-container">
+                    <h3>Weekly Route Comparison</h3>
+                    <canvas id="weekly-comparison-chart"></canvas>
+                </div>
+
+                <!-- Route Distribution -->
+                <div class="chart-container">
+                    <h3>Route Type Distribution</h3>
+                    <canvas id="route-distribution-chart"></canvas>
+                </div>
+
+                <!-- Efficiency Trend -->
+                <div class="chart-container">
+                    <h3>Efficiency Trend (Last 7 Days)</h3>
+                    <canvas id="efficiency-trend-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="card">
+            <h2>✨ AI-Powered Features</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+                <div style="padding: 1rem; background: #f9fafb; border-radius: 8px; border-left: 4px solid #2563eb;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: #2563eb;">🚦 Traffic-Aware Routing</h3>
+                    <p style="color: #6b7280; font-size: 0.95rem;">Real-time traffic simulation for optimal route selection based on time of day and week.</p>
+                </div>
+                <div style="padding: 1rem; background: #f9fafb; border-radius: 8px; border-left: 4px solid #10b981;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: #10b981;">💰 Cost Estimation</h3>
+                    <p style="color: #6b7280; font-size: 0.95rem;">Accurate fuel cost calculations and CO2 emission estimates for each route.</p>
+                </div>
+                <div style="padding: 1rem; background: #f9fafb; border-radius: 8px; border-left: 4px solid #9333ea;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: #9333ea;">🌱 Eco-Friendly Options</h3>
+                    <p style="color: #6b7280; font-size: 0.95rem;">Environmentally conscious route suggestions to minimize carbon footprint.</p>
+                </div>
+                <div style="padding: 1rem; background: #f9fafb; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: #f59e0b;">📈 Smart Analytics</h3>
+                    <p style="color: #6b7280; font-size: 0.95rem;">Comprehensive analytics dashboard with traffic patterns and efficiency insights.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer style="text-align: center; margin-top: 3rem; padding: 2rem; color: #6b7280; border-top: 2px solid #e5e7eb;">
+            <p><strong>Intelligent Route Planning System</strong> - Powered by AI & Django</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem;">Built with Django, Python, Leaflet.js, OpenStreetMap & Chart.js</p>
+        </footer>
+    </div>
+
+    <!-- External JavaScript Libraries -->
+    <!-- Leaflet JS for maps -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Custom Application JavaScript -->
+    <script src="{% static 'js/app.js' %}"></script>
+
+    <!-- Auth Script -->
+    <script>
+        function logout() {
+            if (confirm('Are you sure you want to log out?')) {
+                fetch('/api/auth/logout/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/login/';
+                    }
+                })
+                .catch(error => {
+                    console.error('Logout error:', error);
+                    window.location.href = '/login/';
+                });
+            }
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,326 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Dashboard - OptiFlow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-speedometer2"></i> Executive Dashboard</h1>
+            <div>
+                <a href="{% url 'core:process_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> New Process
+                </a>
+                <a href="{% url 'core:log_entry' %}" class="btn btn-success">
+                    <i class="bi bi-plus-lg"></i> Log Data
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Key Metrics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card metric-card">
+            <div class="card-body">
+                <div class="metric-value">{{ total_processes }}</div>
+                <div class="metric-label">Active Processes</div>
+                <i class="bi bi-diagram-3 position-absolute top-0 end-0 m-3 fs-1 opacity-25"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card metric-card" style="background: linear-gradient(135deg, #4cc9f0, #4895ef);">
+            <div class="card-body">
+                <div class="metric-value">{{ completion_rate }}%</div>
+                <div class="metric-label">Completion Rate</div>
+                <i class="bi bi-check-circle position-absolute top-0 end-0 m-3 fs-1 opacity-25"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card metric-card" style="background: linear-gradient(135deg, #f72585, #b5179e);">
+            <div class="card-body">
+                <div class="metric-value">{{ total_executions }}</div>
+                <div class="metric-label">Total Executions</div>
+                <i class="bi bi-activity position-absolute top-0 end-0 m-3 fs-1 opacity-25"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card metric-card" style="background: linear-gradient(135deg, #4361ee, #3f37c9);">
+            <div class="card-body">
+                <div class="metric-value">{{ total_steps }}</div>
+                <div class="metric-label">Total Steps</div>
+                <i class="bi bi-list-check position-absolute top-0 end-0 m-3 fs-1 opacity-25"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Execution Trend (Last 30 Days)</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="executionTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Status Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Processes and Bottlenecks -->
+<div class="row mb-4">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-diagram-2"></i> Active Processes</h5>
+                <a href="{% url 'core:process_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Process Name</th>
+                                <th>Steps</th>
+                                <th>Completion</th>
+                                <th>Avg Time</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for process in processes %}
+                            <tr>
+                                <td>
+                                    <strong>{{ process.name }}</strong><br>
+                                    <small class="text-muted">Created {{ process.created_at|date:"M d, Y" }}</small>
+                                </td>
+                                <td>{{ process.total_steps }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1" style="height: 8px;">
+                                            <div class="progress-bar" role="progressbar"
+                                                 style="width: {{ process.completion_rate }}%"
+                                                 aria-valuenow="{{ process.completion_rate }}"
+                                                 aria-valuemin="0" aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        <span class="ms-2">{{ process.completion_rate }}%</span>
+                                    </div>
+                                </td>
+                                <td>{{ process.avg_cycle_time }} min</td>
+                                <td>
+                                    <a href="{% url 'core:process_dashboard' process.id %}"
+                                       class="btn btn-sm btn-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No processes found. <a href="{% url 'core:process_create' %}">Create your first process</a>.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header bg-danger bg-opacity-10 text-danger">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Top Bottlenecks</h5>
+            </div>
+            <div class="card-body">
+                {% if bottleneck_steps %}
+                <div class="list-group list-group-flush">
+                    {% for bottleneck in bottleneck_steps %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ bottleneck.step_name }}</h6>
+                                <small class="text-muted">{{ bottleneck.process_name }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-danger">{{ bottleneck.avg_time|floatformat:1 }} min</span>
+                                {% if bottleneck.failure_rate > 0 %}
+                                <br><small class="text-danger">{{ bottleneck.failure_rate }}% fail rate</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="bottleneck-indicator mt-2"></div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-4">
+                    <i class="bi bi-check-circle text-success fs-1 d-block mb-2"></i>
+                    No bottlenecks detected!
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Recommendations -->
+        <div class="card mt-3">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Recent Recommendations</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_recommendations %}
+                <div class="list-group list-group-flush">
+                    {% for rec in recent_recommendations %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ rec.title|truncatewords:8 }}</h6>
+                                <small class="text-muted">{{ rec.process.name }}</small>
+                            </div>
+                            <span class="badge priority-{{ rec.priority }}">{{ rec.priority }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <a href="{% url 'core:recommendation_list' %}" class="btn btn-sm btn-outline-primary w-100 mt-2">
+                    View All Recommendations
+                </a>
+                {% else %}
+                <p class="text-muted text-center py-3">No recommendations yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Execution Trend Chart
+const executionCtx = document.getElementById('executionTrendChart').getContext('2d');
+const executionData = {{ execution_trend|safe }};
+
+new Chart(executionCtx, {
+    type: 'line',
+    data: {
+        labels: executionData.map(d => d.date),
+        datasets: [{
+            label: 'Executions',
+            data: executionData.map(d => d.count),
+            borderColor: '#4361ee',
+            backgroundColor: 'rgba(67, 97, 238, 0.1)',
+            fill: true,
+            tension: 0.4,
+            yAxisID: 'y'
+        }, {
+            label: 'Avg Time (min)',
+            data: executionData.map(d => d.avg_time),
+            borderColor: '#f72585',
+            backgroundColor: 'rgba(247, 37, 133, 0.1)',
+            fill: false,
+            tension: 0.4,
+            yAxisID: 'y1'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+            mode: 'index',
+            intersect: false
+        },
+        scales: {
+            y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: {
+                    display: true,
+                    text: 'Executions'
+                }
+            },
+            y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: {
+                    display: true,
+                    text: 'Time (min)'
+                },
+                grid: {
+                    drawOnChartArea: false
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'top'
+            }
+        }
+    }
+});
+
+// Status Distribution Chart
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusData = {{ status_data|safe }};
+
+const statusLabels = {
+    'pending': 'Pending',
+    'in_progress': 'In Progress',
+    'completed': 'Completed',
+    'failed': 'Failed',
+    'skipped': 'Skipped'
+};
+
+const statusColors = {
+    'pending': '#6c757d',
+    'in_progress': '#0dcaf0',
+    'completed': '#198754',
+    'failed': '#dc3545',
+    'skipped': '#ffc107'
+};
+
+new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys(statusData).map(k => statusLabels[k] || k),
+        datasets: [{
+            data: Object.values(statusData),
+            backgroundColor: Object.keys(statusData).map(k => statusColors[k] || '#6c757d'),
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

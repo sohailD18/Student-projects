@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Feedback - HelpDeskPro</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 2rem 0;
+        }
+
+        .feedback-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            border: none;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 2.5rem 2rem;
+            text-align: center;
+        }
+
+        .card-header .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        .card-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin: 0.5rem 0 0 0;
+        }
+
+        .card-body {
+            padding: 3rem 2.5rem;
+        }
+
+        /* Ticket ID Display */
+        .ticket-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: white;
+        }
+
+        .ticket-display h3 {
+            margin: 0;
+            font-size: 2rem;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+        }
+
+        .ticket-display small {
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Star Rating */
+        .rating-options {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+
+        .rating-option {
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .rating-option input[type="radio"] {
+            display: none;
+        }
+
+        .rating-option label {
+            display: block;
+            padding: 1.5rem 1rem;
+            background: #f8f9fa;
+            border: 3px solid #e9ecef;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 2rem;
+        }
+
+        .rating-option label:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+            transform: translateY(-3px);
+        }
+
+        .rating-option input[type="radio"]:checked + label {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .rating-option .rating-text {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #495057;
+            margin-top: 0.5rem;
+        }
+
+        /* Form Styling */
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+        }
+
+        /* Buttons */
+        .btn-submit {
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 50px;
+            padding: 1rem 3rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .breadcrumb-item a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .breadcrumb-item a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb-item.active {
+            color: #6c757d;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #0d6efd;
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-box h5 {
+            color: #0d6efd;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .info-box p {
+            margin: 0;
+            color: #495057;
+            font-size: 0.95rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .card-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .rating-options {
+                flex-direction: column;
+            }
+
+            .rating-option {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'tickets:home' %}"><i class="bi bi-house-door"></i> Home</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">Submit Feedback</li>
+                    </ol>
+                </nav>
+
+                <!-- Feedback Card -->
+                <div class="card feedback-card">
+                    <div class="card-header">
+                        <div class="icon">
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <h1>We Value Your Feedback</h1>
+                        <p>Help us improve our support by rating your experience</p>
+                    </div>
+
+                    <div class="card-body">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message|safe }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        {% if ticket %}
+                            <!-- Ticket Display -->
+                            <div class="ticket-display">
+                                <small><i class="bi bi-ticket-perforated"></i> Ticket ID</small>
+                                <h3>{{ ticket.unique_ticket_id }}</h3>
+                                <div class="mt-2">
+                                    <i class="bi bi-person"></i> {{ ticket.complaint.name }}
+                                    <span class="mx-2">•</span>
+                                    <i class="bi bi-folder"></i> {{ ticket.complaint.get_category_display }}
+                                </div>
+                            </div>
+
+                            <!-- Info Box -->
+                            <div class="info-box">
+                                <h5><i class="bi bi-info-circle"></i> About Your Feedback</h5>
+                                <p>This ticket has been marked as <strong>Closed</strong>. Your feedback helps us understand how well we addressed your issue and where we can improve.</p>
+                            </div>
+
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="ticket_id" value="{{ ticket.unique_ticket_id }}">
+
+                                <!-- Rating Selection -->
+                                <div class="mb-4">
+                                    <label class="form-label text-center fs-5">
+                                        <i class="bi bi-emoji-smile"></i> How would you rate your experience?
+                                    </label>
+                                    <div class="rating-options">
+                                        <div class="rating-option">
+                                            <input type="radio" name="rating" value="1" id="rating1" required>
+                                            <label for="rating1">
+                                                ⭐
+                                                <span class="rating-text">Poor</span>
+                                            </label>
+                                        </div>
+                                        <div class="rating-option">
+                                            <input type="radio" name="rating" value="2" id="rating2">
+                                            <label for="rating2">
+                                                ⭐⭐
+                                                <span class="rating-text">Fair</span>
+                                            </label>
+                                        </div>
+                                        <div class="rating-option">
+                                            <input type="radio" name="rating" value="3" id="rating3">
+                                            <label for="rating3">
+                                                ⭐⭐⭐
+                                                <span class="rating-text">Good</span>
+                                            </label>
+                                        </div>
+                                        <div class="rating-option">
+                                            <input type="radio" name="rating" value="4" id="rating4">
+                                            <label for="rating4">
+                                                ⭐⭐⭐⭐
+                                                <span class="rating-text">Very Good</span>
+                                            </label>
+                                        </div>
+                                        <div class="rating-option">
+                                            <input type="radio" name="rating" value="5" id="rating5">
+                                            <label for="rating5">
+                                                ⭐⭐⭐⭐⭐
+                                                <span class="rating-text">Excellent</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% if form.rating.errors %}
+                                        <div class="text-danger text-center mt-2">
+                                            {% for error in form.rating.errors %}
+                                                <small><i class="bi bi-exclamation-circle"></i> {{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Comments -->
+                                <div class="mb-4">
+                                    <label for="{{ form.comments.id_for_label }}" class="form-label">
+                                        <i class="bi bi-chat-left-text"></i> Additional Comments (Optional)
+                                    </label>
+                                    {{ form.comments }}
+                                    <small class="text-muted">
+                                        Tell us more about your experience. What did we do well? What can we improve?
+                                    </small>
+                                    {% if form.comments.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.comments.errors %}
+                                                <small><i class="bi bi-exclamation-circle"></i> {{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Submit Button -->
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-primary btn-submit">
+                                        <i class="bi bi-send"></i> Submit Feedback
+                                    </button>
+                                </div>
+                            </form>
+                        {% else %}
+                            <!-- Find Ticket Form -->
+                            <div class="info-box">
+                                <h5><i class="bi bi-info-circle"></i> Submit Feedback for a Closed Ticket</h5>
+                                <p>Enter your Ticket ID to submit feedback. Only closed tickets are eligible for feedback submission.</p>
+                            </div>
+
+                            <form method="post" class="mb-4">
+                                {% csrf_token %}
+                                <div class="input-group input-group-lg mb-3">
+                                    <span class="input-group-text" style="background: var(--primary-gradient); color: white; border: none;">
+                                        <i class="bi bi-ticket-perforated"></i>
+                                    </span>
+                                    <input type="text"
+                                           name="ticket_id"
+                                           class="form-control"
+                                           placeholder="Enter Ticket ID (e.g., HDP-001)"
+                                           pattern="HDP-[0-9]{3}"
+                                           title="Format: HDP-001"
+                                           required
+                                           style="border-left: none;">
+                                    <button class="btn btn-primary" type="submit" style="background: var(--primary-gradient); border: none;">
+                                        <i class="bi bi-search"></i> Find Ticket
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div class="text-center mt-5">
+                                <i class="bi bi-star-half" style="font-size: 4rem; color: #dee2e6;"></i>
+                                <h5 class="mt-3 text-muted">No Ticket Selected</h5>
+                                <p class="text-muted">Enter your Ticket ID above to begin the feedback process.</p>
+                                <a href="{% url 'tickets:home' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-house-door"></i> Return to Home
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Footer Note -->
+                <div class="text-center mt-4 text-muted">
+                    <small>
+                        <i class="bi bi-shield-check"></i>
+                        Your feedback is confidential and helps us improve our services.
+                        Questions? Contact us at <a href="mailto:support@helpdeskpro.com">support@helpdeskpro.com</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

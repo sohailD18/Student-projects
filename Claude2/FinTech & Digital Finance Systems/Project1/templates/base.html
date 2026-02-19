@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-Based Financial Transaction Fraud Detection System">
+    <title>{% block title %}Fraud Detection System{% endblock %}</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/chart-custom.css">
+
+    <!-- Google Fonts for better typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <a href="/" class="logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="M9 12l2 2 4-4"/>
+                </svg>
+                Fraud Detection System
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Dashboard</a></li>
+                    <li><a href="/transactions/" class="{% if '/transactions' in request.path %}active{% endif %}">Transactions</a></li>
+                    <li><a href="/performance/" class="{% if '/performance' in request.path %}active{% endif %}">Performance</a></li>
+                    <li><a href="/analysis/" class="{% if '/analysis' in request.path %}active{% endif %}">Analysis</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 AI-Based Financial Transaction Fraud Detection System. Powered by Django & Scikit-Learn.</p>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+
+    <!-- Interactive JavaScript -->
+    <script src="/static/js/interactive.js"></script>
+
+    <!-- Background Particles (Visual Enhancement) -->
+    <div class="particles" id="particles"></div>
+</body>
+</html>

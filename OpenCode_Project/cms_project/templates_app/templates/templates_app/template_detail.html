@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ template.name }} - Templates - CMS{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'templates:template_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Templates
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-file-alt"></i> Template Details</h4>
+            </div>
+            <div class="card-body">
+                <h3>{{ template.name }}</h3>
+                <p class="text-muted mb-3">{{ template.description }}</p>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <p><strong>Type:</strong> {{ template.get_template_type_display }}</p>
+                        <p><strong>Created by:</strong> {{ template.created_by.username }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Created:</strong> {{ template.created_at|date:"F j, Y" }}</p>
+                        <p><strong>Updated:</strong> {{ template.updated_at|date:"F j, Y" }}</p>
+                    </div>
+                </div>
+                
+                {% if template.is_default %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-star"></i> This is the default template for {{ template.get_template_type_display }} pages.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-puzzle-piece"></i> Template Sections</h5>
+            </div>
+            <div class="card-body">
+                {% for section in sections %}
+                    <div class="mb-4 p-3 border rounded">
+                        <h6>{{ section.name }}</h6>
+                        <p class="text-muted small mb-2">Identifier: <code>{{ section.identifier }}</code></p>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <small class="text-muted">Order</small>
+                                <p>{{ section.order }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Required</small>
+                                <p>{% if section.is_required %}Yes{% else %}No{% endif %}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Max Blocks</small>
+                                <p>{{ section.max_blocks|default:"Unlimited" }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if section.default_content %}
+                            <div class="mt-2">
+                                <small class="text-muted">Default Content:</small>
+                                <pre class="bg-light p-2 rounded">{{ section.default_content }}</pre>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <p class="text-muted">No sections defined for this template.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'templates:template_update' template.pk %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Template
+                    </a>
+                    <a href="{% url 'templates:template_delete' template.pk %}" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Delete Template
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Pages Using This Template</h5>
+            </div>
+            <div class="card-body">
+                {% if template.pages.count %}
+                    <ul class="list-group">
+                        {% for page in template.pages.all|slice:":10" %}
+                            <li class="list-group-item">
+                                <a href="{% url 'pages:page_detail' page.slug %}" class="text-decoration-none">
+                                    <i class="fas fa-file-alt"></i> {{ page.title }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No pages are using this template yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Traffic Prediction System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1 class="page-title">Traffic Dashboard</h1>
+        <p class="page-subtitle">Real-time traffic insights and congestion predictions</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card stat-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                    <polyline points="3.27,6.96 12,12.01 20.73,6.96"/>
+                    <line x1="12" y1="22.08" x2="12" y2="12"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <p class="stat-label">Total Records</p>
+                <h2 class="stat-value">{{ total_records }}</h2>
+                <p class="stat-description">Traffic data points</p>
+            </div>
+        </div>
+
+        <div class="stat-card stat-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12,6 12,12 16,14"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <p class="stat-label">Avg. Vehicles</p>
+                <h2 class="stat-value">{{ avg_vehicles }}</h2>
+                <p class="stat-description">Per recording</p>
+            </div>
+        </div>
+
+        <div class="stat-card stat-warning">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <p class="stat-label">High Congestion</p>
+                <h2 class="stat-value">{{ high_count }}</h2>
+                <p class="stat-description">{{ high_count|floatformat:1 }}% of total</p>
+            </div>
+        </div>
+
+        <div class="stat-card stat-info">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="16" x2="12" y2="12"/>
+                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <p class="stat-label">Low Congestion</p>
+                <h2 class="stat-value">{{ low_count }}</h2>
+                <p class="stat-description">{{ low_count|floatformat:1 }}% of total</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Congestion Distribution -->
+    <div class="dashboard-grid">
+        <div class="card">
+            <div class="card-header">
+                <h3>Congestion Level Distribution</h3>
+                <p class="card-subtitle">Overview of traffic conditions</p>
+            </div>
+            <div class="card-body">
+                <div class="congestion-bars">
+                    <div class="congestion-item">
+                        <div class="congestion-label">
+                            <span class="congestion-badge congestion-low">Low</span>
+                            <span>{{ low_count }} records</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill progress-low" style="width: {% if total_records > 0 %}{{ low_count|floatformat:0|add:0 }}{% endif %}%"></div>
+                        </div>
+                    </div>
+                    <div class="congestion-item">
+                        <div class="congestion-label">
+                            <span class="congestion-badge congestion-medium">Medium</span>
+                            <span>{{ medium_count }} records</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill progress-medium" style="width: {% if total_records > 0 %}{{ medium_count|floatformat:0 }}{% endif %}%"></div>
+                        </div>
+                    </div>
+                    <div class="congestion-item">
+                        <div class="congestion-label">
+                            <span class="congestion-badge congestion-high">High</span>
+                            <span>{{ high_count }} records</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill progress-high" style="width: {% if total_records > 0 %}{{ high_count|floatformat:0 }}{% endif %}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- High Congestion Hotspots -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Recent High Congestion Hotspots</h3>
+                <p class="card-subtitle">Top locations (Last 7 days)</p>
+            </div>
+            <div class="card-body">
+                {% if hotspots %}
+                    <div class="hotspots-list">
+                        {% for hotspot in hotspots %}
+                            <div class="hotspot-item">
+                                <div class="hotspot-info">
+                                    <h4>{{ hotspot.location }}</h4>
+                                    <span class="hotspot-count">{{ hotspot.high_count }} incidents</span>
+                                </div>
+                                <svg class="hotspot-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                    <circle cx="12" cy="10" r="3"/>
+                                </svg>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="empty-state">No high congestion data available for the past week.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <a href="{% url 'traffic_app:predict' %}" class="action-card">
+            <div class="action-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 6v6l4 2"/>
+                </svg>
+            </div>
+            <div class="action-content">
+                <h3>Make Prediction</h3>
+                <p>Get real-time congestion prediction</p>
+            </div>
+        </a>
+
+        <a href="{% url 'traffic_app:analysis' %}" class="action-card">
+            <div class="action-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10"/>
+                    <line x1="12" y1="20" x2="12" y2="4"/>
+                    <line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+            </div>
+            <div class="action-content">
+                <h3>View Analysis</h3>
+                <p>Explore detailed traffic statistics</p>
+            </div>
+        </a>
+
+        <a href="/admin/" class="action-card">
+            <div class="action-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                </svg>
+            </div>
+            <div class="action-content">
+                <h3>Manage Data</h3>
+                <p>Access admin panel</p>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Animate stats on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const stats = document.querySelectorAll('.stat-value');
+    stats.forEach(stat => {
+        const target = parseInt(stat.textContent);
+        if (!isNaN(target)) {
+            let current = 0;
+            const increment = Math.ceil(target / 50);
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                stat.textContent = current;
+            }, 30);
+        }
+    });
+});
+</script>
+{% endblock %}

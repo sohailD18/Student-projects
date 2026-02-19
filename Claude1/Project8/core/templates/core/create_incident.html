@@ -1,0 +1,153 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Report a New Incident</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">Title *</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger small">{{ form.title.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.severity.id_for_label }}" class="form-label">Severity *</label>
+                            {{ form.severity }}
+                            {% if form.severity.errors %}
+                                <div class="text-danger small">{{ form.severity.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                            <div class="text-danger small">{{ form.category.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Description *</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger small">{{ form.description.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Provide details about the incident. Include any relevant information.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.location.id_for_label }}" class="form-label">Location *</label>
+                        {{ form.location }}
+                        {% if form.location.errors %}
+                            <div class="text-danger small">{{ form.location.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.address.id_for_label }}" class="form-label">Detailed Address</label>
+                        {{ form.address }}
+                        <div class="form-text">Optional: Provide street address, landmarks, or directions.</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.latitude.id_for_label }}" class="form-label">Latitude</label>
+                            {{ form.latitude }}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.longitude.id_for_label }}" class="form-label">Longitude</label>
+                            {{ form.longitude }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="getLocation()">
+                            <i class="bi bi-geo-alt me-1"></i>Use My Current Location
+                        </button>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.timestamp.id_for_label }}" class="form-label">When did this incident occur? *</label>
+                        {{ form.timestamp }}
+                        {% if form.timestamp.errors %}
+                            <div class="text-danger small">{{ form.timestamp.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.image.id_for_label }}" class="form-label">Upload Image</label>
+                        {{ form.image }}
+                        <div class="form-text">Optional: Add a photo to help others identify or verify the incident.</div>
+                        {% if form.image.errors %}
+                            <div class="text-danger small">{{ form.image.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        {{ form.is_anonymous }}
+                        <label class="form-check-label" for="{{ form.is_anonymous.id_for_label }}">
+                            Report anonymously (hide my identity)
+                        </label>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'incident_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>Submit Report
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-muted small">
+                <i class="bi bi-info-circle me-1"></i>
+                Please report only genuine incidents. False reports may be flagged and affect your account reputation.
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Get current location
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+}
+
+function showPosition(position) {
+    document.getElementById('incident-latitude').value = position.coords.latitude.toFixed(6);
+    document.getElementById('incident-longitude').value = position.coords.longitude.toFixed(6);
+}
+
+function showError(error) {
+    switch(error.code) {
+        case error.PERMISSION_DENIED:
+            alert("User denied the request for Geolocation.");
+            break;
+        case error.POSITION_UNAVAILABLE:
+            alert("Location information is unavailable.");
+            break;
+        case error.TIMEOUT:
+            alert("The request to get user location timed out.");
+            break;
+        default:
+            alert("An unknown error occurred.");
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}

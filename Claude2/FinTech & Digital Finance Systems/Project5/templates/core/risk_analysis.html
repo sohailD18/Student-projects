@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb -->
+    <div style="margin-bottom: 1rem;">
+        <a href="{% url 'core:profile_detail' profile.pk %}" style="color: var(--color-accent); text-decoration: none;">
+            ← Back to Profile
+        </a>
+    </div>
+
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h1 style="color: var(--color-primary); margin-bottom: 0.5rem;">Risk Profile Analysis</h1>
+        <p style="color: var(--color-gray-500);">
+            Modules 2-5: Pattern Analysis • AI Risk Profiling • Classification • Insights
+        </p>
+    </div>
+
+    <!-- Risk Classification Badge -->
+    <div class="card" style="text-align: center; padding: 2rem;">
+        <h2 style="color: var(--color-gray-600); margin-bottom: 1rem;">Risk Classification</h2>
+        <span class="risk-badge risk-{{ risk_profile.classification }}" style="font-size: 1.5rem; padding: 1rem 2rem;">
+            {{ risk_profile.get_classification_display }}
+        </span>
+        <div style="margin-top: 1.5rem;">
+            <span style="font-size: 0.95rem; color: var(--color-gray-500);">Risk Score:</span>
+            <span style="font-size: 2.5rem; font-weight: 700; color: var(--color-primary); margin-left: 1rem;">
+                {{ risk_profile.risk_score }}/100
+            </span>
+        </div>
+    </div>
+
+    <!-- Component Scores -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Risk Score Components</h3>
+            <p class="card-subtitle">Module 3: AI-Based Risk Profiling Engine</p>
+        </div>
+
+        <div class="card-body">
+            <div class="form-group">
+                <label class="form-label">Age Factor Score (30% weight)</label>
+                <div class="progress">
+                    <div class="progress-bar" style="width: {{ risk_profile.age_factor_score }}%;">
+                        {{ risk_profile.age_factor_score }}/100
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Savings Rate Score (30% weight)</label>
+                <div class="progress">
+                    <div class="progress-bar" style="width: {{ risk_profile.savings_rate_score }}%;">
+                        {{ risk_profile.savings_rate_score }}/100
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Income Stability Score (25% weight)</label>
+                <div class="progress">
+                    <div class="progress-bar" style="width: {{ risk_profile.income_stability_score }}%;">
+                        {{ risk_profile.income_stability_score }}/100
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Investment Experience Score (15% weight)</label>
+                <div class="progress">
+                    <div class="progress-bar" style="width: {{ risk_profile.experience_score }}%;">
+                        {{ risk_profile.experience_score }}/100
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Summary -->
+    <div class="grid grid-3">
+        <div class="stat-card">
+            <div class="stat-label">Total Income</div>
+            <div class="stat-value" style="color: var(--color-success-dark);">${{ risk_profile.total_income|floatformat:2 }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Expenses</div>
+            <div class="stat-value" style="color: var(--color-aggressive);">${{ risk_profile.total_expenses|floatformat:2 }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Savings Rate</div>
+            <div class="stat-value" style="color: var(--color-accent);">{{ risk_profile.savings_rate }}%</div>
+        </div>
+    </div>
+
+    <!-- Spending Pattern Analysis -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Spending Pattern Analysis</h3>
+            <p class="card-subtitle">Module 2: Spending and Investment Pattern Analysis</p>
+        </div>
+
+        <div class="card-body">
+            <div class="grid grid-2">
+                <div>
+                    <h4 style="margin-bottom: 1rem;">Essential Expenses</h4>
+                    <div class="stat-value" style="color: var(--color-accent);">
+                        ${{ risk_profile.essential_expenses|floatformat:2 }}
+                    </div>
+                    <p style="color: var(--color-gray-500);">Housing, food, utilities, healthcare, transportation</p>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 1rem;">Discretionary Expenses</h4>
+                    <div class="stat-value" style="color: var(--color-moderate);">
+                        ${{ risk_profile.discretionary_expenses|floatformat:2 }}
+                    </div>
+                    <p style="color: var(--color-gray-500);">Dining, entertainment, shopping, travel</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem; padding: 1rem; background-color: var(--color-gray-50); border-radius: var(--radius-md);">
+                <strong>Spending Pattern Classification:</strong>
+                <span style="color: var(--color-primary); font-size: 1.1rem; font-weight: 600;">
+                    {{ risk_profile.spending_pattern }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personalized Insights -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Personalized Financial Insights</h3>
+            <p class="card-subtitle">Module 5: Personalized Financial Planning Insights</p>
+        </div>
+
+        <div class="card-body">
+            <div style="background-color: var(--color-gray-50); padding: 1.5rem; border-radius: var(--radius-md); line-height: 1.8;">
+                {{ risk_profile.insights|linebreaks }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="card">
+        <div class="card-footer" style="border-top: none; padding-top: 0;">
+            <a href="{% url 'core:dashboard' profile.pk %}" class="btn btn-primary" style="flex: 1; text-align: center;">
+                📊 View Dashboard
+            </a>
+            <a href="{% url 'core:scenario_calculator' profile.pk %}" class="btn btn-outline" style="flex: 1; text-align: center;">
+                🔮 Scenario Calculator
+            </a>
+            <a href="{% url 'core:financial_report' profile.pk %}" class="btn btn-secondary" style="flex: 1; text-align: center;">
+                📄 Financial Report
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

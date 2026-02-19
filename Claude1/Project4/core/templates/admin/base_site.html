@@ -1,0 +1,30 @@
+{% extends "admin/base.html" %}
+{% load static i18n admin_modify %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="{% static 'core/css/admin-custom.css' %}">
+{% endblock %}
+
+{% block branding %}
+<div class="ecotrack-branding">
+    <a href="{% url 'admin:index' %}">
+        <i class="fas fa-leaf"></i>
+        <span>EcoTrack</span>
+    </a>
+</div>
+{% endblock %}
+
+{% block nav-global %}
+{{ block.super }}
+{% endblock %}
+
+{% block footer %}
+<div class="ecotrack-footer">
+    <div class="footer-content">
+        <p><strong>🌱 EcoTrack</strong> - Making sustainability measurable and rewarding</p>
+        <p>&copy; 2025 EcoTrack. Built with 💚 for the planet</p>
+    </div>
+</div>
+{% endblock %}

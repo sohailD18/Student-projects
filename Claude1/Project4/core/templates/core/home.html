@@ -1,0 +1,23 @@
+{% extends "core/base.html" %}
+
+{% block title %}Home - EcoTrack{% endblock %}
+
+{% block content %}
+<div class="auth-container" style="text-align: center;">
+    <div class="auth-header">
+        {% if user.is_authenticated %}
+            <h1>Welcome, {{ user.username }}!</h1>
+            <p>You're logged in and ready to track your carbon footprint.</p>
+        {% else %}
+            <h1>Welcome to EcoTrack</h1>
+            <p>Track your carbon footprint and earn badges for eco-friendly activities.</p>
+        {% endif %}
+    </div>
+
+    {% if not user.is_authenticated %}
+        <div style="margin-top: 2rem;">
+            <a href="{% url 'register' %}" class="btn">Get Started</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

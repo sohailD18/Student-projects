@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Subjects{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1><i class="fas fa-book text-primary me-2"></i>Manage Subjects & Topics</h1>
+            <div>
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
+                    <i class="fas fa-plus me-2"></i>Add Subject
+                </button>
+                <a href="{% url 'examination_app:create_topic' %}" class="btn btn-primary">
+                    <i class="fas fa-tag me-2"></i>Add Topic
+                </a>
+                <a href="{% url 'examination_app:teacher_dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Subjects List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>Subjects & Topics</h5>
+            </div>
+            <div class="card-body">
+                {% if subjects %}
+                    <div class="accordion" id="subjectsAccordion">
+                        {% for subject in subjects %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ subject.id }}">
+                                <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}"
+                                        type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#collapse{{ subject.id }}">
+                                    <strong>{{ subject.name }}</strong> ({{ subject.code }})
+                                    <span class="badge bg-secondary ms-2">{{ subject.topics.count }} topics</span>
+                                </button>
+                            </h2>
+                            <div id="collapse{{ subject.id }}"
+                                 class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                                 data-bs-parent="#subjectsAccordion">
+                                <div class="accordion-body">
+                                    <p class="text-muted">{{ subject.description|default:"No description" }}</p>
+
+                                    <h6 class="fw-bold mb-3">Topics:</h6>
+                                    {% if subject.topics.all %}
+                                        <div class="row">
+                                            {% for topic in subject.topics.all %}
+                                            <div class="col-md-4 mb-3">
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">
+                                                            Chapter {{ topic.chapter_number }}: {{ topic.name }}
+                                                        </h6>
+                                                        <p class="card-text small text-muted">
+                                                            {{ topic.description|truncatewords:15|default:"No description" }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted">No topics added yet.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-book fa-3x mb-3"></i>
+                        <p>No subjects found. Add your first subject!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Subject Modal -->
+<div class="modal fade" id="addSubjectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add New Subject</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                <div class="modal-body">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Subject Name</label>
+                        {{ form.name }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.code.id_for_label }}" class="form-label">Subject Code</label>
+                        {{ form.code }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                        {{ form.description }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-2"></i>Save Subject
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

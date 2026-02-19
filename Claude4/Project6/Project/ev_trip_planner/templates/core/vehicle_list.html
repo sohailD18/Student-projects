@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}My Vehicles - EV Trip Planner{% endblock %}
+
+{% block content %}
+<section class="vehicles-section">
+    <div class="container">
+        <div class="section-header">
+            <div>
+                <h1>My Vehicles</h1>
+                <p>Manage your electric vehicles</p>
+            </div>
+            <a href="{% url 'core:vehicle_add' %}" class="btn btn-primary">Add Vehicle</a>
+        </div>
+
+        <div class="vehicles-grid">
+            {% for vehicle in vehicles %}
+                <div class="vehicle-card">
+                    <div class="vehicle-header">
+                        <h3>{{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}</h3>
+                        <span class="vehicle-type-badge">{{ vehicle.get_ev_type_display }}</span>
+                    </div>
+
+                    <div class="vehicle-specs">
+                        <div class="spec-item">
+                            <span class="spec-label">Battery Capacity</span>
+                            <span class="spec-value">{{ vehicle.battery_capacity }} kWh</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Range</span>
+                            <span class="spec-value">{{ vehicle.range_km }} km</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Charging Speed</span>
+                            <span class="spec-value">{{ vehicle.charging_speed }} kW</span>
+                        </div>
+                    </div>
+
+                    <div class="vehicle-actions">
+                        <a href="{% url 'core:vehicle_edit' vehicle.pk %}" class="btn btn-sm btn-secondary">Edit</a>
+                        <a href="{% url 'core:vehicle_delete' vehicle.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="empty-state-large">
+                    <div class="empty-icon">🚗</div>
+                    <h2>No Vehicles Yet</h2>
+                    <p>Add your electric vehicle(s) to get personalized trip planning and range estimates.</p>
+                    <a href="{% url 'core:vehicle_add' %}" class="btn btn-primary btn-large">Add Your First Vehicle</a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

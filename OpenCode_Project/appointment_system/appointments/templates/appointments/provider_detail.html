@@ -1,0 +1,174 @@
+{% extends 'appointments/base.html' %}
+
+{% block title %}{{ provider }} - Appointment System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                {% if provider.profile_image %}
+                <img src="{{ provider.profile_image.url }}" class="rounded-circle mb-3" alt="{{ provider }}" style="width: 150px; height: 150px; object-fit: cover;">
+                {% else %}
+                <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-3" style="width: 150px; height: 150px;">
+                    <span class="text-white fs-2">{{ provider.user.username|first|upper }}</span>
+                </div>
+                {% endif %}
+                <h4 class="card-title">{{ provider }}</h4>
+                <p class="card-text text-muted">{{ provider.bio }}</p>
+                <p class="card-text">
+                    <strong>Phone:</strong> {{ provider.phone }}<br>
+                    <strong>Status:</strong> {% if provider.is_available %}<span class="badge bg-success">Available</span>{% else %}<span class="badge bg-danger">Unavailable</span>{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <h4 class="mb-3">Services Offered</h4>
+        <div class="row mb-4">
+            {% for service in services %}
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h6 class="card-title">{{ service.name }}</h6>
+                        <p class="card-text small">{{ service.description|truncatewords:10 }}</p>
+                        <p class="card-text">
+                            <strong>Duration:</strong> {{ service.duration }} min<br>
+                            <strong>Price:</strong> ${{ service.price }}
+                        </p>
+                        <button class="btn btn-primary btn-sm" onclick="selectService({{ service.id }}, '{{ service.name }}', {{ service.duration }}, {{ service.price }})">Select Service</button>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <p class="text-muted">No services available.</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <h4 class="mb-3">Available Time Slots</h4>
+        <div class="card">
+            <div class="card-body">
+                {% if time_slots %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for slot in time_slots %}
+                            <tr>
+                                <td>{{ slot.get_day_of_week_display }}</td>
+                                <td>{{ slot.start_time }} - {{ slot.end_time }}</td>
+                                <td>{% if slot.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No time slots configured.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="selectedServiceInfo" class="card mt-4" style="display: none;">
+    <div class="card-body">
+        <h5>Book Appointment</h5>
+        <div id="serviceDetails"></div>
+        <form method="post" action="{% url 'book_appointment' %}" id="bookingForm">
+            {% csrf_token %}
+            <input type="hidden" name="provider_id" id="providerIdInput" value="{{ provider.id }}">
+            <input type="hidden" name="service_id" id="selectedServiceId">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="booking_date" class="form-control" id="bookingDate" required min="{{ today|date:'Y-m-d' }}" onchange="loadTimeSlots()">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Time</label>
+                    <select name="booking_time" class="form-control" id="timeSlotSelect" required>
+                        <option value="">First select a date</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Special Requests</label>
+                <textarea name="special_requests" class="form-control" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-success">Confirm Booking</button>
+        </form>
+    </div>
+</div>
+
+<script>
+const providerId = {{ provider.id }};
+
+function selectService(serviceId, serviceName, duration, price) {
+    document.getElementById('selectedServiceInfo').style.display = 'block';
+    document.getElementById('selectedServiceId').value = serviceId;
+    document.getElementById('serviceDetails').innerHTML = `
+        <p><strong>Service:</strong> ${serviceName} | <strong>Duration:</strong> ${duration} min | <strong>Price:</strong> $${price}</p>
+    `;
+}
+
+function loadTimeSlots() {
+    const dateInput = document.getElementById('bookingDate');
+    const timeSelect = document.getElementById('timeSlotSelect');
+    
+    if (!dateInput.value) {
+        timeSelect.innerHTML = '<option value="">First select a date</option>';
+        return;
+    }
+    
+    timeSelect.innerHTML = '<option value="">Loading...</option>';
+    
+    fetch(`/provider/${providerId}/slots/${dateInput.value}/`)
+        .then(response => response.json())
+        .then(data => {
+            timeSelect.innerHTML = '<option value="">Select a time slot</option>';
+            if (data.slots && data.slots.length > 0) {
+                data.slots.forEach(slot => {
+                    const option = document.createElement('option');
+                    option.value = slot;
+                    option.textContent = slot;
+                    timeSelect.appendChild(option);
+                });
+            } else {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No available slots';
+                option.disabled = true;
+                timeSelect.appendChild(option);
+            }
+        })
+        .catch(error => {
+            timeSelect.innerHTML = '<option value="">Error loading slots</option>';
+            console.error('Error:', error);
+        });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

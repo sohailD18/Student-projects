@@ -1,0 +1,91 @@
+{% extends 'appointments/base.html' %}
+
+{% block title %}Book Appointment - Appointment System{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <h2 class="mb-4">Book Appointment</h2>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Service Details</h5>
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Service:</strong></td>
+                            <td>{{ service.name }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Provider:</strong></td>
+                            <td>{{ provider }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Duration:</strong></td>
+                            <td>{{ service.duration }} minutes</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Price:</strong></td>
+                            <td>${{ service.price }}</td>
+                        </tr>
+                    </table>
+                    
+                    <hr>
+                    
+                    <h5 class="card-title">Select Date & Time</h5>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Date</label>
+                            <input type="date" name="booking_date" class="form-control" required min="{{ today|date:'Y-m-d' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Time</label>
+                            <select name="booking_time" class="form-control" required>
+                                <option value="">Select a time slot</option>
+                                <option value="09:00">09:00 AM</option>
+                                <option value="09:30">09:30 AM</option>
+                                <option value="10:00">10:00 AM</option>
+                                <option value="10:30">10:30 AM</option>
+                                <option value="11:00">11:00 AM</option>
+                                <option value="11:30">11:30 AM</option>
+                                <option value="12:00">12:00 PM</option>
+                                <option value="12:30">12:30 PM</option>
+                                <option value="13:00">01:00 PM</option>
+                                <option value="13:30">01:30 PM</option>
+                                <option value="14:00">02:00 PM</option>
+                                <option value="14:30">02:30 PM</option>
+                                <option value="15:00">03:00 PM</option>
+                                <option value="15:30">03:30 PM</option>
+                                <option value="16:00">04:00 PM</option>
+                                <option value="16:30">04:30 PM</option>
+                                <option value="17:00">05:00 PM</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Special Requests (Optional)</label>
+                            <textarea name="special_requests" class="form-control" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg w-100">Confirm Booking</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Booking Summary</h5>
+                    <hr>
+                    <p><strong>Service:</strong> {{ service.name }}</p>
+                    <p><strong>Provider:</strong> {{ provider }}</p>
+                    <p><strong>Duration:</strong> {{ service.duration }} min</p>
+                    <hr>
+                    <p class="h4">Total: ${{ service.price }}</p>
+                    <a href="{% url 'provider_detail' provider.id %}" class="btn btn-outline-secondary w-100 mt-2">Back to Provider</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

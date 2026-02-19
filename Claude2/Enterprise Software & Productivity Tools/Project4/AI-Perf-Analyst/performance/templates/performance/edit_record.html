@@ -1,0 +1,172 @@
+{% extends 'performance/base.html' %}
+
+{% block title %}Edit Record - {{ employee.name }} - AI Performance Analyst{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h1 class="card-title">✏️ Edit Performance Record</h1>
+                <p class="card-subtitle">{{ employee.name }} | {{ record.date|date:"F d, Y" }}</p>
+            </div>
+            <a href="{% url 'employee_detail' employee.id %}" class="btn btn-outline">Cancel</a>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label class="form-label">Employee</label>
+                    <input type="text"
+                           class="form-control"
+                           value="{{ employee.name }} - {{ employee.role }}"
+                           readonly
+                           style="background: var(--gray-100);">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="date" class="form-label">Record Date *</label>
+                        <input type="date"
+                               id="date"
+                               name="date"
+                               class="form-control"
+                               value="{{ record.date|date:'Y-m-d' }}"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="hours_worked" class="form-label">Hours Worked</label>
+                        <input type="number"
+                               id="hours_worked"
+                               name="hours_worked"
+                               class="form-control"
+                               value="{{ record.hours_worked }}"
+                               step="0.5"
+                               min="0"
+                               max="24">
+                        <div class="form-hint">Standard: 8 hours</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tasks_completed" class="form-label">Tasks Completed</label>
+                        <input type="number"
+                               id="tasks_completed"
+                               name="tasks_completed"
+                               class="form-control"
+                               value="{{ record.tasks_completed }}"
+                               min="0"
+                               required>
+                        <div class="form-hint">Number of tasks completed in this period</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="efficiency" class="form-label">Efficiency Score (1-10) *</label>
+                        <input type="number"
+                               id="efficiency"
+                               name="efficiency"
+                               class="form-control"
+                               value="{{ record.efficiency }}"
+                               min="1"
+                               max="10"
+                               step="0.1"
+                               required>
+                        <div class="form-hint">1 = Poor, 10 = Excellent</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quality" class="form-label">Quality Rating (1-10) *</label>
+                        <input type="number"
+                               id="quality"
+                               name="quality"
+                               class="form-control"
+                               value="{{ record.quality }}"
+                               min="1"
+                               max="10"
+                               step="0.1"
+                               required>
+                        <div class="form-hint">1 = Poor, 10 = Excellent</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="manager_notes" class="form-label">Manager Notes</label>
+                    <textarea id="manager_notes"
+                              name="manager_notes"
+                              class="form-control"
+                              rows="4">{{ record.manager_notes }}</textarea>
+                    <div class="form-hint">Optional: Add any notes or context about this performance record</div>
+                </div>
+
+                <div class="btn-group" style="margin-top: 2rem;">
+                    <button type="submit" class="btn btn-success">
+                        <span>💾</span> Update Record
+                    </button>
+                    <a href="{% url 'employee_detail' employee.id %}" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Current Info -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">📊 Record Information</h2>
+        </div>
+        <div class="card-body">
+            <div class="grid grid-2">
+                <div>
+                    <div style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 0.25rem;">Record Created</div>
+                    <div style="font-weight: 600;">{{ record.created_at|date:"F d, Y H:i" }}</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 0.25rem;">Last Updated</div>
+                    <div style="font-weight: 600;">{{ record.updated_at|date:"F d, Y H:i" }}</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 0.25rem;">Overall Score</div>
+                    <div style="font-weight: 600;">{{ record.get_overall_score|floatformat:2 }}/10</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 0.25rem;">Productivity</div>
+                    <div style="font-weight: 600;">{{ record.get_productivity_score }} tasks/hour</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Score visual feedback
+    function updateScoreBackground(input) {
+        const value = parseFloat(input.value);
+        input.style.background = '';
+        if (value >= 8) {
+            input.style.background = '#d1fae5';
+        } else if (value >= 5) {
+            input.style.background = '#fef3c7';
+        } else {
+            input.style.background = '#fee2e2';
+        }
+    }
+
+    document.getElementById('efficiency').addEventListener('input', function() {
+        updateScoreBackground(this);
+    });
+
+    document.getElementById('quality').addEventListener('input', function() {
+        updateScoreBackground(this);
+    });
+
+    // Initial color
+    updateScoreBackground(document.getElementById('efficiency'));
+    updateScoreBackground(document.getElementById('quality'));
+</script>
+{% endblock %}

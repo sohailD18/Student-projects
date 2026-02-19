@@ -1,0 +1,66 @@
+{% extends 'performance/base.html' %}
+
+{% block title %}Delete Record - {{ record.employee.name }} - AI Performance Analyst{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">🗑️ Delete Performance Record</h1>
+            <p class="card-subtitle">Confirm deletion of this record</p>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <span>⚠️</span>
+                <strong>Warning:</strong> This action cannot be undone. The record will be permanently deleted.
+            </div>
+
+            <div style="background: var(--gray-100); padding: 1.5rem; border-radius: var(--radius-md); margin: 1.5rem 0;">
+                <h3 style="margin-bottom: 1rem;">Record Details</h3>
+                <div class="grid grid-2">
+                    <div>
+                        <div style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 0.25rem;">Employee</div>
+                        <div style="font-weight: 600;">{{ record.employee.name }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 0.25rem;">Date</div>
+                        <div style="font-weight: 600;">{{ record.date|date:"F d, Y" }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 0.25rem;">Efficiency</div>
+                        <div style="font-weight: 600;">{{ record.efficiency }}/10</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 0.25rem;">Quality</div>
+                        <div style="font-weight: 600;">{{ record.quality }}/10</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 0.25rem;">Tasks Completed</div>
+                        <div style="font-weight: 600;">{{ record.tasks_completed }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 0.25rem;">Hours Worked</div>
+                        <div style="font-weight: 600;">{{ record.hours_worked }}</div>
+                    </div>
+                </div>
+                {% if record.manager_notes %}
+                <div style="margin-top: 1rem;">
+                    <div style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 0.25rem;">Manager Notes</div>
+                    <div style="font-style: italic;">{{ record.manager_notes }}</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-danger">
+                        <span>🗑️</span> Yes, Delete This Record
+                    </button>
+                    <a href="{% url 'employee_detail' record.employee.id %}" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

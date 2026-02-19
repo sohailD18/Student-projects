@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Document - LexiGuard{% endblock %}
+
+{% block content %}
+<a href="{% url 'core:dashboard' %}" class="btn btn-secondary mb-3">
+    &larr; Back to Dashboard
+</a>
+
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <div class="card-header">
+        <h2>Upload Legal Document</h2>
+    </div>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="title" class="form-label">Document Title *</label>
+            <input type="text" id="title" name="title" class="form-control" placeholder="Enter a descriptive title for this document" required>
+            <small class="text-muted">Example: Employment Contract 2026, Service Agreement, NDA Template</small>
+        </div>
+
+        <div class="form-group">
+            <label for="document" class="form-label">Upload File *</label>
+            <input type="file" id="document" name="document" class="form-control" accept=".pdf,.docx,.txt" required>
+            <small class="text-muted">Supported formats: PDF, DOCX, TXT (Max 10MB)</small>
+        </div>
+
+        <div style="background: #e7f3ff; border-left: 4px solid #2c5282; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
+            <h4 style="color: #1e3a5f; font-size: 1rem; margin-bottom: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                Before Uploading
+            </h4>
+            <ul style="margin: 0; padding-left: 1.5rem; font-size: 0.875rem; color: #2c3e50;">
+                <li>Ensure the document contains readable text (not scanned images)</li>
+                <li>Remove any sensitive personal information before uploading</li>
+                <li>Check that the file is not password protected</li>
+                <li>Documents will be automatically analyzed after upload</li>
+            </ul>
+        </div>
+
+        <div style="display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-right: 0.5rem;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Upload Document
+            </button>
+            <a href="{% url 'core:dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

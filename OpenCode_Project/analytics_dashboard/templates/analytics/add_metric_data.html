@@ -1,0 +1,27 @@
+{% extends 'analytics/base.html' %}
+
+{% block title %}Add Data - {{ metric.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-container">
+        <h1>Add Data Point</h1>
+        <p>Metric: <strong>{{ metric.name }}</strong></p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="value">Value:</label>
+                <input type="number" name="value" id="value" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label for="metadata">Metadata (JSON format, optional):</label>
+                <textarea name="metadata" id="metadata" rows="3" placeholder='{"key": "value"}'></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Add Data Point</button>
+                <a href="/metrics/{{ metric.id }}/" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

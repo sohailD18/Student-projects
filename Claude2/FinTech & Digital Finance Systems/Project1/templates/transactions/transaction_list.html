@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% load fraud_filters %}
+
+{% block title %}Transactions - Fraud Detection System{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <h1 class="page-title">Transaction List</h1>
+    <p class="page-subtitle">Browse and filter all transactions</p>
+</div>
+
+<!-- Filters -->
+<div class="filters-bar">
+    <div class="filter-group">
+        <label for="fraud-filter" class="form-label" style="margin-bottom: 0;">Filter:</label>
+        <select id="fraud-filter" class="form-control" style="width: auto;" onchange="applyFilters()">
+            <option value="all" {% if filters.fraud == 'all' %}selected{% endif %}>All Transactions</option>
+            <option value="fraud" {% if filters.fraud == 'fraud' %}selected{% endif %}>Fraud Only</option>
+            <option value="legitimate" {% if filters.fraud == 'legitimate' %}selected{% endif %}>Legitimate Only</option>
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <select id="status-filter" class="form-control" style="width: auto;" onchange="applyFilters()">
+            <option value="all" {% if filters.status == 'all' %}selected{% endif %}>Any Status</option>
+            <option value="flagged" {% if filters.status == 'flagged' %}selected{% endif %}>Flagged</option>
+            <option value="reviewed" {% if filters.status == 'reviewed' %}selected{% endif %}>Reviewed</option>
+        </select>
+    </div>
+
+    <div class="filter-group" style="flex-grow: 1;">
+        <input type="text" id="search-input" class="form-control" placeholder="Search by ID, merchant, or account..."
+               value="{{ filters.search }}" onkeypress="if(event.key === 'Enter') applyFilters()">
+    </div>
+
+    <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+    <a href="/transactions/" class="btn btn-outline">Clear</a>
+</div>
+
+<!-- Statistics -->
+<div class="stats-grid" style="margin-bottom: 1.5rem;">
+    <div class="stat-card">
+        <div class="label">Total</div>
+        <div class="value" style="font-size: 1.5rem;">{{ stats.total }}</div>
+    </div>
+    <div class="stat-card danger">
+        <div class="label">Fraud</div>
+        <div class="value" style="font-size: 1.5rem;">{{ stats.fraud }}</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="label">Flagged</div>
+        <div class="value" style="font-size: 1.5rem;">{{ stats.flagged }}</div>
+    </div>
+</div>
+
+<!-- Transactions Table -->
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Transaction ID</th>
+                <th>Date & Time</th>
+                <th>Amount</th>
+                <th>Type</th>
+                <th>Merchant</th>
+                <th>Location</th>
+                <th>Risk Score</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transaction in transactions %}
+            <tr class="{% if transaction.risk_score >= 0.7 %}high-risk{% elif transaction.risk_score >= 0.4 %}medium-risk{% endif %}">
+                <td><strong>{{ transaction.transaction_id }}</strong></td>
+                <td>{{ transaction.timestamp|date:"M d, H:i" }}</td>
+                <td><strong>${{ transaction.amount }}</strong></td>
+                <td>{{ transaction.transaction_type|title }}</td>
+                <td>{{ transaction.merchant }}</td>
+                <td>{{ transaction.city }}, {{ transaction.country }}</td>
+                <td>
+                    <div class="risk-score">
+                        <span>{{ transaction.risk_score|floatformat:3 }}</span>
+                        <div class="risk-score-bar">
+                            <div class="risk-score-fill {% if transaction.risk_score >= 0.7 %}high{% elif transaction.risk_score >= 0.4 %}medium{% else %}low{% endif %}"
+                                 style="width: {{ transaction.risk_score|multiply:100 }}%"></div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    {% if transaction.is_fraud %}
+                        <span class="badge badge-danger">Fraud</span>
+                    {% elif transaction.is_flagged %}
+                        <span class="badge badge-warning">Flagged</span>
+                    {% else %}
+                        <span class="badge badge-success">Clean</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="/transactions/{{ transaction.transaction_id }}/" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+                        View
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" class="text-center" style="padding: 3rem;">
+                    <div style="color: var(--text-muted);">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 1rem;">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <p>No transactions found matching your criteria.</p>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Legend -->
+<div class="stat-card" style="margin-top: 1.5rem;">
+    <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">Risk Level Guide</h4>
+    <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="width: 12px; height: 12px; background: #10b981; border-radius: 2px;"></div>
+            <span style="color: var(--text-secondary);">Low Risk (0.0 - 0.4)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="width: 12px; height: 12px; background: #f59e0b; border-radius: 2px;"></div>
+            <span style="color: var(--text-secondary);">Medium Risk (0.4 - 0.7)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="width: 12px; height: 12px; background: #ef4444; border-radius: 2px;"></div>
+            <span style="color: var(--text-secondary);">High Risk (0.7 - 1.0)</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function applyFilters() {
+    const fraudFilter = document.getElementById('fraud-filter').value;
+    const statusFilter = document.getElementById('status-filter').value;
+    const search = document.getElementById('search-input').value;
+
+    let url = '/transactions/?';
+    const params = [];
+
+    if (fraudFilter !== 'all') {
+        params.push('fraud=' + fraudFilter);
+    }
+    if (statusFilter !== 'all') {
+        params.push('status=' + statusFilter);
+    }
+    if (search) {
+        params.push('search=' + encodeURIComponent(search));
+    }
+
+    window.location.href = url + params.join('&');
+}
+</script>
+{% endblock %}

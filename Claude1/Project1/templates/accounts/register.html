@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - JobPortal{% endblock %}
+
+{% block content %}
+<div class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-user-plus text-success mb-3" style="font-size: 3rem;"></i>
+                            <h2>Create Account</h2>
+                            <p class="text-muted">Join JobPortal and find your dream job</p>
+                        </div>
+
+                        <form method="POST" action="{% url 'accounts:register' %}">
+                            {% csrf_token %}
+
+                            {% if messages %}
+                            <div class="alert alert-danger">
+                                {% for message in messages %}
+                                {{ message }}<br>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_first_name" class="form-label">First Name</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="id_first_name"
+                                           name="first_name"
+                                           placeholder="John"
+                                           value="{{ form.first_name.value|default:'' }}">
+                                    {% if form.first_name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.first_name.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_last_name" class="form-label">Last Name</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="id_last_name"
+                                           name="last_name"
+                                           placeholder="Doe"
+                                           value="{{ form.last_name.value|default:'' }}">
+                                    {% if form.last_name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.last_name.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_username" class="form-label">Username *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="id_username"
+                                           name="username"
+                                           placeholder="Choose a unique username"
+                                           required
+                                           value="{{ form.username.value|default:'' }}">
+                                </div>
+                                {% if form.username.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.username.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_email" class="form-label">Email Address *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <input type="email"
+                                           class="form-control"
+                                           id="id_email"
+                                           name="email"
+                                           placeholder="john.doe@example.com"
+                                           required
+                                           value="{{ form.email.value|default:'' }}">
+                                </div>
+                                {% if form.email.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.email.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_user_type" class="form-label">I am a * </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user-tag"></i>
+                                    </span>
+                                    <select name="user_type" class="form-select" id="id_user_type" required>
+                                        <option value="">Select your role</option>
+                                        <option value="job_seeker" {% if form.user_type.value == 'job_seeker' %}selected{% endif %}>Job Seeker - Looking for a Job</option>
+                                        <option value="employer" {% if form.user_type.value == 'employer' %}selected{% endif %}>Employer - Hiring Talent</option>
+                                    </select>
+                                </div>
+                                <div class="form-text">Choose whether you're looking for a job or hiring talent.</div>
+                                {% if form.user_type.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.user_type.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_password1" class="form-label">Password *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-lock"></i>
+                                        </span>
+                                        <input type="password"
+                                               class="form-control"
+                                               id="id_password1"
+                                               name="password1"
+                                               placeholder="Enter a strong password"
+                                               required>
+                                    </div>
+                                    {% if form.password1.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.password1.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        <ul class="mb-0 small">
+                                            <li>Your password can't be too similar to your other personal information.</li>
+                                            <li>Your password must contain at least 8 characters.</li>
+                                            <li>Your password can't be a commonly used password.</li>
+                                            <li>Your password can't be entirely numeric.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_password2" class="form-label">Confirm Password *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-lock"></i>
+                                        </span>
+                                        <input type="password"
+                                               class="form-control"
+                                               id="id_password2"
+                                               name="password2"
+                                               placeholder="Confirm your password"
+                                               required>
+                                    </div>
+                                    {% if form.password2.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.password2.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                                <label class="form-check-label" for="termsCheck">
+                                    I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> and <a href="#" class="text-decoration-none">Privacy Policy</a>
+                                </label>
+                            </div>
+
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="fas fa-user-plus me-2"></i>Create Account
+                                </button>
+                            </div>
+
+                            <div class="text-center">
+                                <p class="mb-0">
+                                    Already have an account?
+                                    <a href="{% url 'accounts:login' %}" class="text-decoration-none fw-bold">
+                                        Sign in here
+                                    </a>
+                                </p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const password1 = document.getElementById('id_password1');
+    const password2 = document.getElementById('id_password2');
+
+    form.addEventListener('submit', function(e) {
+        const username = document.getElementById('id_username').value.trim();
+        const email = document.getElementById('id_email').value.trim();
+        const pass1 = password1.value;
+        const pass2 = password2.value;
+        const terms = document.getElementById('termsCheck').checked;
+
+        if (!username || !email || !pass1 || !pass2) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Missing Information',
+                text: 'Please fill in all required fields.'
+            });
+            return false;
+        }
+
+        if (pass1 !== pass2) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Passwords Do Not Match',
+                text: 'Please make sure both passwords are the same.'
+            });
+            return false;
+        }
+
+        if (!terms) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Terms Required',
+                text: 'Please agree to the Terms of Service and Privacy Policy.'
+            });
+            return false;
+        }
+
+        if (pass1.length < 8) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Password Too Short',
+                text: 'Password must be at least 8 characters long.'
+            });
+            return false;
+        }
+    });
+
+    // Real-time password match validation
+    password2.addEventListener('input', function() {
+        if (this.value !== password1.value) {
+            this.classList.add('is-invalid');
+        } else {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        }
+    });
+});
+</script>
+{% endblock %}

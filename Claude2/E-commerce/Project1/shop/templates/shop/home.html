@@ -1,0 +1,188 @@
+{% extends 'shop/base.html' %}
+{% load static %}
+
+{% block title %}AI E-Commerce - Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <h1>Welcome to AI-Powered Shopping</h1>
+            <p class="hero-subtitle">
+                {% if user.is_authenticated %}
+                    Discover products personalized just for you based on your browsing history
+                {% else %}
+                    Explore our curated collection of products with intelligent recommendations
+                {% endif %}
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+{% if featured_categories %}
+<section class="categories-section">
+    <div class="container">
+        <h2 class="section-title">Shop by Category</h2>
+        <div class="categories-grid">
+            {% for category in featured_categories %}
+            <a href="{% url 'shop:category' category.id %}" class="category-card">
+                <h3>{{ category.name }}</h3>
+                <span class="product-count">{{ category.product_count }} products</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Personalized Recommendations (Logged-in users) -->
+{% if user_authenticated and personalized_recommendations %}
+<section class="recommendations-section">
+    <div class="container">
+        <h2 class="section-title">
+            <span class="ai-badge">AI</span> Recommended for You
+        </h2>
+        <p class="section-subtitle">Based on your browsing and purchase history</p>
+        <div class="products-grid">
+            {% for product in personalized_recommendations %}
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{% static 'shop/images/placeholder.jpg' %}" alt="{{ product.name }}">
+                    <span class="ai-indicator">AI Pick</span>
+                </div>
+                <div class="product-info">
+                    <span class="product-category">{{ product.category.name }}</span>
+                    <h3 class="product-name">
+                        <a href="{% url 'shop:product_detail' product.id %}">{{ product.name }}</a>
+                    </h3>
+                    <p class="product-description">{{ product.description|truncatewords:15 }}</p>
+                    <div class="product-footer">
+                        <span class="product-price">${{ product.price }}</span>
+                        <button class="btn-add-cart" onclick="addToCart({{ product.id }})">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Frequently Bought Together (Logged-in users) -->
+{% if user_authenticated and frequently_bought %}
+<section class="recommendations-section">
+    <div class="container">
+        <h2 class="section-title">
+            <span class="ai-badge">Frequently Bought</span>
+        </h2>
+        <p class="section-subtitle">Customers who viewed this also bought</p>
+        <div class="products-grid">
+            {% for product, score in frequently_bought %}
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{% static 'shop/images/placeholder.jpg' %}" alt="{{ product.name }}">
+                    {% if score > 0 %}
+                    <span class="match-badge">{{ score }} buyers</span>
+                    {% endif %}
+                </div>
+                <div class="product-info">
+                    <span class="product-category">{{ product.category.name }}</span>
+                    <h3 class="product-name">
+                        <a href="{% url 'shop:product_detail' product.id %}">{{ product.name }}</a>
+                    </h3>
+                    <p class="product-description">{{ product.description|truncatewords:15 }}</p>
+                    <div class="product-footer">
+                        <span class="product-price">${{ product.price }}</span>
+                        <button class="btn-add-cart" onclick="addToCart({{ product.id }})">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Latest Products (Anonymous users) -->
+{% if not user_authenticated and latest_products %}
+<section class="products-section">
+    <div class="container">
+        <h2 class="section-title">Latest Products</h2>
+        <p class="section-subtitle">Fresh arrivals just for you</p>
+        <div class="products-grid">
+            {% for product in latest_products %}
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{% static 'shop/images/placeholder.jpg' %}" alt="{{ product.name }}">
+                    <span class="new-badge">New</span>
+                </div>
+                <div class="product-info">
+                    <span class="product-category">{{ product.category.name }}</span>
+                    <h3 class="product-name">
+                        <a href="{% url 'shop:product_detail' product.id %}">{{ product.name }}</a>
+                    </h3>
+                    <p class="product-description">{{ product.description|truncatewords:15 }}</p>
+                    <div class="product-footer">
+                        <span class="product-price">${{ product.price }}</span>
+                        <button class="btn-add-cart" onclick="addToCart({{ product.id }})">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Popular Products (All users) -->
+{% if popular_products %}
+<section class="products-section">
+    <div class="container">
+        <h2 class="section-title">Popular Products</h2>
+        <p class="section-subtitle">Trending across our store</p>
+        <div class="products-grid">
+            {% for product in popular_products %}
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{% static 'shop/images/placeholder.jpg' %}" alt="{{ product.name }}">
+                    <span class="popular-badge">Trending</span>
+                </div>
+                <div class="product-info">
+                    <span class="product-category">{{ product.category.name }}</span>
+                    <h3 class="product-name">
+                        <a href="{% url 'shop:product_detail' product.id %}">{{ product.name }}</a>
+                    </h3>
+                    <p class="product-description">{{ product.description|truncatewords:15 }}</p>
+                    <div class="product-footer">
+                        <span class="product-price">${{ product.price }}</span>
+                        <button class="btn-add-cart" onclick="addToCart({{ product.id }})">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Empty State -->
+{% if not user_authenticated and not latest_products and not popular_products %}
+<section class="empty-state">
+    <div class="container">
+        <h2>Welcome to AI E-Commerce</h2>
+        <p>No products available yet. Please add products through the <a href="{% url 'admin:index' %}">admin panel</a>.</p>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addToCart(productId) {
+    // TODO: Implement cart functionality
+    alert('Product ' + productId + ' added to cart!');
+}
+</script>
+{% endblock %}

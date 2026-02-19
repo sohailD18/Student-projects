@@ -1,0 +1,105 @@
+{% extends 'appointments/base.html' %}
+
+{% block title %}My Appointments - Appointment System{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">My Appointments</h2>
+
+<h4 class="mb-3">Upcoming Appointments</h4>
+{% if upcoming %}
+<div class="table-responsive mb-5">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Service</th>
+                <th>Provider</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for appointment in upcoming %}
+            <tr>
+                <td>{{ appointment.service.name }}</td>
+                <td>{{ appointment.provider }}</td>
+                <td>{{ appointment.appointment_date }}</td>
+                <td>{{ appointment.start_time }}</td>
+                <td><span class="badge bg-{% if appointment.status == 'CONFIRMED' %}success{% elif appointment.status == 'PENDING' %}warning{% else %}secondary{% endif %}">{{ appointment.status }}</span></td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="cancelAppointment({{ appointment.id }})">Cancel</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="text-muted mb-5">No upcoming appointments.</p>
+{% endif %}
+
+<h4 class="mb-3">Past Appointments</h4>
+{% if past %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Service</th>
+                <th>Provider</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for appointment in past %}
+            <tr>
+                <td>{{ appointment.service.name }}</td>
+                <td>{{ appointment.provider }}</td>
+                <td>{{ appointment.appointment_date }}</td>
+                <td>{{ appointment.start_time }}</td>
+                <td><span class="badge bg-{% if appointment.status == 'COMPLETED' %}success{% elif appointment.status == 'CANCELLED' %}danger{% else %}secondary{% endif %}">{{ appointment.status }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="text-muted">No past appointments.</p>
+{% endif %}
+
+<script>
+function cancelAppointment(appointmentId) {
+    if (confirm('Are you sure you want to cancel this appointment?')) {
+        fetch(`/appointment/${appointmentId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

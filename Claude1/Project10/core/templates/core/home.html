@@ -1,0 +1,438 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Home - SkillSwap{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+
+    @keyframes pulse-glow {
+        0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); }
+        50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.8); }
+    }
+
+    .animate-fade-in {
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .animate-float {
+        animation: float 3s ease-in-out infinite;
+    }
+
+    .feature-card {
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
+    }
+
+    .feature-icon {
+        transition: all 0.3s ease;
+    }
+
+    .feature-card:hover .feature-icon {
+        transform: scale(1.2) rotate(5deg);
+    }
+
+    .category-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+    }
+
+    .category-card:hover .category-icon {
+        transform: scale(1.3);
+    }
+
+    .category-icon {
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4) !important;
+    }
+
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero-icon {
+        font-size: 12rem;
+        background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: float 4s ease-in-out infinite;
+    }
+
+    .btn-glow:hover {
+        animation: pulse-glow 1.5s infinite;
+    }
+
+    .glass-effect {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 animate-fade-in">
+                <h1><i class="bi bi-lightning-charge-fill text-warning"></i> SkillSwap</h1>
+                <p class="lead">Exchange Knowledge, Learn Together, Grow Community</p>
+                <p class="mb-4 fs-5">
+                    Discover new skills, share your expertise, and connect with passionate learners.
+                    Trade knowledge points for personalized sessions with expert teachers.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    {% if user.is_authenticated %}
+                        {% if user.is_staff %}
+                        <!-- Admin User -->
+                        <a href="{% url 'users:admin_dashboard' %}" class="btn btn-light btn-hero btn-glow">
+                            <i class="bi bi-shield-fill-check"></i> Admin Dashboard
+                        </a>
+                        {% elif user.skills_teaching.exists %}
+                        <!-- Teacher User -->
+                        <a href="{% url 'core:teacher_sessions' %}" class="btn btn-light btn-hero btn-glow">
+                            <i class="bi bi-calendar-check"></i> My Sessions
+                        </a>
+                        <a href="{% url 'core:create_skill' %}" class="btn btn-outline-light btn-hero btn-glow">
+                            <i class="bi bi-plus-circle"></i> Create Skill
+                        </a>
+                        {% else %}
+                        <!-- Student User -->
+                        <a href="{% url 'core:skill_list' %}" class="btn btn-light btn-hero btn-glow">
+                            <i class="bi bi-search"></i> Browse Skills
+                        </a>
+                        <a href="{% url 'users:student_dashboard' %}" class="btn btn-outline-light btn-hero btn-glow">
+                            <i class="bi bi-speedometer2"></i> Student Dashboard
+                        </a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'users:register' %}" class="btn btn-light btn-hero btn-glow">
+                            <i class="bi bi-person-plus"></i> Get Started
+                        </a>
+                        <a href="{% url 'core:skill_list' %}" class="btn btn-outline-light btn-hero btn-glow">
+                            <i class="bi bi-book"></i> Explore Skills
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-4 d-none d-lg-block">
+                <div class="text-center">
+                    <i class="bi bi-people-fill hero-icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Stats Section -->
+    <section class="mb-5">
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="stat-card text-white p-4 rounded-3 text-center">
+                    <div class="stat-number">{{ users_count }}</div>
+                    <div class="fs-5">Active Learners</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card text-white p-4 rounded-3 text-center" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <div class="stat-number">{{ skills_count }}</div>
+                    <div class="fs-5">Skills Available</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card text-white p-4 rounded-3 text-center" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <div class="stat-number">{{ sessions_count }}</div>
+                    <div class="fs-5">Sessions Completed</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card text-white p-4 rounded-3 text-center" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <div class="stat-number">{{ badges_count }}</div>
+                    <div class="fs-5">Badges Earned</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="mb-5">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold">
+                <i class="bi bi-lightning-charge text-primary"></i> How SkillSwap Works
+            </h2>
+            <p class="lead text-muted">Learn, Teach, and Earn Points</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card feature-card h-100 text-center p-4 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="mb-3 feature-icon">
+                            <span class="badge rounded-pill bg-primary bg-gradient p-3">
+                                <i class="bi bi-search fs-2 text-white"></i>
+                            </span>
+                        </div>
+                        <h4 class="card-title fw-bold">1. Browse Skills</h4>
+                        <p class="card-text text-muted">Explore hundreds of skills taught by community members. From coding to cooking, music to martial arts.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card h-100 text-center p-4 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="mb-3 feature-icon">
+                            <span class="badge rounded-pill bg-success bg-gradient p-3">
+                                <i class="bi bi-calendar-check fs-2 text-white"></i>
+                            </span>
+                        </div>
+                        <h4 class="card-title fw-bold">2. Book Sessions</h4>
+                        <p class="card-text text-muted">Schedule sessions with teachers using your knowledge points. Learn at your own pace, on your schedule.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card h-100 text-center p-4 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="mb-3 feature-icon">
+                            <span class="badge rounded-pill bg-warning bg-gradient p-3">
+                                <i class="bi bi-trophy-fill fs-2 text-white"></i>
+                            </span>
+                        </div>
+                        <h4 class="card-title fw-bold">3. Earn & Grow</h4>
+                        <p class="card-text text-muted">Teach what you know, earn points, and unlock badges. Build your reputation as you help others learn.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Preview -->
+    <section class="mb-5">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold">
+                <i class="bi bi-grid-fill text-primary"></i> Popular Categories
+            </h2>
+            <p class="lead text-muted">Find your next learning adventure</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-6 col-md-3">
+                <div class="card category-card text-center p-4 border-0 shadow-sm">
+                    <i class="bi bi-laptop category-icon text-primary" style="font-size: 2.5rem;"></i>
+                    <h5 class="mt-3 fw-bold">Technology</h5>
+                    <small class="text-muted">{{ tech_count }} skills</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card category-card text-center p-4 border-0 shadow-sm">
+                    <i class="bi bi-palette category-icon text-danger" style="font-size: 2.5rem;"></i>
+                    <h5 class="mt-3 fw-bold">Art & Design</h5>
+                    <small class="text-muted">{{ art_count }} skills</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card category-card text-center p-4 border-0 shadow-sm">
+                    <i class="bi bi-translate category-icon text-success" style="font-size: 2.5rem;"></i>
+                    <h5 class="mt-3 fw-bold">Languages</h5>
+                    <small class="text-muted">{{ language_count }} skills</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card category-card text-center p-4 border-0 shadow-sm">
+                    <i class="bi bi-music-note category-icon text-warning" style="font-size: 2.5rem;"></i>
+                    <h5 class="mt-3 fw-bold">Music</h5>
+                    <small class="text-muted">{{ music_count }} skills</small>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <a href="{% url 'core:skill_list' %}" class="btn btn-outline-primary btn-lg">
+                <i class="bi bi-arrow-right-circle"></i> View All Categories
+            </a>
+        </div>
+    </section>
+
+    <!-- Featured Skills Section -->
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="display-6 fw-bold">
+                    <i class="bi bi-star-fill text-warning"></i> Featured Skills
+                </h2>
+                <p class="text-muted mb-0">Top-rated skills from our community</p>
+            </div>
+            <a href="{% url 'core:skill_list' %}" class="btn btn-primary">
+                View All <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        <div class="row g-4">
+            {% for skill in featured_skills %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <span class="badge bg-primary">{{ skill.get_category_display }}</span>
+                            <span class="badge bg-warning text-dark">
+                                <i class="bi bi-star-fill"></i> {{ skill.hourly_rate_points }} pts
+                            </span>
+                        </div>
+                        <h5 class="card-title fw-bold">{{ skill.title }}</h5>
+                        <p class="card-text text-muted small">{{ skill.description|truncatewords:20 }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="bi bi-person-circle"></i> {{ skill.teacher.username }}
+                            </small>
+                            <a href="{% url 'core:skill_detail' skill.id %}" class="btn btn-sm btn-outline-primary">
+                                Learn More
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="text-center py-5 mb-5">
+        <div class="card bg-primary text-white p-5 border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;">
+            <div class="card-body">
+                <div class="mb-4">
+                    <i class="bi bi-rocket-takeoff" style="font-size: 4rem; opacity: 0.9;"></i>
+                </div>
+                <h2 class="display-6 fw-bold mb-3">Ready to Start Your Learning Journey?</h2>
+                <p class="lead mb-4">Join thousands of knowledge seekers and teachers in our community.</p>
+                {% if user.is_authenticated %}
+                <a href="{% url 'core:skill_list' %}" class="btn btn-light btn-lg btn-glow">
+                    <i class="bi bi-book"></i> Explore All Skills
+                </a>
+                {% else %}
+                <a href="{% url 'users:register' %}" class="btn btn-light btn-lg btn-glow">
+                    <i class="bi bi-person-plus"></i> Join SkillSwap Now - It's Free!
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="mb-5">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold">
+                <i class="bi bi-chat-quote-fill text-primary"></i> What Our Users Say
+            </h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="mb-3 text-warning">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <p class="card-text fst-italic">"SkillSwap helped me learn Python from scratch. The teacher was patient and the sessions were very practical!"</p>
+                        <div class="d-flex align-items-center mt-3">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h6 class="mb-0 fw-bold">John D.</h6>
+                                <small class="text-muted">Python Learner</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="mb-3 text-warning">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <p class="card-text fst-italic">"I've earned over 500 points teaching web development. It's a great way to share knowledge while earning rewards!"</p>
+                        <div class="d-flex align-items-center mt-3">
+                            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h6 class="mb-0 fw-bold">Sarah M.</h6>
+                                <small class="text-muted">Web Development Teacher</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="mb-3 text-warning">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-half"></i>
+                        </div>
+                        <p class="card-text fst-italic">"The badge system keeps me motivated! I've already earned 5 badges and completed 20 sessions. Best learning platform!"</p>
+                        <div class="d-flex align-items-center mt-3">
+                            <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h6 class="mb-0 fw-bold">Mike R.</h6>
+                                <small class="text-muted">Guitar Enthusiast</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

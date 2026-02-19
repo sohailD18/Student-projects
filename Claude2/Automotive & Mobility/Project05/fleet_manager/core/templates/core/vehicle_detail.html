@@ -1,0 +1,326 @@
+{% extends "core/base.html" %}
+
+{% block title %}{{ vehicle.plate }} - Fleet Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:vehicle_list' %}">Vehicles</a></li>
+                <li class="breadcrumb-item active">{{ vehicle.plate }}</li>
+            </ol>
+        </nav>
+        <h1 class="mb-4">
+            <i class="bi bi-car-front"></i> {{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}
+            <small class="text-muted">({{ vehicle.plate }})</small>
+        </h1>
+    </div>
+</div>
+
+<!-- Vehicle Overview -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Vehicle Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th class="text-muted" width="40%">License Plate:</th>
+                                <td><strong>{{ vehicle.plate }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">VIN:</th>
+                                <td>{{ vehicle.vin }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Type:</th>
+                                <td>{{ vehicle.get_vehicle_type_display }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Status:</th>
+                                <td>
+                                    {% if vehicle.status == 'active' %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% elif vehicle.status == 'maintenance' %}
+                                        <span class="badge bg-warning">In Maintenance</span>
+                                    {% elif vehicle.status == 'inactive' %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Retired</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th class="text-muted" width="40%">Purchase Date:</th>
+                                <td>{{ vehicle.purchase_date|date:"M d, Y" }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Current Mileage:</th>
+                                <td>{{ vehicle.current_mileage|floatformat }} mi</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Fuel Capacity:</th>
+                                <td>{% if vehicle.fuel_capacity %}{{ vehicle.fuel_capacity }} gal{% else %}N/A{% endif %}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Total Distance:</th>
+                                <td>{{ vehicle.total_distance|floatformat }} mi</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Performance Metrics</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <h2 class="display-6 text-success">{{ vehicle.fuel_efficiency }}</h2>
+                    <p class="text-muted mb-0">Average MPG</p>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Cost per Mile:</span>
+                    <strong>${{ vehicle.cost_per_mile|floatformat:2 }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Total Fuel Used:</span>
+                    <strong>{{ vehicle.total_fuel_used|floatformat }} gal</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Maintenance Cost:</span>
+                    <strong>${{ vehicle.total_maintenance_cost|floatformat:2 }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Predictions -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card border-{% if maintenance_prediction.urgency == 'critical' %}danger{% elif maintenance_prediction.urgency == 'high' %}warning{% else %}info{% endif %}">
+            <div class="card-header bg-{% if maintenance_prediction.urgency == 'critical' %}danger{% elif maintenance_prediction.urgency == 'high' %}warning{% else %}info{% endif %} text-white">
+                <h5 class="mb-0"><i class="bi bi-robot"></i> Predictive Maintenance</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong class="text-muted">Current Mileage:</strong></p>
+                        <h4>{{ maintenance_prediction.current_mileage|floatformat }} mi</h4>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong class="text-muted">Predicted Next Service:</strong></p>
+                        <h4>{{ maintenance_prediction.predicted_next_maintenance_mileage|floatformat }} mi</h4>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong class="text-muted">Miles Until Maintenance:</strong></p>
+                        <h3 class="text-{% if maintenance_prediction.miles_until_maintenance < 1000 %}danger{% elif maintenance_prediction.miles_until_maintenance < 2000 %}warning{% else %}success{% endif %}">
+                            {{ maintenance_prediction.miles_until_maintenance|floatformat }} mi
+                        </h3>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong class="text-muted">Urgency:</strong></p>
+                        <span class="badge bg-{% if maintenance_prediction.urgency == 'critical' %}danger{% elif maintenance_prediction.urgency == 'high' %}warning{% elif maintenance_prediction.urgency == 'medium' %}info{% else %}success{% endif %} fs-6">
+                            {{ maintenance_prediction.urgency|title }}
+                        </span>
+                    </div>
+                </div>
+                <p class="text-muted small mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    Confidence: {{ maintenance_prediction.confidence|percentage:"0" }} |
+                    Method: {{ maintenance_prediction.prediction_method|title }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-{% if failure_prediction.risk_level == 'critical' %}danger{% elif failure_prediction.risk_level == 'high' %}warning{% else %}info{% endif %}">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Failure Risk Assessment</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <h2 class="display-6 text-{% if failure_prediction.failure_probability > 0.6 %}danger{% elif failure_prediction.failure_probability > 0.3 %}warning{% else %}success{% endif %}">
+                        {{ failure_prediction.failure_probability|percentage:"0" }}
+                    </h2>
+                    <p class="text-muted mb-0">Failure Probability</p>
+                </div>
+                <div class="alert alert-{% if failure_prediction.risk_level == 'critical' %}danger{% elif failure_prediction.risk_level == 'high' %}warning{% else %}info{% endif %}">
+                    <strong>Recommendation:</strong> {{ failure_prediction.recommendation }}
+                </div>
+                {% if failure_prediction.risk_factors %}
+                <p class="mb-1 small text-muted">Risk Factors:</p>
+                {% for factor in failure_prediction.risk_factors %}
+                <span class="badge bg-secondary me-1">{{ factor.factor|title }}: {{ factor.score|percentage:"0" }}</span>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Alerts -->
+{% if alerts %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle-fill"></i> Active Alerts ({{ alerts|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% for alert in alerts %}
+                <div class="alert alert-{{ alert.severity }} alert-dismissible fade show mb-2" role="alert">
+                    <strong>{{ alert.get_alert_type_display }}:</strong> {{ alert.message }}
+                    <small class="d-block text-muted">{{ alert.created_at|timesince }} ago</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Tabs for Trips and Maintenance -->
+<div class="row">
+    <div class="col-12">
+        <ul class="nav nav-tabs" id="vehicleTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="trips-tab" data-bs-toggle="tab" data-bs-target="#trips" type="button">
+                    <i class="bi bi-route"></i> Recent Trips
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="maintenance-tab" data-bs-toggle="tab" data-bs-target="#maintenance" type="button">
+                    <i class="bi bi-tools"></i> Maintenance History
+                </button>
+            </li>
+        </ul>
+        <div class="tab-content border border-top-0 p-3" id="vehicleTabsContent">
+            <!-- Trips Tab -->
+            <div class="tab-pane fade show active" id="trips" role="tabpanel">
+                {% if trips %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Driver</th>
+                                <th>Route</th>
+                                <th>Distance</th>
+                                <th>Fuel Used</th>
+                                <th>Efficiency</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for trip in trips %}
+                            <tr>
+                                <td>{{ trip.start_date|date:"M d, Y" }}</td>
+                                <td>{{ trip.driver.name }}</td>
+                                <td>
+                                    {{ trip.start_location }} <i class="bi bi-arrow-right"></i> {{ trip.end_location }}
+                                </td>
+                                <td>{{ trip.distance }} mi</td>
+                                <td>{{ trip.fuel_used }} gal</td>
+                                <td>
+                                    <span class="{% if trip.fuel_efficiency >= 25 %}text-success{% elif trip.fuel_efficiency >= 15 %}text-warning{% else %}text-danger{% endif %}">
+                                        {{ trip.fuel_efficiency }} MPG
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if trip.status == 'completed' %}success{% elif trip.status == 'in_progress' %}info{% else %}secondary{% endif %}">
+                                        {{ trip.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No trips recorded for this vehicle.</p>
+                {% endif %}
+            </div>
+
+            <!-- Maintenance Tab -->
+            <div class="tab-pane fade" id="maintenance" role="tabpanel">
+                {% if maintenance_records %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Mileage</th>
+                                <th>Cost</th>
+                                <th>Severity</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in maintenance_records %}
+                            <tr>
+                                <td>{{ record.date|date:"M d, Y" }}</td>
+                                <td>{{ record.get_maintenance_type_display }}</td>
+                                <td>{{ record.mileage_at_service|floatformat }} mi</td>
+                                <td>${{ record.cost }}</td>
+                                <td>
+                                    <span class="badge bg-{{ record.severity }}">
+                                        {{ record.get_severity_display }}
+                                    </span>
+                                </td>
+                                <td>{{ record.description|truncatewords:8 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No maintenance records for this vehicle.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'core:vehicle_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Vehicles
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh vehicle stats every 30 seconds
+setInterval(function() {
+    fetch("{% url 'core:get_vehicle_stats' vehicle.id %}")
+        .then(response => response.json())
+        .then(data => {
+            // Update stats if needed
+            console.log('Vehicle stats refreshed');
+        })
+        .catch(error => console.error('Error refreshing stats:', error));
+}, 30000);
+</script>
+{% endblock %}

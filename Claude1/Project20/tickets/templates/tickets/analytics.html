@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - HelpDeskPro</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background: #f5f7fa;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: #667eea;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            color: #212529;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        .page-header p {
+            color: #6c757d;
+            margin: 0.5rem 0 0 0;
+        }
+
+        /* Stat Cards */
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            border: none;
+            transition: all 0.3s ease;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card.total::before {
+            background: var(--primary-gradient);
+        }
+
+        .stat-card.open::before {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .stat-card.in-progress::before {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .stat-card.resolved::before {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stat-card.escalated::before {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        }
+
+        .stat-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+
+        .stat-icon.total {
+            background: var(--primary-gradient);
+        }
+
+        .stat-icon.open {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .stat-icon.in-progress {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .stat-icon.resolved {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stat-icon.escalated {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #212529;
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-percentage {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .stat-percentage.positive {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .stat-percentage.neutral {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        /* Section Cards */
+        .section-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            border: none;
+            overflow: hidden;
+        }
+
+        .section-card .card-header {
+            background: white;
+            border-bottom: 2px solid #f0f0f0;
+            padding: 1.5rem;
+        }
+
+        .section-card .card-header h5 {
+            color: #212529;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .section-card .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Breakdown Items */
+        .breakdown-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            background: #f8f9fa;
+        }
+
+        .breakdown-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .breakdown-count {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+
+        /* Recent Activity */
+        .recent-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .recent-item:last-child {
+            border-bottom: none;
+        }
+
+        .recent-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            background: #f8f9fa;
+            font-size: 1.25rem;
+        }
+
+        .recent-info {
+            flex: 1;
+        }
+
+        .recent-ticket-id {
+            font-weight: 700;
+            color: #212529;
+            font-family: 'Courier New', monospace;
+        }
+
+        .recent-name {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .recent-status {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-weight: 600;
+        }
+
+        /* Rating Display */
+        .rating-display {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .rating-stars {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .rating-number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .rating-label {
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stat-value {
+                font-size: 2rem;
+            }
+
+            .stat-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'tickets:home' %}">
+                <i class="bi bi-headset"></i> HelpDeskPro
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'tickets:home' %}">
+                            <i class="bi bi-house-door"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'tickets:submit' %}">
+                            <i class="bi bi-plus-circle"></i> Submit Ticket
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'tickets:dashboard' %}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'tickets:analytics' %}">
+                            <i class="bi bi-graph-up"></i> Analytics
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1><i class="bi bi-graph-up-arrow" style="color: #667eea;"></i> Ticket Analytics</h1>
+                <p>Comprehensive overview of your help desk performance metrics</p>
+            </div>
+
+            <!-- Main Statistics Cards -->
+            <div class="row g-4 mb-5">
+                <!-- Total Tickets -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card total">
+                        <div class="stat-icon total">
+                            <i class="bi bi-ticket-perforated-fill"></i>
+                        </div>
+                        <div class="stat-value">{{ total_tickets }}</div>
+                        <div class="stat-label">Total Tickets</div>
+                        <span class="stat-percentage neutral">All Time</span>
+                    </div>
+                </div>
+
+                <!-- Open Tickets -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card open">
+                        <div class="stat-icon open">
+                            <i class="bi bi-envelope-open"></i>
+                        </div>
+                        <div class="stat-value">{{ open_tickets }}</div>
+                        <div class="stat-label">Open Tickets</div>
+                        <span class="stat-percentage neutral">{{ open_percentage }}%</span>
+                    </div>
+                </div>
+
+                <!-- In Progress -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card in-progress">
+                        <div class="stat-icon in-progress">
+                            <i class="bi bi-arrow-repeat"></i>
+                        </div>
+                        <div class="stat-value">{{ in_progress_tickets }}</div>
+                        <div class="stat-label">In Progress</div>
+                        <span class="stat-percentage neutral">{{ in_progress_percentage }}%</span>
+                    </div>
+                </div>
+
+                <!-- Resolved -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card resolved">
+                        <div class="stat-icon resolved">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <div class="stat-value">{{ resolved_tickets }}</div>
+                        <div class="stat-label">Resolved</div>
+                        <span class="stat-percentage positive">{{ resolved_percentage }}%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Stats Row -->
+            <div class="row g-4 mb-5">
+                <!-- Escalated -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="stat-card escalated">
+                        <div class="stat-icon escalated">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                        </div>
+                        <div class="stat-value">{{ escalated_tickets }}</div>
+                        <div class="stat-label">Escalated</div>
+                        <span class="stat-percentage neutral">{{ escalated_percentage }}%</span>
+                    </div>
+                </div>
+
+                <!-- Average Rating -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="stat-card" style="border-top: 5px solid var(--primary-gradient);">
+                        <div class="rating-display">
+                            <div class="rating-stars">
+                                {% if avg_rating > 0 %}
+                                    {% for i in ''|ljust:avg_rating %}⭐{% endfor %}
+                                {% else %}
+                                    📊
+                                {% endif %}
+                            </div>
+                            <div class="rating-number">{{ avg_rating|default:0 }}</div>
+                            <div class="rating-label">Average Rating</div>
+                            <small class="text-muted">Based on {{ feedback_count }} reviews</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Count -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="stat-card" style="border-top: 5px solid var(--primary-gradient);">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);">
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <div class="stat-value">{{ feedback_count }}</div>
+                        <div class="stat-label">Feedback Received</div>
+                        <span class="stat-percentage positive">Total Reviews</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Breakdown & Recent Activity -->
+            <div class="row g-4">
+                <!-- Category Breakdown -->
+                <div class="col-lg-6">
+                    <div class="section-card">
+                        <div class="card-header">
+                            <h5><i class="bi bi-folder"></i> Tickets by Category</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if category_stats %}
+                                {% for stat in category_stats %}
+                                    <div class="breakdown-item">
+                                        <div class="breakdown-label">
+                                            <i class="bi bi-{% if stat.category == 'technical' %}pc-display{% elif stat.category == 'billing' %}credit-card{% elif stat.category == 'feature' %}lightbulb{% elif stat.category == 'bug' %}bug{% else %}three-dots{% endif %}"></i>
+                                            {% if stat.category == 'technical' %}Technical Issue
+                                            {% elif stat.category == 'billing' %}Billing & Payment
+                                            {% elif stat.category == 'feature' %}Feature Request
+                                            {% elif stat.category == 'bug' %}Bug Report
+                                            {% else %}Other{% endif %}
+                                        </div>
+                                        <div class="breakdown-count">{{ stat.count }}</div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted text-center mb-0">No data available</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="col-lg-6">
+                    <div class="section-card">
+                        <div class="card-header">
+                            <h5><i class="bi bi-clock-history"></i> Recent Activity</h5>
+                        </div>
+                        <div class="card-body" style="padding: 0;">
+                            {% if recent_tickets %}
+                                {% for ticket in recent_tickets %}
+                                    <div class="recent-item">
+                                        <div class="recent-icon">
+                                            <i class="bi bi-ticket-perforated"></i>
+                                        </div>
+                                        <div class="recent-info">
+                                            <div class="recent-ticket-id">{{ ticket.unique_ticket_id }}</div>
+                                            <div class="recent-name">{{ ticket.complaint.name }}</div>
+                                        </div>
+                                        <div class="recent-status status-{{ ticket.status }}">
+                                            {{ ticket.get_status_display }}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center p-4">
+                                    <i class="bi bi-inbox" style="font-size: 2rem; color: #dee2e6;"></i>
+                                    <p class="text-muted mb-0 mt-2">No recent activity</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Priority Breakdown & Feedback Summary -->
+            <div class="row g-4 mt-4">
+                <!-- Priority Breakdown -->
+                <div class="col-lg-6">
+                    <div class="section-card">
+                        <div class="card-header">
+                            <h5><i class="bi bi-flag"></i> Tickets by Priority</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if priority_stats %}
+                                {% for stat in priority_stats %}
+                                    <div class="breakdown-item">
+                                        <div class="breakdown-label">
+                                            <i class="bi bi-{% if stat.priority == 'high' %}exclamation-triangle-fill text-danger{% elif stat.priority == 'medium' %}dash-circle text-warning{% else %}arrow-down-circle text-success{% endif %}"></i>
+                                            {% if stat.priority == 'high' %}High Priority
+                                            {% elif stat.priority == 'medium' %}Medium Priority
+                                            {% else %}Low Priority{% endif %}
+                                        </div>
+                                        <div class="breakdown-count">{{ stat.count }}</div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted text-center mb-0">No data available</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Summary -->
+                <div class="col-lg-6">
+                    <div class="section-card">
+                        <div class="card-header">
+                            <h5><i class="bi bi-star"></i> Feedback Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center py-3">
+                                <div class="rating-stars" style="font-size: 2.5rem; margin-bottom: 1rem;">
+                                    {% if avg_rating > 0 %}
+                                        {% for i in ''|ljust:avg_rating %}⭐{% endfor %}
+                                    {% else %}
+                                        📊
+                                    {% endif %}
+                                </div>
+                                <div class="rating-number" style="font-size: 2.5rem; font-weight: 800; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                                    {{ avg_rating }}
+                                </div>
+                                <div class="rating-label" style="color: #6c757d; font-weight: 600; margin-bottom: 1rem;">
+                                    Average Rating
+                                </div>
+                                <hr style="margin: 1.5rem 0; border-color: #e9ecef;">
+                                <div style="display: flex; justify-content: space-around; text-align: center;">
+                                    <div>
+                                        <div style="font-size: 1.5rem; font-weight: 700; color: #667eea;">{{ feedback_count }}</div>
+                                        <div style="font-size: 0.85rem; color: #6c757d;">Total Reviews</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 1.5rem; font-weight: 700; color: #28a745;">{{ resolved_tickets }}</div>
+                                        <div style="font-size: 0.85rem; color: #6c757d;">Resolved</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 1.5rem; font-weight: 700; color: #ffc107;">{{ open_tickets }}</div>
+                                        <div style="font-size: 0.85rem; color: #6c757d;">Open</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

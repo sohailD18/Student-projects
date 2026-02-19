@@ -1,0 +1,520 @@
+{% extends "core/base.html" %}
+
+{% block title %}Leaderboard - EcoTrack{% endblock %}
+
+{% block content %}
+<div class="leaderboard-header">
+    <h1>
+        <i class="fas fa-trophy"></i>
+        Global Leaderboard
+    </h1>
+    <p>Top eco-warriors making a difference!</p>
+</div>
+
+<!-- Top 3 Podium -->
+<div class="podium-container">
+    {% if top_users|length >= 3 %}
+        <!-- 2nd Place -->
+        <div class="podium-position podium-second">
+            <div class="podium-rank">2nd</div>
+            <div class="podium-avatar">
+                {% if top_users.1.user.profile.avatar_url %}
+                    <img src="{{ top_users.1.user.profile.avatar_url }}" alt="{{ top_users.1.user.username }}">
+                {% else %}
+                    <i class="fas fa-user"></i>
+                {% endif %}
+            </div>
+            <div class="podium-name">{{ top_users.1.user.username }}</div>
+            <div class="podium-points">{{ top_users.1.total_points }} pts</div>
+            <div class="podium-bar" style="height: 80px;"></div>
+        </div>
+
+        <!-- 1st Place -->
+        <div class="podium-position podium-first">
+            <div class="podium-crown">
+                <i class="fas fa-crown"></i>
+            </div>
+            <div class="podium-rank">1st</div>
+            <div class="podium-avatar">
+                {% if top_users.0.user.profile.avatar_url %}
+                    <img src="{{ top_users.0.user.profile.avatar_url }}" alt="{{ top_users.0.user.username }}">
+                {% else %}
+                    <i class="fas fa-user"></i>
+                {% endif %}
+            </div>
+            <div class="podium-name">{{ top_users.0.user.username }}</div>
+            <div class="podium-points">{{ top_users.0.total_points }} pts</div>
+            <div class="podium-bar" style="height: 120px;"></div>
+        </div>
+
+        <!-- 3rd Place -->
+        <div class="podium-position podium-third">
+            <div class="podium-rank">3rd</div>
+            <div class="podium-avatar">
+                {% if top_users.2.user.profile.avatar_url %}
+                    <img src="{{ top_users.2.user.profile.avatar_url }}" alt="{{ top_users.2.user.username }}">
+                {% else %}
+                    <i class="fas fa-user"></i>
+                {% endif %}
+            </div>
+            <div class="podium-name">{{ top_users.2.user.username }}</div>
+            <div class="podium-points">{{ top_users.2.total_points }} pts</div>
+            <div class="podium-bar" style="height: 50px;"></div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Your Rank -->
+{% if current_user_rank %}
+    <div class="card your-rank-card">
+        <h2>
+            <i class="fas fa-user-circle"></i>
+            Your Rank
+        </h2>
+        <div class="your-rank-content">
+            <div class="your-rank-position">#{{ current_user_rank }}</div>
+            <div class="your-rank-info">
+                <strong>{{ user.username }}</strong>
+                <span class="your-rank-points">{{ user.profile.total_points }} points</span>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Full Leaderboard -->
+<div class="card leaderboard-table-card">
+    <h2>
+        <i class="fas fa-list-ol"></i>
+        Full Leaderboard
+    </h2>
+
+    <div class="leaderboard-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>User</th>
+                    <th>Points</th>
+                    <th>Streak</th>
+                    <th>Location</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user_profile in all_users %}
+                    <tr class="{% if user_profile.user == user %}highlight-row{% endif %}">
+                        <td class="rank-cell">
+                            {% if forloop.counter0 == 0 %}
+                                <span class="rank-gold"><i class="fas fa-medal"></i> 1</span>
+                            {% elif forloop.counter0 == 1 %}
+                                <span class="rank-silver"><i class="fas fa-medal"></i> 2</span>
+                            {% elif forloop.counter0 == 2 %}
+                                <span class="rank-bronze"><i class="fas fa-medal"></i> 3</span>
+                            {% else %}
+                                <span class="rank-normal">{{ forloop.counter }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="user-cell">
+                            <div class="user-info">
+                                <div class="user-avatar-small">
+                                    {% if user_profile.user.profile.avatar_url %}
+                                        <img src="{{ user_profile.user.profile.avatar_url }}" alt="{{ user_profile.user.username }}">
+                                    {% else %}
+                                        <i class="fas fa-user"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="user-details">
+                                    <div class="user-name">
+                                        {{ user_profile.user.username }}
+                                        {% if user_profile.user == user %}
+                                            <span class="you-badge">You</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if user_profile.bio %}
+                                        <div class="user-bio">{{ user_profile.bio|truncatewords:8 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="points-cell">
+                            <span class="points-badge">{{ user_profile.total_points }}</span>
+                        </td>
+                        <td class="streak-cell">
+                            <span class="streak-badge">
+                                <i class="fas fa-fire"></i> {{ user_profile.streak_days }}
+                            </span>
+                        </td>
+                        <td class="location-cell">
+                            {% if user_profile.location %}
+                                <i class="fas fa-map-marker-alt"></i> {{ user_profile.location }}
+                            {% else %}
+                                <span style="color: var(--gray);">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .leaderboard-header {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 249, 232, 0.95) 100%);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+        box-shadow: var(--shadow-lg);
+        text-align: center;
+    }
+
+    .leaderboard-header h1 {
+        color: var(--primary);
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: var(--spacing-xs);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-sm);
+    }
+
+    .leaderboard-header p {
+        color: var(--gray);
+        font-size: 1.1rem;
+    }
+
+    .podium-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        gap: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+        padding: var(--spacing-lg);
+    }
+
+    .podium-position {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+    }
+
+    .podium-crown {
+        font-size: 3rem;
+        color: #f39c12;
+        margin-bottom: var(--spacing-xs);
+        animation: bounce 1s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .podium-rank {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: var(--spacing-sm);
+        text-transform: uppercase;
+    }
+
+    .podium-first .podium-rank { color: #f39c12; }
+    .podium-second .podium-rank { color: #95a5a6; }
+    .podium-third .podium-rank { color: #cd7f32; }
+
+    .podium-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--primary-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+        margin-bottom: var(--spacing-sm);
+        border: 4px solid white;
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+    }
+
+    .podium-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .podium-first .podium-avatar {
+        width: 100px;
+        height: 100px;
+        font-size: 2.5rem;
+        border-color: #f39c12;
+    }
+
+    .podium-name {
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: var(--spacing-xs);
+        text-align: center;
+    }
+
+    .podium-points {
+        font-size: 1.1rem;
+        color: var(--gray);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .podium-bar {
+        width: 100px;
+        border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding-bottom: var(--spacing-xs);
+        color: white;
+        font-weight: 600;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .podium-first .podium-bar { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); }
+    .podium-second .podium-bar { background: linear-gradient(135deg, #bdc3c7 0%, #95a5a6 100%); }
+    .podium-third .podium-bar { background: linear-gradient(135deg, #cd7f32 0%, #a0522d 100%); }
+
+    .your-rank-card {
+        background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-lighter) 100%);
+        color: white;
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .your-rank-card h2 {
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+    }
+
+    .your-rank-content {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    .your-rank-position {
+        font-size: 3rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .your-rank-info {
+        flex: 1;
+    }
+
+    .your-rank-info strong {
+        display: block;
+        font-size: 1.5rem;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .your-rank-points {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    .leaderboard-table {
+        overflow-x: auto;
+    }
+
+    .leaderboard-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .leaderboard-table th {
+        background: var(--primary);
+        color: white;
+        padding: var(--spacing-sm) var(--spacing-md);
+        text-align: left;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+
+    .leaderboard-table td {
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-bottom: 1px solid var(--light-gray);
+    }
+
+    .highlight-row {
+        background: rgba(74, 124, 35, 0.1);
+    }
+
+    .rank-cell {
+        text-align: center;
+        width: 80px;
+    }
+
+    .rank-gold {
+        color: #f39c12;
+        font-weight: 700;
+    }
+
+    .rank-silver {
+        color: #95a5a6;
+        font-weight: 700;
+    }
+
+    .rank-bronze {
+        color: #cd7f32;
+        font-weight: 700;
+    }
+
+    .rank-normal {
+        color: var(--gray);
+        font-weight: 600;
+    }
+
+    .user-cell {
+        min-width: 250px;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .user-avatar-small {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--primary-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1rem;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .user-avatar-small img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .user-details {
+        flex: 1;
+    }
+
+    .user-name {
+        font-weight: 600;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+    }
+
+    .you-badge {
+        background: var(--accent-teal);
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .user-bio {
+        font-size: 0.85rem;
+        color: var(--gray);
+        margin-top: 0.2rem;
+    }
+
+    .points-cell {
+        text-align: center;
+        width: 100px;
+    }
+
+    .points-badge {
+        background: var(--primary-light);
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .streak-cell {
+        text-align: center;
+        width: 100px;
+    }
+
+    .streak-badge {
+        background: #e74c3c;
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .location-cell {
+        color: var(--gray);
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+        .leaderboard-header h1 {
+            font-size: 1.8rem;
+            flex-direction: column;
+        }
+
+        .podium-container {
+            padding: var(--spacing-sm);
+            gap: var(--spacing-sm);
+        }
+
+        .podium-avatar {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+
+        .podium-first .podium-avatar {
+            width: 80px;
+            height: 80px;
+            font-size: 2rem;
+        }
+
+        .podium-bar {
+            width: 60px;
+        }
+
+        .your-rank-content {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .leaderboard-table {
+            font-size: 0.85rem;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: var(--spacing-xs);
+        }
+
+        .user-cell {
+            min-width: 150px;
+        }
+
+        .user-bio {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}

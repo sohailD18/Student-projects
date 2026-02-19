@@ -1,0 +1,279 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Process Analysis - {{ process.name }} - OptiFlow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="bi bi-graph-up"></i> AI Process Analysis</h1>
+                <p class="text-muted mb-0">{{ process.name }}</p>
+            </div>
+            <div>
+                <a href="{% url 'core:process_dashboard' process.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+                <a href="{% url 'core:process_detail' process.id %}" class="btn btn-outline-primary">
+                    <i class="bi bi-diagram-2"></i> Process Details
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Health Overview -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center" id="healthCard">
+            <div class="card-body">
+                <h3 class="display-4" id="healthScore">{{ analysis.health_assessment.health_score|floatformat:0 }}</h3>
+                <p class="text-muted mb-0">Health Score</p>
+                <span class="badge bg-{{ analysis.health_assessment.health_level == 'excellent'|yesno:'success,info,warning,danger' }} mt-2">
+                    {{ analysis.health_assessment.health_level|title }}
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="display-4">{{ analysis.efficiency_metrics.efficiency_score|floatformat:0 }}%</h3>
+                <p class="text-muted mb-0">Efficiency</p>
+                <small class="text-muted">Avg: {{ analysis.efficiency_metrics.avg_time|floatformat:1 }} min</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="display-4">{{ analysis.efficiency_metrics.consistency_score|floatformat:0 }}%</h3>
+                <p class="text-muted mb-0">Consistency</p>
+                <small class="text-muted">Std Dev: {{ analysis.efficiency_metrics.std_dev|floatformat:2 }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="display-4">{{ analysis.bottlenecks|length }}</h3>
+                <p class="text-muted mb-0">Bottlenecks</p>
+                <small class="text-muted">Detected Issues</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottlenecks Section -->
+{% if analysis.bottlenecks %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Detected Bottlenecks</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for bottleneck in analysis.bottlenecks %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <h6 class="card-title mb-0">{{ bottleneck.step_name }}</h6>
+                                    <span class="badge bg-{{ bottleneck.severity|floatformat:0|yesno:'success,info,warning,danger' }} ms-auto">
+                                        {{ bottleneck.severity|floatformat:0 }}% Severity
+                                    </span>
+                                </div>
+                                <p class="text-muted small mb-2">
+                                    Avg: {{ bottleneck.mean_time|floatformat:2 }} min |
+                                    Outliers: {{ bottleneck.outlier_count }}/{{ bottleneck.total_executions }}
+                                </p>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-danger" role="progressbar"
+                                         style="width: {{ bottleneck.severity }}%"
+                                         aria-valuenow="{{ bottleneck.severity }}"
+                                         aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                                <small class="text-muted mt-1 d-block">
+                                    Deviation: +{{ bottleneck.deviation_percentage|floatformat:1 }}% from normal
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- AI Recommendations -->
+{% if analysis.recommendations %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning bg-opacity-10">
+                <h5 class="mb-0"><i class="bi bi-lightbulb"></i> AI-Generated Recommendations</h5>
+            </div>
+            <div class="card-body">
+                {% for rec in analysis.recommendations %}
+                <div class="card mb-3 border-start border-5 border-{{ rec.priority|yesno:'danger,warning,info,success' }}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="card-title mb-1">{{ rec.title }}</h6>
+                                <small class="text-muted">
+                                    Category: {{ rec.category|title }} |
+                                    Impact Score: {{ rec.impact_score|floatformat:0 }}/100
+                                </small>
+                            </div>
+                            <span class="badge priority-{{ rec.priority }}">{{ rec.priority|title }}</span>
+                        </div>
+                        <p class="card-text">{{ rec.description }}</p>
+                        <hr>
+                        <h6 class="small">Recommended Actions:</h6>
+                        <p class="card-text small text-pre">{{ rec.recommendation }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                Potential Savings: <strong>{{ rec.potential_savings|floatformat:1 }}</strong> minutes
+                            </small>
+                            <small class="text-success">
+                                <i class="bi bi-arrow-up"></i> {{ rec.current_value|floatformat:1 }}
+                                <i class="bi bi-arrow-right mx-1"></i>
+                                <i class="bi bi-arrow-down"></i> {{ rec.target_value|floatformat:1 }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Trend Analysis -->
+{% if analysis.trend_analysis.trend != 'insufficient_data' %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Performance Trend</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h4>{{ analysis.trend_analysis.trend|title }}</h4>
+                        <p class="text-muted mb-0">Trend Direction</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h4>{{ analysis.trend_analysis.percent_change|floatformat:1 }}%</h4>
+                        <p class="text-muted mb-0">Change</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h4>{{ analysis.trend_analysis.start_value|floatformat:2 }}</h4>
+                        <p class="text-muted mb-0">Start Value</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h4>{{ analysis.trend_analysis.end_value|floatformat:2 }}</h4>
+                        <p class="text-muted mb-0">Current Value</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Step Performance Chart -->
+{% if step_chart_data %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Step Performance Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="stepDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<style>
+.text-pre {
+    white-space: pre-wrap;
+    font-family: inherit;
+}
+</style>
+
+<script>
+{% if step_chart_data %}
+// Step Distribution Chart
+const stepCtx = document.getElementById('stepDistributionChart').getContext('2d');
+const stepData = {{ step_chart_data|safe }};
+
+const datasets = stepData.map((step, index) => {
+    const colors = [
+        'rgba(67, 97, 238, 0.5)',
+        'rgba(76, 201, 240, 0.5)',
+        'rgba(247, 37, 133, 0.5)',
+        'rgba(114, 9, 183, 0.5)',
+        'rgba(25, 135, 84, 0.5)',
+        'rgba(255, 193, 7, 0.5)',
+        'rgba(220, 53, 69, 0.5)',
+        'rgba(108, 117, 125, 0.5)'
+    ];
+
+    return {
+        label: step.name,
+        data: step.times,
+        backgroundColor: colors[index % colors.length],
+        borderColor: colors[index % colors.length].replace('0.5', '1'),
+        borderWidth: 1
+    };
+});
+
+new Chart(stepCtx, {
+    type: 'boxplot',
+    data: {
+        labels: stepData.map(d => d.name),
+        datasets: datasets
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top'
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label + ': ' + context.parsed.y + ' min';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Execution Time (minutes)'
+                }
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

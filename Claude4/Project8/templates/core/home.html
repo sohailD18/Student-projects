@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - GovExamPortal{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="bg-primary text-white py-5 mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="bi bi-mortarboard-fill"></i>
+                    Government Examination Portal
+                </h1>
+                <p class="lead mb-4">
+                    Your comprehensive platform for government exam information,
+                    eligibility checking, and smart recommendations.
+                </p>
+
+                <!-- Search Bar -->
+                <form action="{% url 'search' %}" method="get" class="d-flex gap-2 justify-content-center">
+                    <input type="text" name="q" class="form-control form-control-lg"
+                           placeholder="Search for UPSC, SSC, Banking exams..."
+                           style="max-width: 500px;" required>
+                    <button type="submit" class="btn btn-light btn-lg px-4">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Stats -->
+<div class="container mb-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card stat-card bg-primary text-white">
+                <div class="card-body text-center">
+                    <div class="stat-number">{{ total_exams }}</div>
+                    <div class="h6 mb-0">Active Examinations</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check" style="font-size: 2.5rem;"></i>
+                    <div class="h6 mb-0 mt-2">Updated Regularly</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-people-fill" style="font-size: 2.5rem;"></i>
+                    <div class="h6 mb-0 mt-2">Aspirant Support</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Exam Categories -->
+<div class="container mb-5">
+    <h2 class="text-center mb-4">
+        <i class="bi bi-grid-fill"></i> Browse by Category
+    </h2>
+    <div class="row g-3">
+        <div class="col-6 col-md-3">
+            <a href="{% url 'exam_list' %}?exam_type=UPSC" class="text-decoration-none">
+                <div class="card text-center h-100 border-primary exam-card">
+                    <div class="card-body">
+                        <i class="bi bi-building text-primary" style="font-size: 2rem;"></i>
+                        <h5 class="card-title mt-2 mb-0 text-dark">UPSC</h5>
+                        <small class="text-muted">Civil Services & More</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a href="{% url 'exam_list' %}?exam_type=SSC" class="text-decoration-none">
+                <div class="card text-center h-100 border-success exam-card">
+                    <div class="card-body">
+                        <i class="bi bi-building text-success" style="font-size: 2rem;"></i>
+                        <h5 class="card-title mt-2 mb-0 text-dark">SSC</h5>
+                        <small class="text-muted">Staff Selection</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a href="{% url 'exam_list' %}?exam_type=BANKING" class="text-decoration-none">
+                <div class="card text-center h-100 border-warning exam-card">
+                    <div class="card-body">
+                        <i class="bi bi-bank text-warning" style="font-size: 2rem;"></i>
+                        <h5 class="card-title mt-2 mb-0 text-dark">Banking</h5>
+                        <small class="text-muted">IBPS, SBI & More</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a href="{% url 'exam_list' %}?exam_type=RAILWAYS" class="text-decoration-none">
+                <div class="card text-center h-100 border-danger exam-card">
+                    <div class="card-body">
+                        <i class="bi bi-train text-danger" style="font-size: 2rem;"></i>
+                        <h5 class="card-title mt-2 mb-0 text-dark">Railways</h5>
+                        <small class="text-muted">RRB Exams</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Exams -->
+{% if recent_exams %}
+<section class="container mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-clock-history"></i> Recent Examinations
+        </h2>
+        <a href="{% url 'exam_list' %}" class="btn btn-outline-primary">
+            View All <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+    <div class="row g-4">
+        {% for exam in recent_exams %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card exam-card h-100">
+                <div class="card-body">
+                    <span class="badge bg-primary mb-2">{{ exam.get_exam_type_display }}</span>
+                    <h5 class="card-title">
+                        <a href="{% url 'exam_detail' exam.pk %}" class="text-decoration-none text-dark">
+                            {{ exam.title }}
+                        </a>
+                    </h5>
+                    <p class="card-text text-muted small">
+                        <i class="bi bi-calendar-event"></i> Exam Date: {{ exam.exam_date|date:"M d, Y" }}
+                    </p>
+                    {% if exam.is_application_open %}
+                    <span class="badge bg-success">Applications Open</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Applications Closed</span>
+                    {% endif %}
+                    <p class="card-text mt-2 small">
+                        {{ exam.description|truncatewords:15 }}
+                    </p>
+                </div>
+                <div class="card-footer bg-white border-top">
+                    <a href="{% url 'exam_detail' exam.pk %}" class="btn btn-sm btn-primary w-100">
+                        View Details <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Upcoming Deadlines -->
+{% if upcoming_deadlines %}
+<section class="container mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-danger">
+            <i class="bi bi-alarm-fill"></i> Application Deadlines
+        </h2>
+        <a href="{% url 'exam_list' %}" class="btn btn-outline-danger">
+            View All <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+    <div class="row g-4">
+        {% for exam in upcoming_deadlines %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card exam-card h-100 border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-warning text-dark">{{ exam.get_exam_type_display }}</span>
+                        <span class="badge bg-danger">
+                            {{ exam.days_until_application_deadline }} days left
+                        </span>
+                    </div>
+                    <h5 class="card-title">
+                        <a href="{% url 'exam_detail' exam.pk %}" class="text-decoration-none text-dark">
+                            {{ exam.title }}
+                        </a>
+                    </h5>
+                    <p class="card-text text-muted small mb-2">
+                        <i class="bi bi-calendar-x"></i> Closes: {{ exam.application_end_date|date:"M d, Y" }}
+                    </p>
+                </div>
+                <div class="card-footer bg-white border-top">
+                    <a href="{% url 'exam_detail' exam.pk %}" class="btn btn-sm btn-warning w-100">
+                        Apply Now <i class="bi bi-box-arrow-up-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- CTA Section -->
+<section class="bg-light py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h2 class="mb-3">Get Personalized Exam Recommendations</h2>
+                <p class="lead text-muted mb-4">
+                    Create your profile and get AI-powered recommendations based on your
+                    age, qualification, and preferences.
+                </p>
+                {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg px-5">
+                    <i class="bi bi-speedometer2"></i> Go to Dashboard
+                </a>
+                {% else %}
+                <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-5 me-3">
+                    <i class="bi bi-person-plus"></i> Register Now
+                </a>
+                <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-lg px-5">
+                    <i class="bi bi-box-arrow-in-right"></i> Login
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

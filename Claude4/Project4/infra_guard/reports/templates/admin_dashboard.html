@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Authority Dashboard - InfraGuard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Authority Dashboard</h1>
+        <p>Manage and verify infrastructure incidents</p>
+    </div>
+
+    <!-- Statistics Grid -->
+    <div class="stats-grid">
+        <div class="stat-card stat-primary">
+            <div class="stat-icon">📋</div>
+            <div class="stat-content">
+                <h3>{{ stats.total_incidents }}</h3>
+                <p>Total Reports</p>
+            </div>
+        </div>
+        <div class="stat-card stat-warning">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-content">
+                <h3>{{ stats.pending_count }}</h3>
+                <p>Pending Review</p>
+            </div>
+        </div>
+        <div class="stat-card stat-success">
+            <div class="stat-icon">✅</div>
+            <div class="stat-content">
+                <h3>{{ stats.resolved_count }}</h3>
+                <p>Resolved</p>
+            </div>
+        </div>
+        <div class="stat-card stat-danger">
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-content">
+                <h3>{{ stats.high_severity }}</h3>
+                <p>High Severity</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="two-column-grid">
+        <!-- Pending Incidents -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Pending Verifications</h3>
+                <span class="badge">{{ pending_incidents.count }}</span>
+            </div>
+
+            {% if pending_incidents %}
+                <div class="incident-list">
+                    {% for incident in pending_incidents %}
+                        <div class="incident-item incident-interactive">
+                            <div class="incident-header">
+                                <span class="incident-type-badge type-{{ incident.incident_type }}">
+                                    {{ incident.get_incident_type_display }}
+                                </span>
+                                <span class="severity-badge {{ incident.get_severity_color }}">
+                                    Score: {{ incident.severity_score }}
+                                </span>
+                            </div>
+                            <h4 class="incident-location">{{ incident.location }}</h4>
+                            <p class="incident-description">{{ incident.description }}</p>
+                            <div class="incident-meta">
+                                <span>Reported by: {{ incident.reported_by.username }}</span>
+                                <span>{{ incident.timestamp|timesince }} ago</span>
+                            </div>
+                            {% if incident.image %}
+                                <div class="incident-image">
+                                    <a href="{{ incident.image.url }}" target="_blank">View Image</a>
+                                </div>
+                            {% endif %}
+                            <div class="incident-actions">
+                                <form method="post" action="{% url 'reports:verify_incident' incident.id %}" class="inline-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="verify">
+                                    <button type="submit" class="btn btn-sm btn-success">Verify</button>
+                                </form>
+                                <form method="post" action="{% url 'reports:verify_incident' incident.id %}" class="inline-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="reject">
+                                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <p>No pending incidents to review.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- High Risk Zones -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">High-Risk Zones</h3>
+                <span class="badge">Last 30 Days</span>
+            </div>
+
+            {% if high_risk_zones %}
+                <div class="risk-zones-list">
+                    {% for zone in high_risk_zones %}
+                        <div class="risk-zone-item risk-zone-detailed">
+                            <div class="risk-zone-header">
+                                <h4>{{ zone.location }}</h4>
+                                <span class="risk-score-badge">{{ zone.avg_severity|floatformat:0 }}</span>
+                            </div>
+                            <div class="risk-zone-stats">
+                                <span class="risk-zone-count">{{ zone.incident_count }} incident{{ zone.incident_count|pluralize }}</span>
+                                <span class="risk-zone-trend">↑ Needs Attention</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <p>No high-risk zones identified.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pending Claims -->
+    {% if pending_claims %}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Pending Claims</h3>
+                <a href="{% url 'reports:manage_claims' %}" class="btn-link">View All →</a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Victim</th>
+                            <th>Incident</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for claim in pending_claims|slice:":5" %}
+                            <tr>
+                                <td>{{ claim.victim_name }}</td>
+                                <td>{{ claim.incident.get_incident_type_display }}</td>
+                                <td><strong>${{ claim.claim_amount }}</strong></td>
+                                <td>
+                                    <span class="status-badge {{ claim.get_status_color }}">
+                                        {{ claim.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'reports:update_claim_status' claim.id %}"
+                                       class="btn btn-sm btn-primary">Review</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

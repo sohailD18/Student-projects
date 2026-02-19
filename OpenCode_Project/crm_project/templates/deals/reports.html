@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports - CRM System{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Reports</h1>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body text-center">
+                <h3>${{ won_value|floatformat:0 }}</h3>
+                <p class="mb-0">Won Deals</p>
+                <small>{{ won_count }} deals</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body text-center">
+                <h3>${{ lost_value|floatformat:0 }}</h3>
+                <p class="mb-0">Lost Deals</p>
+                <small>{{ lost_count }} deals</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body text-center">
+                <h3>${{ total_value|floatformat:0 }}</h3>
+                <p class="mb-0">Pipeline Value</p>
+                <small>{{ total_count }} active deals</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body text-center">
+                <h3>${{ avg_deal_size|floatformat:0 }}</h3>
+                <p class="mb-0">Avg Deal Size</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Pipeline by Stage</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Stage</th>
+                            <th>Count</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stage in value_by_stage %}
+                        <tr>
+                            <td>{{ stage.stage__name }}</td>
+                            <td>{{ stage.count }}</td>
+                            <td>${{ stage.total|floatformat:0 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Pipeline by Priority</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Priority</th>
+                            <th>Count</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in value_by_priority %}
+                        <tr>
+                            <td>{{ item.priority }}</td>
+                            <td>{{ item.count }}</td>
+                            <td>${{ item.total|floatformat:0 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

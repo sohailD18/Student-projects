@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb -->
+    <div style="margin-bottom: 1rem;">
+        <a href="{% url 'core:profile_detail' profile.pk %}" style="color: var(--color-accent); text-decoration: none;">
+            ← Back to Profile
+        </a>
+    </div>
+
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h1 style="color: var(--color-primary); margin-bottom: 0.5rem;">What-If Scenario Calculator</h1>
+        <p style="color: var(--color-gray-500);">Module 7: Scenario-Based Financial Analysis</p>
+    </div>
+
+    <!-- Profile Summary -->
+    <div class="grid grid-3">
+        <div class="stat-card">
+            <div class="stat-label">Profile</div>
+            <div class="stat-value" style="font-size: 1.5rem;">{{ profile.name }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Base Annual Return</div>
+            <div class="stat-value">{{ baseline_return }}%</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Risk Category</div>
+            {% if profile.risk_profile %}
+                <div class="stat-value" style="font-size: 1.2rem;">{{ profile.risk_profile.get_classification_display }}</div>
+            {% else %}
+                <div class="stat-value" style="font-size: 1.2rem;">Moderate</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Calculator Form -->
+    <div class="grid grid-2" style="margin-top: 2rem;">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Scenario Parameters</h3>
+                <p class="card-subtitle">Adjust values to see different projections</p>
+            </div>
+
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label" for="currentPortfolio">Current Portfolio Value ($)</label>
+                    <input type="number" id="currentPortfolio" class="form-control" value="100000" step="1000">
+                    <small class="form-text">Your current investment portfolio value</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="monthlyContribution">Monthly Contribution ($)</label>
+                    <input type="number" id="monthlyContribution" class="form-control" value="1000" step="100">
+                    <small class="form-text">Amount you add to investments each month</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="savingsIncrease">Increase Savings by (%)</label>
+                    <input type="range" id="savingsIncrease" class="form-control" value="0" min="-50" max="100" step="5"
+                           oninput="document.getElementById('savingsValue').textContent = this.value + '%'">
+                    <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
+                        <small class="form-text">-50%</small>
+                        <span id="savingsValue" style="font-weight: 600; color: var(--color-accent);">0%</span>
+                        <small class="form-text">+100%</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="marketChange">Market Change (%)</label>
+                    <input type="range" id="marketChange" class="form-control" value="0" min="-50" max="50" step="5"
+                           oninput="document.getElementById('marketValue').textContent = (this.value > 0 ? '+' : '') + this.value + '%'">
+                    <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
+                        <small class="form-text">-50% (Crash)</small>
+                        <span id="marketValue" style="font-weight: 600; color: var(--color-accent);">0%</span>
+                        <small class="form-text">+50% (Boom)</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="baseReturn">Expected Annual Return (%)</label>
+                    <input type="number" id="baseReturn" class="form-control" value="{{ baseline_return }}" step="0.5" min="0" max="30">
+                    <small class="form-text">Based on your risk profile</small>
+                </div>
+
+                <button id="calculateScenarioBtn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                    🧮 Calculate Projections
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div>
+            <div id="scenarioResults">
+                <div class="card" style="text-align: center; padding: 3rem;">
+                    <h3 style="color: var(--color-gray-500); margin-bottom: 1rem;">Ready to Calculate</h3>
+                    <p style="color: var(--color-gray-400); margin-bottom: 2rem;">
+                        Adjust the parameters and click "Calculate Projections" to see your portfolio growth under different scenarios.
+                    </p>
+                    <div style="font-size: 3rem;">📊</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scenario Examples -->
+    <div class="card" style="margin-top: 2rem;">
+        <div class="card-header">
+            <h3 class="card-title">Quick Scenarios</h3>
+            <p class="card-subtitle">Preset scenarios for common situations</p>
+        </div>
+
+        <div class="card-body">
+            <div class="grid grid-4">
+                <button onclick="applyScenario('bull')" class="btn btn-success" style="height: auto; padding: 1.5rem;">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🚀</div>
+                    <div><strong>Bull Market</strong></div>
+                    <div style="font-size: 0.85rem; margin-top: 0.5rem;">+20% returns, strong growth</div>
+                </button>
+
+                <button onclick="applyScenario('bear')" class="btn btn-danger" style="height: auto; padding: 1.5rem;">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📉</div>
+                    <div><strong>Bear Market</strong></div>
+                    <div style="font-size: 0.85rem; margin-top: 0.5rem;">-20% returns, market decline</div>
+                </button>
+
+                <button onclick="applyScenario('savings_boost')" class="btn btn-outline" style="height: auto; padding: 1.5rem;">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">💰</div>
+                    <div><strong>Savings Boost</strong></div>
+                    <div style="font-size: 0.85rem; margin-top: 0.5rem;">+50% monthly contributions</div>
+                </button>
+
+                <button onclick="applyScenario('recession')" class="btn btn-secondary" style="height: auto; padding: 1.5rem;">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🌩️</div>
+                    <div><strong>Recession</strong></div>
+                    <div style="font-size: 0.85rem; margin-top: 0.5rem;">-30% returns, reduce savings</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Explanation -->
+    <div class="card" style="margin-top: 2rem;">
+        <div class="card-header">
+            <h3 class="card-title">How It Works</h3>
+        </div>
+        <div class="card-body">
+            <div class="grid grid-2">
+                <div>
+                    <h4 style="color: var(--color-accent); margin-bottom: 0.5rem;">Compound Interest Formula</h4>
+                    <p style="color: var(--color-gray-600); line-height: 1.7;">
+                        This calculator uses the compound interest formula with monthly contributions to project your portfolio value over time.
+                    </p>
+                    <div style="background-color: var(--color-gray-50); padding: 1rem; border-radius: var(--radius-md); font-family: monospace; margin-top: 1rem;">
+                        FV = P(1+r)^n + PMT × [((1+r)^n - 1) / r]
+                    </div>
+                </div>
+                <div>
+                    <h4 style="color: var(--color-accent); margin-bottom: 0.5rem;">Key Factors</h4>
+                    <ul style="padding-left: 1.25rem; color: var(--color-gray-600); line-height: 1.8;">
+                        <li><strong>Time Horizon:</strong> Longer periods significantly increase compound growth</li>
+                        <li><strong>Regular Contributions:</strong> Consistent investments reduce timing risk</li>
+                        <li><strong>Market Conditions:</strong> Returns vary based on economic cycles</li>
+                        <li><strong>Rate of Return:</strong> Based on your risk profile allocation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="card" style="margin-top: 2rem;">
+        <div class="card-footer" style="border-top: none; padding-top: 0;">
+            <a href="{% url 'core:dashboard' profile.pk %}" class="btn btn-secondary" style="flex: 1; text-align: center;">
+                ← Back to Dashboard
+            </a>
+            <a href="{% url 'core:financial_report' profile.pk %}" class="btn btn-primary" style="flex: 1; text-align: center;">
+                📄 Financial Report
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Quick scenario presets
+function applyScenario(scenario) {
+    const scenarios = {
+        bull: { marketChange: 20, savingsIncrease: 0 },
+        bear: { marketChange: -20, savingsIncrease: 0 },
+        savings_boost: { marketChange: 0, savingsIncrease: 50 },
+        recession: { marketChange: -30, savingsIncrease: -25 }
+    };
+
+    const s = scenarios[scenario];
+    document.getElementById('marketChange').value = s.marketChange;
+    document.getElementById('marketValue').textContent = (s.marketChange > 0 ? '+' : '') + s.marketChange + '%';
+    document.getElementById('savingsIncrease').value = s.savingsIncrease;
+    document.getElementById('savingsValue').textContent = s.savingsIncrease + '%';
+
+    // Auto-calculate
+    calculateScenario();
+}
+
+// Add applyScenario to window object for onclick access
+window.applyScenario = applyScenario;
+</script>
+{% endblock %}

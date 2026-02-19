@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-1"><i class="bi bi-speedometer2"></i> Transaction Dashboard</h1>
+        <p class="text-muted mb-0">Real-time fraud detection and transaction monitoring</p>
+    </div>
+    <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#transactionModal">
+        <i class="bi bi-plus-circle-fill"></i> Simulate Transaction
+    </button>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1"><i class="bi bi-list-check"></i> Total Transactions</h5>
+                    <h2>{{ stats.total_transactions }}</h2>
+                </div>
+                <i class="bi bi-diagram-3" style="font-size: 3rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card success">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1"><i class="bi bi-shield-check"></i> Safe</h5>
+                    <h2>{{ stats.safe_count }}</h2>
+                </div>
+                <i class="bi bi-shield-fill-check" style="font-size: 3rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card warning">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1"><i class="bi bi-exclamation-triangle"></i> Suspicious</h5>
+                    <h2>{{ stats.suspicious_count }}</h2>
+                </div>
+                <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card danger">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1"><i class="bi bi-shield-x"></i> Fraud</h5>
+                    <h2>{{ stats.fraud_count }}</h2>
+                </div>
+                <i class="bi bi-shield-fill-x" style="font-size: 3rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats & Actions -->
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="card h-100">
+            <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <i class="bi bi-bell-fill"></i> Alerts Overview
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h3 class="mb-1">{{ stats.open_alerts }}</h3>
+                        <small class="text-muted">Open Alerts</small>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="mb-1">{{ stats.open_cases }}</h3>
+                        <small class="text-muted">Open Cases</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card h-100">
+            <div class="card-header" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                <i class="bi bi-lightning-fill"></i> Quick Actions
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-4">
+                        <a href="{% url 'alerts' %}" class="quick-action-card alerts-card text-decoration-none d-block">
+                            <span class="quick-action-badge bg-danger text-white">{{ stats.open_alerts }}</span>
+                            <div class="icon-wrapper">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                            </div>
+                            <small>View Alerts</small>
+                        </a>
+                    </div>
+                    <div class="col-4">
+                        <a href="{% url 'fraud_cases' %}" class="quick-action-card cases-card text-decoration-none d-block">
+                            <span class="quick-action-badge bg-warning text-dark">{{ stats.open_cases }}</span>
+                            <div class="icon-wrapper">
+                                <i class="bi bi-folder-fill"></i>
+                            </div>
+                            <small>Cases</small>
+                        </a>
+                    </div>
+                    <div class="col-4">
+                        <a href="{% url 'analytics_dashboard' %}" class="quick-action-card analytics-card text-decoration-none d-block">
+                            <span class="quick-action-badge bg-info text-white">
+                                <i class="bi bi-arrow-up-right"></i>
+                            </span>
+                            <div class="icon-wrapper">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </div>
+                            <small>Analytics</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transactions Table -->
+<div class="card">
+    <div class="card-header" style="background: linear-gradient(135deg, #495057 0%, #343a40 100%); color: white;">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-table"></i> Recent Transactions</h5>
+            <span class="badge bg-light text-dark">{{ transactions|length }} records</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Merchant</th>
+                        <th>Amount</th>
+                        <th>Risk Score</th>
+                        <th>Location</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td><strong>#{{ transaction.id }}</strong></td>
+                        <td>
+                            <i class="bi bi-person-circle text-secondary"></i>
+                            {{ transaction.user }}
+                        </td>
+                        <td>{{ transaction.merchant }}</td>
+                        <td><strong>${{ transaction.amount }}</strong></td>
+                        <td>
+                            <span class="badge {% if transaction.risk_score >= 80 %}severity-critical{% elif transaction.risk_score >= 60 %}severity-high{% elif transaction.risk_score >= 40 %}severity-medium{% else %}severity-low{% endif %}">
+                                {{ transaction.risk_score|default:0 }}/100
+                            </span>
+                        </td>
+                        <td>
+                            <i class="bi bi-geo-alt-fill text-secondary"></i>
+                            {{ transaction.location }}
+                        </td>
+                        <td>{{ transaction.timestamp|date:"M d, Y H:i" }}</td>
+                        <td>
+                            {% if transaction.status == 'safe' %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Safe</span>
+                            {% elif transaction.status == 'suspicious' %}
+                                <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle"></i> Suspicious</span>
+                            {% elif transaction.status == 'fraud' %}
+                                <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Fraud</span>
+                            {% elif transaction.status == 'under_review' %}
+                                <span class="badge bg-info"><i class="bi bi-search"></i> Under Review</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">
+                            <i class="bi bi-inbox" style="font-size: 3rem; color: #dee2e6;"></i>
+                            <p class="text-muted mt-2">No transactions found</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Transaction Modal -->
+<div class="modal fade" id="transactionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle-fill"></i> Add New Transaction</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'add_transaction' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="user" class="form-label"><i class="bi bi-person"></i> User</label>
+                            <select class="form-select" id="user" name="user" required>
+                                <option value="">Select User</option>
+                                <option value="alice@example.com">alice@example.com</option>
+                                <option value="bob@test.com">bob@test.com</option>
+                                <option value="charlie@mail.com">charlie@mail.com</option>
+                                <option value="david@web.com">david@web.com</option>
+                                <option value="eve@domain.com">eve@domain.com</option>
+                                <option value="frank@company.com">frank@company.com</option>
+                                <option value="grace@tech.com">grace@tech.com</option>
+                                <option value="henry@corp.com">henry@corp.com</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="amount" class="form-label"><i class="bi bi-currency-dollar"></i> Amount ($)</label>
+                            <input type="number" step="0.01" class="form-control" id="amount" name="amount" required placeholder="100.00">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="merchant" class="form-label"><i class="bi bi-shop"></i> Merchant</label>
+                            <select class="form-select" id="merchant" name="merchant" required>
+                                <option value="">Select Merchant</option>
+                                <option value="Amazon">Amazon</option>
+                                <option value="Walmart">Walmart</option>
+                                <option value="Target">Target</option>
+                                <option value="Best Buy">Best Buy</option>
+                                <option value="Netflix">Netflix</option>
+                                <option value="Starbucks">Starbucks</option>
+                                <option value="Apple Store">Apple Store</option>
+                                <option value="Crypto Exchange">Crypto Exchange</option>
+                                <option value="Jewelry Store">Jewelry Store</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="location" class="form-label"><i class="bi bi-geo-alt"></i> Location</label>
+                            <select class="form-select" id="location" name="location" required>
+                                <option value="New York">New York</option>
+                                <option value="California">California</option>
+                                <option value="Texas">Texas</option>
+                                <option value="Florida">Florida</option>
+                                <option value="Washington">Washington</option>
+                                <option value="Nevada">Nevada</option>
+                                <option value="Illinois">Illinois</option>
+                                <option value="Foreign">Foreign</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="transaction_type" class="form-label"><i class="bi bi-arrow-left-right"></i> Type</label>
+                            <select class="form-select" id="transaction_type" name="transaction_type">
+                                <option value="purchase">Purchase</option>
+                                <option value="withdrawal">Withdrawal</option>
+                                <option value="transfer">Transfer</option>
+                                <option value="deposit">Deposit</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Submit Transaction
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('{% url "add_transaction" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('transactionModal'));
+                modal.hide();
+                form.reset();
+
+                // Show result with enhanced styling
+                let severityClass = data.severity || 'low';
+                let alertClass = severityClass === 'critical' || severityClass === 'high' ? 'danger' : severityClass === 'medium' ? 'warning' : 'success';
+                let resultDiv = document.createElement('div');
+                resultDiv.className = `alert alert-${alertClass} fade-in`;
+                resultDiv.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-${alertClass === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill'} fs-4 me-3"></i>
+                        <div>
+                            <h5 class="mb-1">Transaction Created Successfully!</h5>
+                            <p class="mb-0">Risk Score: <strong>${data.risk_score}/100 (${data.severity || 'N/A'})</strong> | Status: <strong>${data.status}</strong></p>
+                        </div>
+                    </div>
+                `;
+                document.querySelector('main').insertBefore(resultDiv, document.querySelector('main').firstChild);
+
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (error) {
+            alert('Failed to submit transaction. Please try again.');
+            console.error('Error:', error);
+        }
+    });
+});
+</script>
+{% endblock %}

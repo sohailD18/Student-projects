@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - EV Trip Planner{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="hero-title">Plan Your EV Journey with Confidence</h1>
+            <p class="hero-subtitle">Find charging stations, plan routes, and get AI-powered assistance for your electric vehicle trips.</p>
+            <div class="hero-actions">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'planner:plan_trip' %}" class="btn btn-primary btn-large">Plan Your Trip</a>
+                    <a href="{% url 'core:stations_map' %}" class="btn btn-secondary btn-large">Find Chargers</a>
+                {% else %}
+                    <a href="{% url 'core:register' %}" class="btn btn-primary btn-large">Get Started</a>
+                    <a href="{% url 'core:stations_map' %}" class="btn btn-secondary btn-large">Find Chargers</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features">
+    <div class="container">
+        <h2 class="section-title">Everything You Need for EV Travel</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🗺️</div>
+                <h3>Smart Trip Planning</h3>
+                <p>Plan your route with optimized charging stops based on your vehicle's battery capacity and range.</p>
+                <a href="{% url 'planner:plan_trip' %}" class="feature-link">Start Planning →</a>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Charging Station Finder</h3>
+                <p>Discover thousands of charging stations with real-time availability, pricing, and connector types.</p>
+                <a href="{% url 'core:stations_map' %}" class="feature-link">Find Stations →</a>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>AI Charging Assistant</h3>
+                <p>Get instant answers to your EV questions with our intelligent, knowledge-based AI assistant.</p>
+                {% if user.is_authenticated %}
+                    <a href="javascript:void(0)" onclick="openChatWidget()" class="feature-link">Chat Now →</a>
+                {% else %}
+                    <a href="{% url 'core:register' %}" class="feature-link">Sign Up to Chat →</a>
+                {% endif %}
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Trip Dashboard</h3>
+                <p>Track your trip history, manage your vehicles, and monitor your charging activities.</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'core:dashboard' %}" class="feature-link">View Dashboard →</a>
+                {% else %}
+                    <a href="{% url 'core:register' %}" class="feature-link">Sign Up →</a>
+                {% endif %}
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🚗</div>
+                <h3>Vehicle Management</h3>
+                <p>Add your EVs to get personalized range estimates and charging recommendations.</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'core:vehicle_list' %}" class="feature-link">Manage Vehicles →</a>
+                {% else %}
+                    <a href="{% url 'core:register' %}" class="feature-link">Get Started →</a>
+                {% endif %}
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">💡</div>
+                <h3>EV Knowledge Base</h3>
+                <p>Learn about battery maintenance, charging tips, cost savings, and best practices.</p>
+                {% if user.is_authenticated %}
+                    <a href="javascript:void(0)" onclick="openChatWidget()" class="feature-link">Ask AI →</a>
+                {% else %}
+                    <a href="{% url 'core:register' %}" class="feature-link">Sign Up to Ask →</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">{{ total_stations }}</div>
+                <div class="stat-label">Charging Stations</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ available_stations }}</div>
+                <div class="stat-label">Available Now</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ fast_charging }}</div>
+                <div class="stat-label">Fast Chargers</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Ready to Go Electric?</h2>
+            <p>Join thousands of EV drivers who trust us for their trip planning needs.</p>
+            {% if user.is_authenticated %}
+                <a href="{% url 'planner:plan_trip' %}" class="btn btn-primary btn-large">Plan Your First Trip</a>
+            {% else %}
+                <a href="{% url 'core:register' %}" class="btn btn-primary btn-large">Create Free Account</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

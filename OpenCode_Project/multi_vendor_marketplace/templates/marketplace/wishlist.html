@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}My Wishlist - Multi-Vendor Marketplace{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">My Wishlist</h2>
+
+{% if wishlist_items %}
+<div class="row">
+    {% for wishlist_item in wishlist_items %}
+    <div class="col-md-4 col-sm-6 mb-4">
+        <div class="card card-product h-100">
+            <div class="card-body position-relative">
+                <button class="btn btn-outline-danger btn-sm position-absolute" style="top: 10px; right: 10px;" onclick="removeFromWishlist({{ wishlist_item.product.id }})">
+                    <i class="fas fa-times"></i>
+                </button>
+                {% if wishlist_item.product.image %}
+                <img src="{{ wishlist_item.product.image.url }}" class="card-img-top mb-2" alt="{{ wishlist_item.product.name }}" style="height: 200px; object-fit: cover; width: 100%;">
+                {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center mb-2" style="height: 200px;">
+                    <i class="fas fa-image fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+                <h6 class="card-title">
+                    <a href="{% url 'product_detail' wishlist_item.product.slug %}" class="text-decoration-none text-dark">
+                        {{ wishlist_item.product.name|truncatewords:10 }}
+                    </a>
+                </h6>
+                <p class="card-text text-muted small">
+                    <a href="{% url 'vendor_store' wishlist_item.product.vendor.store_slug %}">{{ wishlist_item.product.vendor.store_name }}</a>
+                </p>
+                <div class="mb-2">
+                    {% if wishlist_item.product.sale_price and wishlist_item.product.sale_price < wishlist_item.product.price %}
+                    <span class="price-original">${{ wishlist_item.product.price }}</span>
+                    <span class="price-sale">${{ wishlist_item.product.sale_price }}</span>
+                    {% else %}
+                    <span class="fw-bold">${{ wishlist_item.product.price }}</span>
+                    {% endif %}
+                </div>
+                <div class="star-rating mb-2">
+                    {% for i in "12345" %}
+                    <i class="fas fa-star{% if forloop.counter <= wishlist_item.product.rating %}{% else %}-o{% endif %}"></i>
+                    {% endfor %}
+                    <small class="text-muted">({{ wishlist_item.product.review_count }})</small>
+                </div>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary btn-sm" onclick="addToCart({{ wishlist_item.product.id }})">
+                        <i class="fas fa-cart-plus"></i> Add to Cart
+                    </button>
+                    <a href="{% url 'product_detail' wishlist_item.product.slug %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-eye"></i> View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-heart fa-5x text-muted mb-4"></i>
+    <h3>Your wishlist is empty</h3>
+    <p class="text-muted mb-4">Save your favorite products for later!</p>
+    <a href="{% url 'product_list' %}" class="btn btn-primary">
+        <i class="fas fa-th-large"></i> Browse Products
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function removeFromWishlist(productId) {
+    fetch(`/wishlist/remove/${productId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', 'Removed from wishlist!');
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'An error occurred.');
+    });
+}
+</script>
+{% endblock %}

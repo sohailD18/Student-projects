@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Driver Behavior Analysis{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.total_trips }}</div>
+        <div class="stat-label">Total Trips</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.avg_safety }}%</div>
+        <div class="stat-label">Avg Safety Score</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" style="color: #4caf50;">{{ stats.safe_drivers }}</div>
+        <div class="stat-label">Safe Drivers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" style="color: #ff9800;">{{ stats.moderate_drivers }}</div>
+        <div class="stat-label">Moderate</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" style="color: #f44336;">{{ stats.risky_drivers }}</div>
+        <div class="stat-label">Risky Drivers</div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="card">
+    <h2>📊 Risk Score Trends (Last 30 Days)</h2>
+    <div class="chart-container">
+        <canvas id="riskChart"></canvas>
+    </div>
+</div>
+
+<div class="card">
+    <h2>🚗 Speed Analysis (Last 30 Days)</h2>
+    <div class="chart-container">
+        <canvas id="speedChart"></canvas>
+    </div>
+</div>
+
+<!-- Recent Trips Table -->
+<div class="card">
+    <h2>📋 Recent Trips</h2>
+    {% if recent_trips %}
+    <table>
+        <thead>
+            <tr>
+                <th>Driver Name</th>
+                <th>Date</th>
+                <th>Avg Speed</th>
+                <th>Max Speed</th>
+                <th>Braking Events</th>
+                <th>Accel Events</th>
+                <th>Risk Score</th>
+                <th>Classification</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for trip in recent_trips %}
+            <tr>
+                <td>
+                    <a href="{% url 'driver_app:driver_report' trip.driver_name %}" style="color: #667eea; text-decoration: none; font-weight: 600;">
+                        {{ trip.driver_name }}
+                    </a>
+                </td>
+                <td>{{ trip.trip_date|date:"Y-m-d" }}</td>
+                <td>{{ trip.average_speed }} km/h</td>
+                <td>{{ trip.max_speed }} km/h</td>
+                <td>{{ trip.harsh_braking_events }}</td>
+                <td>{{ trip.rapid_acceleration_events }}</td>
+                <td>
+                    {% if trip.risk_score %}{{ trip.risk_score }}{% else %}N/A{% endif %}
+                </td>
+                <td>
+                    {% if trip.behavior_class %}
+                    <span class="badge badge-{{ trip.behavior_class|lower }}">
+                        {{ trip.behavior_class }}
+                    </span>
+                    {% else %}
+                    <span style="color: #999;">Pending</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'driver_app:trip_detail' trip.id %}" style="color: #667eea;">View Details</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="text-align: center; color: #999; padding: 40px;">
+        No trip data available. <a href="{% url 'driver_app:add_data' %}" style="color: #667eea;">Add your first trip</a> to get started!
+    </p>
+    {% endif %}
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+    <h2>⚡ Quick Actions</h2>
+    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+        <a href="{% url 'driver_app:add_data' %}" class="btn">➕ Add New Trip</a>
+        <button onclick="loadChartData()" class="btn" style="background: #4caf50;">🔄 Refresh Charts</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Chart data from Django
+    const chartLabels = {{ chart_labels|safe }};
+    const chartRiskScores = {{ chart_risk_scores|safe }};
+    const chartSpeeds = {{ chart_speeds|safe }};
+
+    // Risk Score Chart
+    const riskCtx = document.getElementById('riskChart').getContext('2d');
+    new Chart(riskCtx, {
+        type: 'line',
+        data: {
+            labels: chartLabels.length > 0 ? chartLabels : ['No Data'],
+            datasets: [{
+                label: 'Risk Score',
+                data: chartRiskScores.length > 0 ? chartRiskScores : [0],
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#667eea',
+                pointRadius: 5,
+                pointHoverRadius: 7,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Risk Score: ' + context.parsed.y;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Risk Score (0-100)'
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Speed Chart
+    const speedCtx = document.getElementById('speedChart').getContext('2d');
+    new Chart(speedCtx, {
+        type: 'bar',
+        data: {
+            labels: chartLabels.length > 0 ? chartLabels : ['No Data'],
+            datasets: [{
+                label: 'Average Speed (km/h)',
+                data: chartSpeeds.length > 0 ? chartSpeeds : [0],
+                backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                borderColor: '#667eea',
+                borderWidth: 2,
+                borderRadius: 5,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Speed (km/h)'
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Function to refresh chart data
+    function loadChartData() {
+        fetch('{% url "driver_app:api_chart_data" %}')
+            .then(response => response.json())
+            .then(data => {
+                // You could update charts here with new data
+                location.reload();
+            })
+            .catch(error => console.error('Error loading chart data:', error));
+    }
+</script>
+{% endblock %}

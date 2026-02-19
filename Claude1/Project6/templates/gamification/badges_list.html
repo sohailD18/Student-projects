@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Badges - TimeBank{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1><i class="fas fa-medal"></i> Badges</h1>
+    <p class="text-muted">Earn badges by participating in the community!</p>
+
+    <div class="row mt-4">
+        {% for badge in all_badges %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 {% if badge.id in earned_badge_ids %}border-warning{% else %}text-muted{% endif %}">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas {{ badge.icon_name }} fa-4x {% if badge.id in earned_badge_ids %}text-warning{% else %}text-secondary{% endif %}"></i>
+                        </div>
+                        <h5 class="card-title">{{ badge.name }}</h5>
+                        <p class="card-text small">{{ badge.description }}</p>
+                        <p class="card-text">
+                            <small>
+                                {% if badge.badge_type == 'tasks_completed' %}
+                                    <i class="fas fa-tasks"></i> Complete {{ badge.requirement_value }} tasks
+                                {% elif badge.badge_type == 'hours_earned' %}
+                                    <i class="fas fa-clock"></i> Earn {{ badge.requirement_value }} hours
+                                {% elif badge.badge_type == 'reviews_given' %}
+                                    <i class="fas fa-star"></i> Give {{ badge.requirement_value }} reviews
+                                {% endif %}
+                            </small>
+                        </p>
+                        {% if badge.id in earned_badge_ids %}
+                            <span class="badge bg-success"><i class="fas fa-check"></i> Earned!</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Not yet earned</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No badges available yet.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if user_badges %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5><i class="fas fa-award"></i> Your Badges ({{ user_badges.count }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for user_badge in user_badges %}
+                        <div class="col-md-3 mb-3 text-center">
+                            <div class="p-3 border rounded">
+                                <i class="fas {{ user_badge.badge.icon_name }} fa-3x text-warning mb-2"></i>
+                                <h6>{{ user_badge.badge.name }}</h6>
+                                <small class="text-muted">Earned: {{ user_badge.earned_at|date:"M d, Y" }}</small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{% url 'leaderboard' %}" class="btn btn-outline-primary">
+            <i class="fas fa-trophy"></i> View Leaderboard
+        </a>
+        <a href="{% url 'task_list' %}" class="btn btn-primary">
+            <i class="fas fa-tasks"></i> Browse Tasks
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-folder"></i> Fraud Cases</h1>
+    <a href="{% url 'create_case' %}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> New Case</a>
+</div>
+
+<!-- Case Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Total Cases</h5>
+                <h2 class="card-text">{{ stats.total }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title">Open</h5>
+                <h2 class="card-text">{{ stats.open }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Investigating</h5>
+                <h2 class="card-text">{{ stats.investigating }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Closed</h5>
+                <h2 class="card-text">{{ stats.closed }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="status" class="form-label">Status</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="all">All Status</option>
+                    <option value="open" {% if status_filter == 'open' %}selected{% endif %}>Open</option>
+                    <option value="investigating" {% if status_filter == 'investigating' %}selected{% endif %}>Investigating</option>
+                    <option value="evidence_collection" {% if status_filter == 'evidence_collection' %}selected{% endif %}>Evidence Collection</option>
+                    <option value="pending_review" {% if status_filter == 'pending_review' %}selected{% endif %}>Pending Review</option>
+                    <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Closed</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="priority" class="form-label">Priority</label>
+                <select name="priority" id="priority" class="form-select">
+                    <option value="all">All Priorities</option>
+                    <option value="p1" {% if priority_filter == 'p1' %}selected{% endif %}>P1 - Critical</option>
+                    <option value="p2" {% if priority_filter == 'p2' %}selected{% endif %}>P2 - High</option>
+                    <option value="p3" {% if priority_filter == 'p3' %}selected{% endif %}>P3 - Medium</option>
+                    <option value="p4" {% if priority_filter == 'p4' %}selected{% endif %}>P4 - Low</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="{% url 'fraud_cases' %}" class="btn btn-secondary ms-2">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Cases Table -->
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-list-check"></i> Case List</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Case Number</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Assigned To</th>
+                        <th>Suspected Amount</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for case in cases %}
+                    <tr>
+                        <td><strong>{{ case.case_number }}</strong></td>
+                        <td>{{ case.title }}</td>
+                        <td>
+                            <span class="badge bg-{% if case.status == 'open' %}danger{% elif case.status == 'investigating' %}warning{% elif case.status == 'closed' %}success{% else %}info{% endif %}">
+                                {{ case.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if case.priority == 'p1' %}danger{% elif case.priority == 'p2' %}warning{% elif case.priority == 'p3' %}info{% else %}secondary{% endif %}">
+                                {{ case.priority|upper }}
+                            </span>
+                        </td>
+                        <td>{{ case.assigned_to|default:"Unassigned" }}</td>
+                        <td>${{ case.suspected_amount }}</td>
+                        <td>{{ case.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'case_detail' case.case_number %}" class="btn btn-sm btn-info">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">No cases found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

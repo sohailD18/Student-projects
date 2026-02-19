@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports - AI Safety System{% endblock %}
+
+{% block page_title %}Safety Incident Reports{% endblock %}
+
+{% block content %}
+<!-- Filters Section -->
+<div class="filters-section">
+    <div class="filter-card">
+        <h3><i class="fas fa-filter"></i> Filter Reports</h3>
+
+        <form method="get" class="filter-form">
+            <div class="filter-group">
+                <label for="start_date">From Date:</label>
+                <input
+                    type="date"
+                    id="start_date"
+                    name="start_date"
+                    value="{{ request.GET.start_date }}"
+                    class="filter-input"
+                >
+            </div>
+
+            <div class="filter-group">
+                <label for="end_date">To Date:</label>
+                <input
+                    type="date"
+                    id="end_date"
+                    name="end_date"
+                    value="{{ request.GET.end_date }}"
+                    class="filter-input"
+                >
+            </div>
+
+            <div class="filter-group">
+                <label for="hazard_type">Hazard Type:</label>
+                <select id="hazard_type" name="hazard_type" class="filter-input">
+                    <option value="">All Types</option>
+                    {% for value, label in hazard_types %}
+                        <option value="{{ value }}" {% if request.GET.hazard_type == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-search"></i> Apply Filters
+            </button>
+
+            <a href="{% url 'monitoring:reports' %}" class="btn-secondary">
+                <i class="fas fa-times"></i> Clear
+            </a>
+        </form>
+    </div>
+</div>
+
+<!-- Incidents Table -->
+<div class="table-section">
+    <div class="table-header">
+        <h2><i class="fas fa-table"></i> Incident Log</h2>
+        <div class="table-actions">
+            <button class="btn-clear" onclick="clearAllIncidents()">
+                <i class="fas fa-trash"></i> Clear All
+            </button>
+            <button class="btn-export" onclick="exportReport()">
+                <i class="fas fa-download"></i> Export CSV
+            </button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="incidents-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Timestamp</th>
+                    <th>Camera</th>
+                    <th>Hazard Type</th>
+                    <th>Confidence</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for incident in incidents %}
+                    <tr class="{% if not incident.is_resolved %}unresolved{% endif %}">
+                        <td>#{{ incident.incident_id }}</td>
+                        <td>{{ incident.timestamp|date:"Y-m-d H:i:s" }}</td>
+                        <td>{{ incident.camera_id }}</td>
+                        <td>
+                            <span class="hazard-badge {{ incident.hazard_type|lower }}">
+                                {{ incident.get_hazard_type_display }}
+                            </span>
+                        </td>
+                        <td>{{ incident.confidence_percentage }}%</td>
+                        <td>
+                            {% if incident.is_resolved %}
+                                <span class="status-badge resolved">
+                                    <i class="fas fa-check"></i> Resolved
+                                </span>
+                            {% else %}
+                                <span class="status-badge pending">
+                                    <i class="fas fa-clock"></i> Pending
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                {% if incident.image_path %}
+                                    <a href="{{ incident.image_path.url }}" target="_blank" class="btn-view" title="View Image">
+                                        <i class="fas fa-image"></i>
+                                    </a>
+                                {% endif %}
+                                {% if not incident.is_resolved %}
+                                    <button
+                                        class="btn-resolve"
+                                        onclick="resolveIncident({{ incident.incident_id }})"
+                                        title="Mark as Resolved">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="no-data">
+                            <i class="fas fa-inbox"></i>
+                            <p>No incidents found</p>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination (simplified) -->
+    {% if incidents|length > 0 %}
+        <div class="table-footer">
+            <span class="showing-text">Showing {{ incidents|length }} of {{ incidents|length }} incidents</span>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Statistics Summary -->
+<div class="summary-cards">
+    <div class="summary-card">
+        <h4>Total Incidents</h4>
+        <p class="summary-value">{{ total_incidents }}</p>
+    </div>
+    <div class="summary-card">
+        <h4>Unresolved</h4>
+        <p class="summary-value unresolved">{{ unresolved_count }}</p>
+    </div>
+    <div class="summary-card">
+        <h4>Resolved</h4>
+        <p class="summary-value resolved">{{ resolved_count }}</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Clear all incidents
+async function clearAllIncidents() {
+    if (!confirm('Are you sure you want to delete ALL incidents? This action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/monitoring/api/clear-all/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('Failed to clear incidents: ' + (data.error || 'Unknown error'), 'error');
+        }
+    } catch (error) {
+        console.error('Error clearing incidents:', error);
+        showToast('Error clearing incidents', 'error');
+    }
+}
+
+// Resolve incident
+async function resolveIncident(incidentId) {
+    if (!confirm('Mark this incident as resolved?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/monitoring/api/resolve/${incidentId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Incident marked as resolved', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('Failed to resolve incident', 'error');
+        }
+    } catch (error) {
+        console.error('Error resolving incident:', error);
+        showToast('Error resolving incident', 'error');
+    }
+}
+
+// Export report as CSV
+function exportReport() {
+    const rows = document.querySelectorAll('.incidents-table tbody tr');
+
+    if (rows.length === 0 || rows[0].classList.contains('no-data')) {
+        showToast('No data to export', 'error');
+        return;
+    }
+
+    let csv = 'ID,Timestamp,Camera,Hazard Type,Confidence,Status\n';
+
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        const rowData = [
+            cells[0].textContent.trim(),
+            cells[1].textContent.trim(),
+            cells[2].textContent.trim(),
+            cells[3].textContent.trim(),
+            cells[4].textContent.trim(),
+            cells[5].textContent.trim()
+        ];
+        csv += rowData.join(',') + '\n';
+    });
+
+    // Download CSV
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `safety_report_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    showToast('Report exported successfully', 'success');
+}
+
+// Get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Show toast notification
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    container.appendChild(toast);
+
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends 'campaigns/base.html' %}
+
+{% block title %}{{ email_list.name }} - Email Marketing Platform{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">{{ email_list.name }}</h1>
+            <p class="text-muted mb-0">{{ email_list.description }}</p>
+        </div>
+        <div>
+            <a href="{% url 'campaigns:subscriber_create' %}?list={{ email_list.pk }}" class="btn btn-success">
+                <i class="bi bi-person-plus"></i> Add Subscriber
+            </a>
+            <a href="{% url 'campaigns:email_list_delete' email_list.pk %}" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Delete List
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-value text-primary">{{ email_list.subscriber_count }}</div>
+            <div class="stat-label">Active Subscribers</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card stat-info">
+            <div class="stat-value text-info">{{ subscribers.count }}</div>
+            <div class="stat-label">Total Subscribers</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card stat-success">
+            <div class="stat-value text-success">{{ email_list.created_at|date:"M d, Y" }}</div>
+            <div class="stat-label">Created On</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-people"></i> Subscribers ({{ subscribers.count }})
+    </div>
+    <div class="card-body">
+        {% if subscribers %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Subscribed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subscriber in subscribers %}
+                            <tr>
+                                <td>{{ subscriber.email }}</td>
+                                <td>{{ subscriber.full_name }}</td>
+                                <td>
+                                    <span class="badge bg-{% if subscriber.status == 'active' %}success{% elif subscriber.status == 'unsubscribed' %}danger{% else %}warning{% endif %}">
+                                        {{ subscriber.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ subscriber.subscribed_at|date:"M d, Y" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-people" style="font-size: 3rem; color: #dee2e6;"></i>
+                <p class="mt-3 text-muted">No subscribers in this list yet.</p>
+                <a href="{% url 'campaigns:subscriber_create' %}" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Add Your First Subscriber
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

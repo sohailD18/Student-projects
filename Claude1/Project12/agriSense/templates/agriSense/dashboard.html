@@ -1,0 +1,433 @@
+{% extends 'agriSense/base.html' %}
+
+{% block title %}Dashboard - AgriSense{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="text-center mb-5">
+    <h1 class="page-title">
+        <i class="bi bi-flower1 me-2"></i>AgriSense Dashboard
+    </h1>
+    <p class="page-subtitle">Welcome to your Smart Agriculture Management System</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="agri-card stat-card">
+            <i class="bi bi-basket display-4 mb-2" style="color: var(--primary-green);"></i>
+            <h2 class="display-4 fw-bold mb-1">{{ total_crops }}</h2>
+            <p class="mb-0">Total Crops in Database</p>
+            <small class="text-muted">Across all categories</small>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="agri-card stat-card">
+            <i class="bi bi-calendar3 display-4 mb-2" style="color: var(--secondary-green);"></i>
+            <h2 class="display-4 fw-bold mb-1">{{ total_seasons }}</h2>
+            <p class="mb-0">Growing Seasons</p>
+            <small class="text-muted">For crop planning</small>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="agri-card stat-card">
+            <i class="bi bi-graph-up-arrow display-4 mb-2" style="color: var(--light-green);"></i>
+            <h2 class="display-4 fw-bold mb-1">{{ total_yield_records }}</h2>
+            <p class="mb-0">Yield Records</p>
+            <small class="text-muted">Historical data points</small>
+        </div>
+    </div>
+</div>
+
+<!-- Weather Widget & Quick Actions -->
+<div class="row g-4 mb-5">
+    <!-- Weather Widget -->
+    <div class="col-lg-6">
+        <div class="agri-card h-100">
+            <h5 class="mb-4">
+                <i class="bi bi-cloud-sun me-2"></i>Weather Conditions
+                <span class="badge bg-success ms-2">Live</span>
+            </h5>
+            <div class="row align-items-center">
+                <div class="col-6 text-center">
+                    <i class="bi bi-sun-fill display-1" style="color: #ffd54f; font-size: 5rem;"></i>
+                    <h4 class="mt-2 mb-0">28°C</h4>
+                    <p class="text-muted mb-0">Partly Cloudy</p>
+                </div>
+                <div class="col-6">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-droplet-fill text-primary me-2"></i>
+                        <div>
+                            <strong>Humidity</strong>
+                            <p class="mb-0">65%</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-wind me-2" style="color: var(--secondary-green);"></i>
+                        <div>
+                            <strong>Wind</strong>
+                            <p class="mb-0">12 km/h NE</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-moisture me-2" style="color: var(--primary-green);"></i>
+                        <div>
+                            <strong>Soil Moisture</strong>
+                            <p class="mb-0">42% - Optimal</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-umbrella me-2 text-info"></i>
+                        <div>
+                            <strong>Rainfall</strong>
+                            <p class="mb-0">20% chance</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="alert alert-success mt-3 mb-0">
+                <i class="bi bi-check-circle me-2"></i>
+                <strong>Favorable conditions</strong> for most crops today
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-lg-6">
+        <div class="agri-card h-100">
+            <h5 class="mb-4">
+                <i class="bi bi-lightning-charge me-2"></i>Quick Actions
+            </h5>
+            <div class="d-grid gap-3">
+                <a href="{% url 'agriSense:crop_planner' %}" class="btn btn-agri text-start py-3">
+                    <i class="bi bi-calendar-check me-3 fs-5"></i>
+                    <div class="d-inline-block align-middle">
+                        <strong>Crop Planner</strong>
+                        <br><small>Find suitable crops for your soil and season</small>
+                    </div>
+                </a>
+                <a href="{% url 'agriSense:yield_predictor' %}" class="btn btn-agri text-start py-3">
+                    <i class="bi bi-calculator me-3 fs-5"></i>
+                    <div class="d-inline-block align-middle">
+                        <strong>Yield Predictor</strong>
+                        <br><small>Estimate your crop production</small>
+                    </div>
+                </a>
+                <a href="{% url 'agriSense:reports' %}" class="btn btn-agri text-start py-3">
+                    <i class="bi bi-file-bar-graph me-3 fs-5"></i>
+                    <div class="d-inline-block align-middle">
+                        <strong>Analytics Reports</strong>
+                        <br><small>View trends and insights</small>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Yield Trends Chart -->
+<div class="agri-card mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="mb-0">
+            <i class="bi bi-bar-chart-fill me-2" style="color: var(--primary-green);"></i>Yield Trends (Last 5 Years)
+        </h5>
+        <div class="btn-group btn-group-sm" role="group">
+            <button type="button" class="btn btn-outline-agri active" id="btnBarChart" onclick="switchChartType('bar')">
+                <i class="bi bi-bar-chart me-1"></i>Bar
+            </button>
+            <button type="button" class="btn btn-outline-agri" id="btnLineChart" onclick="switchChartType('line')">
+                <i class="bi bi-graph-up me-1"></i>Line
+            </button>
+        </div>
+    </div>
+
+    <!-- Chart Loading State -->
+    <div id="chartLoading" class="text-center py-5">
+        <div class="spinner-agri mx-auto mb-3"></div>
+        <p class="text-muted">Loading yield data...</p>
+    </div>
+
+    <!-- Chart Container -->
+    <div id="chartContainer" style="display: none; height: 400px;">
+        <canvas id="yieldChart"></canvas>
+    </div>
+
+    <!-- Chart Error State -->
+    <div id="chartError" class="error-box text-center" style="display: none;">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <span>Unable to load chart data. Please try refreshing the page.</span>
+    </div>
+</div>
+
+<!-- Top Performing Crops -->
+<div class="agri-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="mb-0">
+            <i class="bi bi-trophy-fill me-2" style="color: #ffd54f;"></i>Top Performing Crops
+        </h5>
+        <a href="{% url 'agriSense:reports' %}" class="btn btn-outline-agri btn-sm">View All</a>
+    </div>
+
+    {% if top_crops %}
+    <div class="table-responsive">
+        <table class="table table-agri mb-0">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-hash me-1"></i>Rank</th>
+                    <th><i class="bi bi-basket me-1"></i>Crop</th>
+                    <th><i class="bi bi-tag me-1"></i>Type</th>
+                    <th class="text-end"><i class="bi bi-graph-up me-1"></i>Avg Yield</th>
+                    <th class="text-center"><i class="bi bi-database me-1"></i>Data Points</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for crop in top_crops %}
+                <tr>
+                    <td>
+                        <span class="badge {% if forloop.counter == 1 %}bg-warning text-dark{% elif forloop.counter == 2 %}bg-secondary{% elif forloop.counter == 3 %}bg-info text-dark{% else %}bg-light text-dark{% endif %} fs-6">
+                            #{{ forloop.counter }}
+                        </span>
+                    </td>
+                    <td><strong>{{ crop.name }}</strong></td>
+                    <td>
+                        <span class="badge bg-light text-dark">{{ crop.type }}</span>
+                    </td>
+                    <td class="text-end">
+                        <strong class="text-success">{{ crop.average_yield }}</strong>
+                        <small class="text-muted">tons/ha</small>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-success">{{ crop.records_count }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-4">
+        <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+        <p class="text-muted mb-0">No yield data available yet.</p>
+        <a href="{% url 'agriSense:yield_predictor' %}" class="btn btn-agri mt-3">Add Yield Records</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Recent Activity / Tips -->
+<div class="row g-4 mt-4">
+    <div class="col-md-6">
+        <div class="agri-card">
+            <h5 class="mb-3">
+                <i class="bi bi-lightbulb me-2" style="color: #ffd54f;"></i>Farming Tips
+            </h5>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex align-items-start">
+                    <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                    <div>
+                        <strong>Test your soil</strong> before planting season for optimal nutrient management
+                    </div>
+                </li>
+                <li class="list-group-item d-flex align-items-start">
+                    <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                    <div>
+                        <strong>Rotate crops</strong> annually to maintain soil health and reduce pests
+                    </div>
+                </li>
+                <li class="list-group-item d-flex align-items-start">
+                    <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                    <div>
+                        <strong>Monitor weather</strong> patterns to time your planting and irrigation
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="agri-card">
+            <h5 class="mb-3">
+                <i class="bi bi-calendar-event me-2"></i>Current Season
+            </h5>
+            <div class="text-center py-2">
+                <h4 class="mb-2" style="color: var(--primary-green);">
+                    <i class="bi bi-sun-fill me-2"></i>Spring Season
+                </h4>
+                <p class="text-muted mb-3">March - May</p>
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Ideal for wheat, vegetables, and summer crops
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global chart instance
+let yieldChart = null;
+let currentChartType = 'bar';
+let chartData = null;
+
+// Fetch chart data and render
+async function loadYieldChart() {
+    try {
+        const response = await fetch('/api/yield-chart-data/');
+        const data = await response.json();
+
+        if (data.years && data.years.length > 0) {
+            chartData = data;
+            document.getElementById('chartLoading').style.display = 'none';
+            document.getElementById('chartContainer').style.display = 'block';
+            renderChart();
+        } else {
+            document.getElementById('chartLoading').style.display = 'none';
+            document.getElementById('chartError').style.display = 'block';
+            document.getElementById('chartError').innerHTML =
+                '<i class="bi bi-inbox me-2"></i>No yield data available. Add yield records to see the chart.';
+        }
+    } catch (err) {
+        console.error('Error loading chart data:', err);
+        document.getElementById('chartLoading').style.display = 'none';
+        document.getElementById('chartError').style.display = 'block';
+    }
+}
+
+// Render the chart
+function renderChart() {
+    const ctx = document.getElementById('yieldChart').getContext('2d');
+
+    // Destroy existing chart if it exists
+    if (yieldChart) {
+        yieldChart.destroy();
+    }
+
+    // Create chart configuration
+    const config = {
+        type: currentChartType,
+        data: {
+            labels: chartData.years.map(year => year.toString()),
+            datasets: chartData.crop_datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        font: {
+                            size: 12,
+                            family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(45, 90, 39, 0.9)',
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.parsed.y + ' tons/hectare';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Yield (tons/hectare)',
+                        font: {
+                            size: 13,
+                            weight: '600'
+                        },
+                        color: 'var(--primary-green)'
+                    },
+                    grid: {
+                        color: 'rgba(45, 90, 39, 0.1)'
+                    },
+                    ticks: {
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Year',
+                        font: {
+                            size: 13,
+                            weight: '600'
+                        },
+                        color: 'var(--primary-green)'
+                    },
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeInOutQuart'
+            }
+        }
+    };
+
+    // Create line chart specific adjustments
+    if (currentChartType === 'line') {
+        config.data.datasets.forEach(dataset => {
+            dataset.tension = 0.4;
+            dataset.fill = false;
+            dataset.pointRadius = 6;
+            dataset.pointHoverRadius = 8;
+            dataset.pointBackgroundColor = dataset.borderColor;
+            dataset.pointBorderColor = '#fff';
+            dataset.pointBorderWidth = 2;
+        });
+    }
+
+    yieldChart = new Chart(ctx, config);
+}
+
+// Switch between bar and line chart
+function switchChartType(type) {
+    currentChartType = type;
+
+    // Update button states
+    document.getElementById('btnBarChart').classList.toggle('active', type === 'bar');
+    document.getElementById('btnLineChart').classList.toggle('active', type === 'line');
+
+    // Re-render chart
+    if (chartData) {
+        renderChart();
+    }
+}
+
+// Load chart when page is ready
+document.addEventListener('DOMContentLoaded', function() {
+    loadYieldChart();
+});
+</script>
+{% endblock %}

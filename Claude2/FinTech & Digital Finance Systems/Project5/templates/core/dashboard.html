@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb -->
+    <div style="margin-bottom: 1rem;">
+        <a href="{% url 'core:profile_detail' profile.pk %}" style="color: var(--color-accent); text-decoration: none;">
+            ← Back to Profile
+        </a>
+    </div>
+
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div>
+            <h1 style="color: var(--color-primary);">Risk vs. Return Dashboard</h1>
+            <p style="color: var(--color-gray-500);">Module 6: Visualization Dashboard</p>
+        </div>
+        {% if risk_profile %}
+            <span class="risk-badge risk-{{ risk_profile.classification }}" style="font-size: 1.1rem; padding: 0.5rem 1.5rem;">
+                {{ risk_profile.get_classification_display }}
+            </span>
+        {% endif %}
+    </div>
+
+    {% if risk_profile %}
+        <!-- Risk Profile Summary -->
+        <div class="grid grid-4">
+            <div class="stat-card">
+                <div class="stat-label">Risk Score</div>
+                <div class="stat-value">{{ risk_profile.risk_score }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Savings Rate</div>
+                <div class="stat-value">{{ risk_profile.savings_rate }}%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Spending Pattern</div>
+                <div class="stat-value" style="font-size: 1.5rem;">{{ risk_profile.spending_pattern }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Classification</div>
+                <div class="stat-value" style="font-size: 1.5rem;">{{ risk_profile.get_classification_display }}</div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-2" style="margin-top: 2rem;">
+            <!-- Risk vs. Return Scatter Plot -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Risk vs. Return Analysis</h3>
+                    <p class="card-subtitle">Asset Classes for {{ risk_profile.get_classification_display }} Profile</p>
+                </div>
+                <div style="height: 400px;">
+                    <canvas id="riskReturnChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Portfolio Allocation -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Recommended Portfolio Allocation</h3>
+                    <p class="card-subtitle">Based on your risk profile</p>
+                </div>
+                <div style="height: 400px;">
+                    <canvas id="allocationChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Asset Class Details -->
+        <div class="card" style="margin-top: 2rem;">
+            <div class="card-header">
+                <h3 class="card-title">Asset Class Details</h3>
+                <p class="card-subtitle">Recommended investments for your risk profile</p>
+            </div>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Asset Class</th>
+                        <th>Risk Level (%)</th>
+                        <th>Expected Return (%)</th>
+                        <th>Recommended Allocation (%)</th>
+                        <th>Risk Category</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in chart_data %}
+                        <tr>
+                            <td><strong>{{ asset.name }}</strong></td>
+                            <td>{{ asset.risk }}%</td>
+                            <td style="color: var(--color-success-dark); font-weight: 600;">{{ asset.return }}%</td>
+                            <td>{{ asset.allocation }}%</td>
+                            <td>
+                                {% if asset.risk < 5 %}
+                                    <span class="risk-badge risk-conservative">Low Risk</span>
+                                {% elif asset.risk < 20 %}
+                                    <span class="risk-badge risk-moderate">Medium Risk</span>
+                                {% else %}
+                                    <span class="risk-badge risk-aggressive">High Risk</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Key Insights -->
+        <div class="card" style="margin-top: 2rem;">
+            <div class="card-header">
+                <h3 class="card-title">Investment Guidelines</h3>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-2">
+                    <div>
+                        <h4 style="color: var(--color-success); margin-bottom: 1rem;">✓ Recommended Actions</h4>
+                        <ul style="padding-left: 1.25rem; line-height: 1.8;">
+                            {% if risk_profile.classification == 'conservative' %}
+                                <li>Focus on capital preservation</li>
+                                <li>Invest in government bonds and fixed deposits</li>
+                                <li>Choose blue-chip dividend stocks</li>
+                                <li>Maintain 6-12 months emergency fund</li>
+                            {% elif risk_profile.classification == 'moderate' %}
+                                <li>Balance growth and stability</li>
+                                <li>Diversify across asset classes</li>
+                                <li>Consider index funds and ETFs</li>
+                                <li>Regular portfolio rebalancing</li>
+                            {% else %}
+                                <li>Pursue maximum growth opportunities</li>
+                                <li>Include growth stocks and emerging markets</li>
+                                <li>Small allocation to high-risk assets</li>
+                                <li>Long-term investment horizon (10+ years)</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--color-aggressive); margin-bottom: 1rem;">⚠️ Risk Considerations</h4>
+                        <ul style="padding-left: 1.25rem; line-height: 1.8;">
+                            {% if risk_profile.classification == 'conservative' %}
+                                <li>Lower returns may not beat inflation</li>
+                                <li>Limited growth potential</li>
+                                <li>Consider conservative growth options</li>
+                            {% elif risk_profile.classification == 'moderate' %}
+                                <li>Market volatility will affect portfolio</li>
+                                <li>Regular monitoring required</li>
+                                <li>Adjust allocation based on life stage</li>
+                            {% else %}
+                                <li>High volatility potential</li>
+                                <li>Significant loss risk in downturns</li>
+                                <li>Requires emotional discipline</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="card" style="margin-top: 2rem;">
+            <div class="card-footer" style="border-top: none; padding-top: 0;">
+                <a href="{% url 'core:scenario_calculator' profile.pk %}" class="btn btn-primary" style="flex: 1; text-align: center;">
+                    🔮 Scenario Calculator
+                </a>
+                <a href="{% url 'core:financial_report' profile.pk %}" class="btn btn-outline" style="flex: 1; text-align: center;">
+                    📄 Financial Report
+                </a>
+            </div>
+        </div>
+    {% else %}
+        <div class="card" style="text-align: center; padding: 3rem;">
+            <h3 style="color: var(--color-gray-500);">No Risk Profile Found</h3>
+            <p style="color: var(--color-gray-400); margin: 1rem 0;">Please analyze your profile first.</p>
+            <a href="{% url 'core:analyze_profile' profile.pk %}" class="btn btn-primary">Analyze Profile</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chartData = {{ chart_data|safe }};
+
+    // Prepare data for scatter plot
+    const scatterData = chartData.map(asset => ({
+        x: asset.risk,
+        y: asset.return,
+        label: asset.name,
+        allocation: asset.allocation
+    }));
+
+    // Create Risk vs. Return Scatter Chart
+    const scatterCtx = document.getElementById('riskReturnChart');
+    if (scatterCtx) {
+        new Chart(scatterCtx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Asset Classes',
+                    data: scatterData,
+                    backgroundColor: chartData.map((_, i) => {
+                        const colors = [
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(139, 92, 246, 0.7)',
+                            'rgba(236, 72, 153, 0.7)',
+                            'rgba(20, 184, 166, 0.7)',
+                            'rgba(249, 115, 22, 0.7)'
+                        ];
+                        return colors[i % colors.length];
+                    }),
+                    borderColor: chartData.map((_, i) => {
+                        const colors = [
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(239, 68, 68, 1)',
+                            'rgba(139, 92, 246, 1)',
+                            'rgba(236, 72, 153, 1)',
+                            'rgba(20, 184, 166, 1)',
+                            'rgba(249, 115, 22, 1)'
+                        ];
+                        return colors[i % colors.length];
+                    }),
+                    borderWidth: 2,
+                    pointRadius: 10,
+                    pointHoverRadius: 12
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const point = context.raw;
+                                return [
+                                    point.label,
+                                    `Risk: ${point.x}%`,
+                                    `Return: ${point.y}%`,
+                                    `Allocation: ${point.allocation}%`
+                                ];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Risk Level (Volatility %)',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        beginAtZero: true,
+                        max: 70
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Expected Return (%)',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        beginAtZero: true,
+                        max: 35
+                    }
+                }
+            }
+        });
+    }
+
+    // Create Portfolio Allocation Doughnut Chart
+    const allocationCtx = document.getElementById('allocationChart');
+    if (allocationCtx) {
+        const labels = chartData.map(asset => asset.name);
+        const data = chartData.map(asset => asset.allocation);
+        const colors = [
+            '#10b981', '#3b82f6', '#f59e0b', '#ef4444',
+            '#8b5cf6', '#ec4899', '#14b8a6', '#f97316',
+            '#06b6d4', '#84cc16', '#f43f5e', '#6366f1'
+        ];
+
+        new Chart(allocationCtx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors.slice(0, data.length),
+                    borderWidth: 3,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'right',
+                        labels: {
+                            padding: 15,
+                            font: { size: 11 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                return `${label}: ${value}%`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

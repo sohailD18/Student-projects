@@ -1,0 +1,221 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Admin Dashboard - {{ user.username }} - SkillSwap{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-card.users { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .stat-card.skills { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .stat-card.sessions { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .stat-card.completed { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+    }
+
+    .badge-item {
+        transition: all 0.3s ease;
+        cursor: default;
+    }
+
+    .badge-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+    }
+
+    .admin-badge {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge admin-badge text-white mb-2">
+                        <i class="bi bi-shield-fill-check"></i> ADMIN ACCESS
+                    </span>
+                    <h1 class="display-5 fw-bold">
+                        <i class="bi bi-speedometer2 text-primary"></i> Admin Dashboard
+                    </h1>
+                    <p class="lead text-muted">Platform overview and management</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'core:admin_analytics' %}" class="btn btn-primary">
+                        <i class="bi bi-graph-up-arrow"></i> Analytics
+                    </a>
+                    <a href="{% url 'admin:index' %}" target="_blank" class="btn btn-outline-dark">
+                        <i class="bi bi-gear"></i> Django Admin
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Platform Stats Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card stat-card users text-white text-center p-4">
+                <i class="bi bi-people-fill" style="font-size: 2rem;"></i>
+                <div class="stat-number">{{ total_users }}</div>
+                <div class="fs-5">Total Users</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card skills text-white text-center p-4">
+                <i class="bi bi-book-fill" style="font-size: 2rem;"></i>
+                <div class="stat-number">{{ total_skills }}</div>
+                <div class="fs-5">Skills Listed</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card sessions text-white text-center p-4">
+                <i class="bi bi-calendar-check" style="font-size: 2rem;"></i>
+                <div class="stat-number">{{ total_sessions }}</div>
+                <div class="fs-5">Total Sessions</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card completed text-white text-center p-4">
+                <i class="bi bi-check-circle-fill" style="font-size: 2rem;"></i>
+                <div class="stat-number">{{ completed_sessions }}</div>
+                <div class="fs-5">Completed</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Badges Section -->
+        <div class="col-lg-8">
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="mb-0"><i class="bi bi-award-fill text-warning"></i> Your Badges</h5>
+                </div>
+                <div class="card-body">
+                    {% if earned_badges %}
+                    <h6 class="text-muted mb-3">Earned Badges</h6>
+                    <div class="row g-3 mb-4">
+                        {% for badge in earned_badges %}
+                        <div class="col-6 col-md-4 col-lg-3">
+                            <div class="badge-item card text-center p-3 border-warning">
+                                <div class="card-body">
+                                    <div style="font-size: 2rem;">{{ badge.icon }}</div>
+                                    <h6 class="mt-2 mb-0">{{ badge.name }}</h6>
+                                    <small class="text-muted">{{ badge.description|truncatewords:8 }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if available_badges %}
+                    <h6 class="text-muted mb-3">Available Badges</h6>
+                    <div class="row g-3">
+                        {% for badge in available_badges %}
+                        <div class="col-6 col-md-4 col-lg-3">
+                            <div class="badge-item card text-center p-3 border-secondary {% if badge.points_required > profile.points_earned %}locked{% endif %}">
+                                <div class="card-body">
+                                    <div style="font-size: 2rem;">{{ badge.icon }}</div>
+                                    <h6 class="mt-2 mb-0">{{ badge.name }}</h6>
+                                    <small class="text-muted">
+                                        {% if badge.points_required > 0 %}{{ badge.points_required }} pts{% endif %}
+                                        {% if badge.sessions_required > 0 %}{{ badge.sessions_required }} sessions{% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-success text-center">
+                        <i class="bi bi-trophy-fill"></i> You've earned all available badges! 🎉
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Admin Actions -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="mb-0"><i class="bi bi-tools text-primary"></i> Admin Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <a href="{% url 'core:admin_analytics' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-graph-up-arrow"></i> View Analytics Dashboard
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{% url 'admin:index' %}" target="_blank" class="btn btn-outline-dark w-100">
+                                <i class="bi bi-gear"></i> Open Django Admin
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- Quick Stats -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="mb-0"><i class="bi bi-lightning-charge text-primary"></i> Quick Stats</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-1">Completion Rate</small>
+                        {% if total_sessions > 0 %}
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {% widthratio completed_sessions total_sessions 100 %}%;">
+                                {{ completed_sessions }}/{{ total_sessions }}
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="text-muted small">No sessions yet</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <small class="text-muted d-block mb-1">Your Points</small>
+                        <h4 class="fw-bold text-primary">{{ profile.points_earned }} pts</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Profile -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="mb-0"><i class="bi bi-person-circle text-primary"></i> Profile</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'users:profile_update' %}" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="bi bi-person-gear"></i> Edit Profile
+                    </a>
+                    <form method="post" action="{% url 'users:logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

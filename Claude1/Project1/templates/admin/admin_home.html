@@ -1,0 +1,259 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | JobPortal</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .admin-sidebar {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .admin-sidebar .app-section {
+            border-bottom: 1px solid #eee;
+        }
+
+        .admin-sidebar .app-section:last-child {
+            border-bottom: none;
+        }
+
+        .admin-sidebar .app-title {
+            background: #f8f9fa;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            color: #495057;
+            margin: 0;
+        }
+
+        .admin-sidebar .model-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .admin-sidebar .model-list li a {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: #495057;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .admin-sidebar .model-list li a:hover {
+            background: #f8f9fa;
+            border-left-color: #667eea;
+            color: #667eea;
+        }
+
+        .model-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .model-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .model-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .count-badge {
+            background: #e9ecef;
+            color: #495057;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
+
+        .stat-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="admin-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Admin Panel</h1>
+                    <p class="mb-0 opacity-75">Site Administration</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <span class="me-3">Welcome, {{ user.username }}!</span>
+                    <a href="/admin/" class="btn btn-light btn-sm">
+                        <i class="fas fa-chart-line me-1"></i>Dashboard
+                    </a>
+                    <a href="{% url 'accounts:logout' %}" class="btn btn-outline-light btn-sm ms-2">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 mb-4">
+                <div class="admin-sidebar">
+                    {% for app in apps %}
+                    <div class="app-section">
+                        <h6 class="app-title">{{ app.name }}</h6>
+                        <ul class="model-list">
+                            {% for model in app.models %}
+                            <li>
+                                <a href="{{ model.url }}">
+                                    <i class="fas fa-{{ model.icon }} me-2"></i>
+                                    {{ model.name }}
+                                    <span class="count-badge float-end">{{ model.count }}</span>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h6 class="mb-3"><i class="fas fa-info-circle me-2"></i>Quick Stats</h6>
+                        <p class="mb-1"><strong>Total Jobs:</strong> {{ apps.0.models.0.count }}</p>
+                        <p class="mb-1"><strong>Applications:</strong> {{ apps.0.models.1.count }}</p>
+                        <p class="mb-0"><strong>Users:</strong> {{ apps.1.models.1.count }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content - Overview Cards -->
+            <div class="col-md-9">
+                <div class="row mb-4">
+                    {% for app in apps %}
+                        {% for model in app.models %}
+                        <div class="col-md-6 mb-4">
+                            <a href="{{ model.url }}" class="model-card">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="model-icon bg-primary me-3">
+                                            <i class="fas fa-{{ model.icon }}"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h5 class="mb-1">{{ model.name }}</h5>
+                                            <p class="text-muted mb-0">{{ app.name }} App</p>
+                                        </div>
+                                        <div class="count-badge">
+                                            {{ model.count }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+
+                <!-- System Overview -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-clock me-2"></i>System Overview</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3 mb-3">
+                                <div class="p-3 border rounded">
+                                    <i class="fas fa-briefcase text-primary mb-2" style="font-size: 2rem;"></i>
+                                    <h4>{{ total_jobs }}</h4>
+                                    <p class="text-muted mb-0">Total Jobs</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="p-3 border rounded">
+                                    <i class="fas fa-users text-success mb-2" style="font-size: 2rem;"></i>
+                                    <h4>{{ apps.0.models.1.count }}</h4>
+                                    <p class="text-muted mb-0">Applications</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="p-3 border rounded">
+                                    <i class="fas fa-building text-warning mb-2" style="font-size: 2rem;"></i>
+                                    <h4>{{ total_companies }}</h4>
+                                    <p class="text-muted mb-0">Companies</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="p-3 border rounded">
+                                    <i class="fas fa-folder text-info mb-2" style="font-size: 2rem;"></i>
+                                    <h4>{{ apps.0.models.2.count }}</h4>
+                                    <p class="text-muted mb-0">Categories</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white mt-5 py-3">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2025 JobPortal Admin Panel. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

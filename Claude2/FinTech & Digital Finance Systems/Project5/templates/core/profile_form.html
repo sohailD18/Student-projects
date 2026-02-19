@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">{{ title }}</h1>
+            <p class="card-subtitle">Module 1: Financial Behavior Data Collection</p>
+        </div>
+
+        <form method="post" action="">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.name.id_for_label }}">Full Name</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <div class="error">{{ form.name.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.age.id_for_label }}">Age</label>
+                    {{ form.age }}
+                    <small class="form-text">Must be 18 or older</small>
+                    {% if form.age.errors %}
+                        <div class="error">{{ form.age.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.annual_income.id_for_label }}">Annual Income (USD)</label>
+                {{ form.annual_income }}
+                <small class="form-text">Enter your total annual income before taxes</small>
+                {% if form.annual_income.errors %}
+                    <div class="error">{{ form.annual_income.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.employment_status.id_for_label }}">Employment Status</label>
+                    {{ form.employment_status }}
+                    {% if form.employment_status.errors %}
+                        <div class="error">{{ form.employment_status.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.income_stability.id_for_label }}">Income Stability</label>
+                    {{ form.income_stability }}
+                    <small class="form-text">How stable is your income source?</small>
+                    {% if form.income_stability.errors %}
+                        <div class="error">{{ form.income_stability.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.dependents.id_for_label }}">Number of Dependents</label>
+                    {{ form.dependents }}
+                    <small class="form-text">People who financially depend on you</small>
+                    {% if form.dependents.errors %}
+                        <div class="error">{{ form.dependents.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.investment_experience_years.id_for_label }}">Investment Experience (Years)</label>
+                    {{ form.investment_experience_years }}
+                    <small class="form-text">Years of investment experience</small>
+                    {% if form.investment_experience_years.errors %}
+                        <div class="error">{{ form.investment_experience_years.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <a href="{% url 'core:profile_list' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Create Profile</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

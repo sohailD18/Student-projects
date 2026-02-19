@@ -1,0 +1,115 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Recommendations - OptiFlow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-lightbulb"></i> AI Recommendations</h1>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <select name="status" class="form-select">
+                            <option value="">All Statuses</option>
+                            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending Review</option>
+                            <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                            <option value="implemented" {% if status_filter == 'implemented' %}selected{% endif %}>Implemented</option>
+                            <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="priority" class="form-select">
+                            <option value="">All Priorities</option>
+                            <option value="critical" {% if priority_filter == 'critical' %}selected{% endif %}>Critical</option>
+                            <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>High</option>
+                            <option value="medium" {% if priority_filter == 'medium' %}selected{% endif %}>Medium</option>
+                            <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>Low</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-funnel"></i> Apply Filters
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recommendations List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                {% if recommendations %}
+                <div class="row">
+                    {% for rec in recommendations %}
+                    <div class="col-lg-6 mb-3">
+                        <div class="card h-100 border-start border-5 border-{{ rec.priority|yesno:'danger,warning,info,success' }}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="card-title mb-1">{{ rec.title }}</h6>
+                                        <small class="text-muted">
+                                            {{ rec.process.name }}{% if rec.step %} - {{ rec.step.name }}{% endif %}
+                                        </small>
+                                    </div>
+                                    <span class="badge priority-{{ rec.priority }}">{{ rec.priority|title }}</span>
+                                </div>
+
+                                <p class="card-text small">{{ rec.description }}</p>
+
+                                <div class="row mb-2">
+                                    <div class="col-6">
+                                        <small class="text-muted">Category:</small><br>
+                                        <strong>{{ rec.get_category_display }}</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Impact Score:</small><br>
+                                        <strong>{{ rec.impact_score|floatformat:0 }}/100</strong>
+                                    </div>
+                                </div>
+
+                                {% if rec.potential_savings %}
+                                <div class="alert alert-info py-2 small mb-2">
+                                    <i class="bi bi-clock"></i> Potential Savings: <strong>{{ rec.potential_savings|floatformat:1 }}</strong> minutes
+                                </div>
+                                {% endif %}
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-secondary">{{ rec.get_status_display }}</span>
+                                    <a href="{% url 'core:recommendation_detail' rec.id %}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-lightbulb fs-1 text-muted d-block mb-3"></i>
+                    <h4>No recommendations found</h4>
+                    <p class="text-muted">Run a process analysis to generate AI recommendations.</p>
+                    <a href="{% url 'core:analytics' %}" class="btn btn-primary">
+                        <i class="bi bi-graph-up"></i> Go to Analytics
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

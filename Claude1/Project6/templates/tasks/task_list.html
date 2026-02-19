@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Browse Tasks - TimeBank{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-tasks"></i> Browse Tasks</h1>
+        <a href="{% url 'create_task' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Post New Task
+        </a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-5">
+                    {{ search_form.search }}
+                </div>
+                <div class="col-md-3">
+                    {{ search_form.status }}
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a href="{% url 'task_list' %}" class="btn btn-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if matched_tasks %}
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> Found {{ matched_tasks|length }} task(s) matching your skills!
+        </div>
+    {% endif %}
+
+    <div class="row">
+        {% for task in tasks %}
+            <div class="col-md-6 mb-4">
+                <div class="card task-card h-100 {% if task in matched_tasks %}matched-task{% endif %}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h5 class="card-title">{{ task.title }}</h5>
+                            <span class="badge {% if task.status == 'Open' %}bg-success{% elif task.status == 'In Progress' %}bg-warning{% elif task.status == 'Assigned' %}bg-info{% else %}bg-secondary{% endif %}">
+                                {{ task.status }}
+                            </span>
+                        </div>
+                        <p class="card-text text-muted small">
+                            <i class="fas fa-user"></i> Posted by {{ task.created_by.username }}
+                            <span class="ms-2"><i class="fas fa-clock"></i> {{ task.estimated_duration }} hours</span>
+                            <span class="ms-2"><i class="fas fa-calendar"></i> {{ task.created_at|date:"M d, Y" }}</span>
+                        </p>
+                        <p class="card-text">{{ task.description|truncatewords:20 }}</p>
+                        <div class="mb-2">
+                            {% for skill in task.get_skills_list|slice:":5" %}
+                                <span class="badge-skill">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                        {% if task in matched_tasks %}
+                            <span class="badge bg-success mb-2"><i class="fas fa-check"></i> Matches Your Skills</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'task_detail' task.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <h4>No tasks found</h4>
+                    <p>Be the first to post a task!</p>
+                    <a href="{% url 'create_task' %}" class="btn btn-primary">Post a Task</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

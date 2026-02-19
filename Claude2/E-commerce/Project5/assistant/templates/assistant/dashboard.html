@@ -1,0 +1,474 @@
+{% extends "assistant/base.html" %}
+
+{% block title %}Dashboard - Smart Shopping Assistant{% endblock %}
+
+{% block content %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 2rem;
+    }
+
+    .dashboard-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .dashboard-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        text-align: center;
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+    }
+
+    @media (max-width: 1024px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .section-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .section-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .section-body {
+        padding: 1.5rem;
+    }
+
+    .insight-item {
+        padding: 1rem;
+        background: var(--background);
+        border-radius: var(--radius-md);
+        margin-bottom: 1rem;
+        display: flex;
+        gap: 1rem;
+        align-items: start;
+    }
+
+    .insight-icon {
+        font-size: 2rem;
+        flex-shrink: 0;
+    }
+
+    .insight-content h4 {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: var(--text-primary);
+    }
+
+    .insight-content p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .list-item {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .list-item:last-child {
+        border-bottom: none;
+    }
+
+    .item-image {
+        width: 60px;
+        height: 60px;
+        border-radius: var(--radius-sm);
+        object-fit: cover;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        flex-shrink: 0;
+    }
+
+    .item-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .item-name {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .item-meta {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+    }
+
+    .item-price {
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .interaction-item {
+        padding: 0.75rem;
+        background: var(--background);
+        border-radius: var(--radius-md);
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .interaction-query {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .interaction-meta {
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .badge-view {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .badge-click {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-compare {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .product-mini-card {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--background);
+        border-radius: var(--radius-md);
+        margin-bottom: 1rem;
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .product-mini-card:hover {
+        background: white;
+        box-shadow: var(--shadow-md);
+    }
+</style>
+
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+    <h1 class="dashboard-title">Welcome back, {{ user.username }}!</h1>
+    <p class="dashboard-subtitle">Here's your personalized shopping dashboard</p>
+</div>
+
+<div class="dashboard-container">
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-value">${{ total_spent|floatformat:0 }}</div>
+            <div class="stat-label">Total Spent</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🛒</div>
+            <div class="stat-value">{{ total_purchases }}</div>
+            <div class="stat-label">Purchases Made</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">❤️</div>
+            <div class="stat-value">{{ wishlist_items|length }}</div>
+            <div class="stat-label">Wishlist Items</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">💡</div>
+            <div class="stat-value">{{ insights|length }}</div>
+            <div class="stat-label">New Insights</div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Left Column -->
+        <div class="dashboard-main">
+            <!-- Insights Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">💡 AI-Generated Insights</h2>
+                    <button class="btn btn-sm btn-secondary" onclick="generateNewInsights()">Generate New</button>
+                </div>
+                <div class="section-body">
+                    {% if insights %}
+                        {% for insight in insights %}
+                        <div class="insight-item">
+                            <div class="insight-icon">
+                                {% if 'budget' in insight.insight_type %}💰
+                                {% elif 'category' in insight.insight_type %}🎯
+                                {% elif 'spending' in insight.insight_type %}📊
+                                {% else %}💡{% endif %}
+                            </div>
+                            <div class="insight-content">
+                                <h4>{{ insight.title }}</h4>
+                                <p>{{ insight.description }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon">💡</div>
+                            <div class="empty-state-title">No insights yet</div>
+                            <p>Start shopping to get personalized insights!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Purchase History Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">📦 Recent Purchases</h2>
+                    <a href="{% url 'assistant:products' %}" class="btn btn-sm btn-primary">Shop More</a>
+                </div>
+                <div class="section-body">
+                    {% if purchases %}
+                        {% for purchase in purchases %}
+                        <div class="list-item">
+                            {% if purchase.product.image_url %}
+                                <img src="{{ purchase.product.image_url }}" alt="{{ purchase.product.name }}" class="item-image">
+                            {% else %}
+                                <div class="item-image">📦</div>
+                            {% endif %}
+                            <div class="item-info">
+                                <div class="item-name">{{ purchase.product.name }}</div>
+                                <div class="item-meta">{{ purchase.purchase_date|date:"M d, Y" }}</div>
+                            </div>
+                            <div class="item-price">${{ purchase.price_at_purchase }}</div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🛒</div>
+                            <div class="empty-state-title">No purchases yet</div>
+                            <p>Start shopping to build your purchase history!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Wishlist Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">❤️ Wishlist</h2>
+                    <a href="{% url 'assistant:products' %}" class="btn btn-sm btn-primary">Browse Products</a>
+                </div>
+                <div class="section-body">
+                    {% if wishlist_items %}
+                        {% for item in wishlist_items %}
+                        <div class="list-item">
+                            {% if item.product.image_url %}
+                                <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="item-image">
+                            {% else %}
+                                <div class="item-image">📦</div>
+                            {% endif %}
+                            <div class="item-info">
+                                <div class="item-name">{{ item.product.name }}</div>
+                                <div class="item-meta">{{ item.product.category }}</div>
+                            </div>
+                            <div class="item-price">${{ item.product.price }}</div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon">❤️</div>
+                            <div class="empty-state-title">Your wishlist is empty</div>
+                            <p>Save products you love to your wishlist!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="dashboard-sidebar">
+            <!-- Recommendations Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">⭐ Recommended For You</h2>
+                </div>
+                <div class="section-body">
+                    {% if recommended_products %}
+                        {% for product in recommended_products %}
+                        <a href="{% url 'assistant:products' %}" class="product-mini-card">
+                            {% if product.image_url %}
+                                <img src="{{ product.image_url }}" alt="{{ product.name }}" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">
+                            {% else %}
+                                <div style="width: 60px; height: 60px; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">📦</div>
+                            {% endif %}
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: 600; margin-bottom: 0.25rem;">{{ product.name }}</div>
+                                <div style="color: var(--text-secondary); font-size: 0.85rem;">{{ product.category }}</div>
+                            </div>
+                            <div style="font-weight: 700; color: var(--primary-color);">${{ product.price }}</div>
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon">⭐</div>
+                            <p>Update your preferences to get personalized recommendations!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Interactions Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">🔍 Recent Activity</h2>
+                </div>
+                <div class="section-body">
+                    {% if recent_interactions %}
+                        {% for interaction in recent_interactions %}
+                        <div class="interaction-item">
+                            <div class="interaction-query">{{ interaction.query_text|truncatewords:10 }}</div>
+                            <div class="interaction-meta">
+                                <span class="badge badge-{{ interaction.interaction_type }}">{{ interaction.interaction_type }}</span>
+                                <span style="margin-left: 0.5rem;">{{ interaction.timestamp|timesince }} ago</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔍</div>
+                            <p>No recent activity</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function generateNewInsights() {
+        fetch('/api/insights/generate/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('New insights generated!');
+                location.reload();
+            } else {
+                alert('Failed to generate insights: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to generate insights');
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}

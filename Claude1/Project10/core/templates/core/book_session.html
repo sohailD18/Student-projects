@@ -1,0 +1,164 @@
+{% extends 'core/base.html' %}
+{% load core_filters %}
+
+{% block title %}Book Session - {{ skill.title }} - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Skill Details -->
+        <div class="col-lg-5 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge bg-primary fs-6">{{ skill.get_category_display }}</span>
+                        <span class="badge-points fs-6">
+                            <i class="bi bi-star-fill"></i> {{ skill.hourly_rate_points }} pts
+                        </span>
+                    </div>
+                    <h2 class="card-title mb-3">{{ skill.title }}</h2>
+                    <p class="text-muted mb-3">
+                        <i class="bi bi-person-fill"></i> Taught by
+                        <strong>{{ skill.teacher.username }}</strong>
+                    </p>
+                    <h5 class="mb-2">About this skill</h5>
+                    <p class="card-text">{{ skill.description }}</p>
+
+                    {% if skill.teacher.profile.bio %}
+                    <hr>
+                    <h5 class="mb-2">About the teacher</h5>
+                    <p class="card-text small text-muted">{{ skill.teacher.profile.bio }}</p>
+                    {% endif %}
+
+                    {% if skill.teacher.profile.skills_to_teach %}
+                    <hr>
+                    <h6 class="mb-2">Skills this teacher offers:</h6>
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for teach_skill in skill.teacher.profile.skills_to_teach|split:"," %}
+                        <span class="badge bg-secondary">{{ teach_skill|strip }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Form -->
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar-plus"></i> Book a Session
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Points Required:</strong> {{ skill.hourly_rate_points }} points will be deducted when the session is completed.
+                    </div>
+
+                    {% if user.is_authenticated %}
+                        {% if user == skill.teacher %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            You cannot book your own skill.
+                        </div>
+                        <a href="{% url 'core:skill_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Browse Other Skills
+                        </a>
+                        {% else %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-4">
+                                <label for="{{ form.scheduled_time.id_for_label }}" class="form-label fw-bold">
+                                    <i class="bi bi-clock"></i> Select Date & Time
+                                </label>
+                                {{ form.scheduled_time }}
+                                {% if form.scheduled_time.help_text %}
+                                <small class="form-text text-muted">{{ form.scheduled_time.help_text }}</small>
+                                {% endif %}
+                                {% if form.scheduled_time.errors %}
+                                <div class="text-danger">{{ form.scheduled_time.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="alert alert-secondary">
+                                <h6 class="mb-2"><i class="bi bi-info-circle"></i> What happens next?</h6>
+                                <ol class="mb-0 small">
+                                    <li>Your booking request will be sent to {{ skill.teacher.username }}</li>
+                                    <li>The teacher will review and accept your request</li>
+                                    <li>Once accepted, you can coordinate session details</li>
+                                    <li>After the session, mark it as complete</li>
+                                    <li>Points will be awarded to both parties upon completion</li>
+                                </ol>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-send"></i> Send Booking Request
+                                </button>
+                                <a href="{% url 'core:skill_detail' skill.id %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left"></i> Back to Skill Details
+                                </a>
+                            </div>
+                        </form>
+                        {% endif %}
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Please <a href="{% url 'admin:login' %}">login</a> or
+                        <a href="{% url 'users:register' %}">register</a> to book a session.
+                    </div>
+                    <a href="{% url 'admin:login' %}" class="btn btn-primary">
+                        <i class="bi bi-box-arrow-in-right"></i> Login to Book
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Teacher Stats -->
+            {% if skill.teacher != user %}
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-person-badge"></i> Teacher Stats
+                    </h5>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="display-6 fw-bold text-primary">
+                                {{ skill.teacher.skills_teaching.count }}
+                            </div>
+                            <small class="text-muted">Skills Teaching</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="display-6 fw-bold text-success">
+                                {{ skill.teacher.profile.points_earned }}
+                            </div>
+                            <small class="text-muted">Points Earned</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="display-6 fw-bold text-warning">
+                                {{ skill.teacher.profile.badges.count }}
+                            </div>
+                            <small class="text-muted">Badges</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set minimum date to today
+    const scheduledTimeInput = document.getElementById('{{ form.scheduled_time.id_for_label }}');
+    if (scheduledTimeInput) {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        scheduledTimeInput.min = now.toISOString().slice(0, 16);
+    }
+</script>
+{% endblock %}

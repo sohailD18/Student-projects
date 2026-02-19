@@ -1,0 +1,111 @@
+{% extends 'campaigns/base.html' %}
+
+{% block title %}{{ action }} Email Template - Email Marketing Platform{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{{ action }} Email Template</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'campaigns:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'campaigns:template_list' %}">Templates</a></li>
+                <li class="breadcrumb-item active">{{ action }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">{{ action }} Email Template</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Template Name *</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="text-danger">{{ form.name.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.subject.id_for_label }}" class="form-label">Email Subject *</label>
+                        {{ form.subject }}
+                        {% if form.subject.errors %}
+                            <div class="text-danger">{{ form.subject.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.html_content.id_for_label }}" class="form-label">HTML Content *</label>
+                        {{ form.html_content }}
+                        {% if form.html_content.errors %}
+                            <div class="text-danger">{{ form.html_content.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            You can use placeholders: {{ first_name }}, {{ last_name }}, {{ email }}
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.text_content.id_for_label }}" class="form-label">Plain Text Version</label>
+                        {{ form.text_content }}
+                        {% if form.text_content.errors %}
+                            <div class="text-danger">{{ form.text_content.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Optional plain text version for clients that don't support HTML</small>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                            Active (can be used in campaigns)
+                        </label>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'campaigns:template_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> {{ action }} Template
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-lightbulb"></i> Tips
+            </div>
+            <div class="card-body">
+                <h6>HTML Email Best Practices</h6>
+                <ul class="small text-muted">
+                    <li>Use table-based layouts for better compatibility</li>
+                    <li>Inline CSS is safest for email clients</li>
+                    <li>Keep width under 600px for mobile</li>
+                    <li>Test across different email clients</li>
+                    <li>Use alt text for images</li>
+                </ul>
+
+                <h6 class="mt-3">Available Placeholders</h6>
+                <div class="mb-2">
+                    <code>{{ first_name }}</code> - Subscriber's first name
+                </div>
+                <div class="mb-2">
+                    <code>{{ last_name }}</code> - Subscriber's last name
+                </div>
+                <div class="mb-2">
+                    <code>{{ email }}</code> - Subscriber's email
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

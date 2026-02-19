@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Report Incident - InfraGuard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Report an Infrastructure Incident</h1>
+        <p>Fill out the form below to report an issue. Our AI will automatically categorize and assess the severity.</p>
+    </div>
+
+    <div class="card form-card">
+        <form method="post" enctype="multipart/form-data" id="incidentForm">
+            {% csrf_token %}
+
+            <!-- Location Section -->
+            <div class="form-group">
+                <label for="location">
+                    Location <span class="required">*</span>
+                </label>
+                <div class="location-input-group">
+                    <input type="text" name="location" id="location" class="form-control"
+                           placeholder="Enter street address or landmark" required>
+                    <button type="button" class="btn btn-secondary location-btn" onclick="getCurrentLocation()">
+                        📍 Get Location
+                    </button>
+                </div>
+                <small class="form-help">Click the button to use your current GPS location</small>
+            </div>
+
+            <!-- Description Section -->
+            <div class="form-group">
+                <label for="description">
+                    Description <span class="required">*</span>
+                </label>
+                <textarea name="description" id="description" class="form-control"
+                          placeholder="Describe the incident in detail. Include information about what happened, when, and any relevant details..."
+                          rows="5" required></textarea>
+                <small class="form-help">Be descriptive - this helps our AI categorize the incident accurately</small>
+            </div>
+
+            <!-- Incident Type Section -->
+            <div class="form-group">
+                <label for="incident_type">
+                    Incident Type <span class="optional">(Optional - AI will auto-detect)</span>
+                </label>
+                <select name="incident_type" id="incident_type" class="form-control">
+                    <option value="other">Let AI Detect (Recommended)</option>
+                    <option value="pothole">Pothole</option>
+                    <option value="drainage">Drainage</option>
+                    <option value="streetlight">Streetlight</option>
+                    <option value="footpath">Footpath</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <!-- Image Upload Section -->
+            <div class="form-group">
+                <label for="image">
+                    Upload Image <span class="optional">(Optional but Recommended)</span>
+                </label>
+                <div class="file-upload-wrapper">
+                    <input type="file" name="image" id="image" class="form-control"
+                           accept="image/*" onchange="previewImage(this)">
+                </div>
+                <div id="imagePreview" class="image-preview" style="display: none;">
+                    <img id="previewImg" src="" alt="Preview">
+                    <button type="button" class="btn-remove" onclick="removeImage()">×</button>
+                </div>
+                <small class="form-help">Images help authorities verify incidents faster</small>
+            </div>
+
+            <!-- Hidden GPS Fields -->
+            <input type="hidden" name="latitude" id="latitude">
+            <input type="hidden" name="longitude" id="longitude">
+
+            <!-- Location Status -->
+            <div id="locationStatus" class="location-status" style="display: none;"></div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-large">
+                    <span class="btn-icon">📤</span> Submit Report
+                </button>
+                <a href="{% url 'reports:citizen_dashboard' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Info Box -->
+    <div class="info-box">
+        <h4>ℹ️ How Reports Are Processed</h4>
+        <ol>
+            <li>Our AI analyzes your description to categorize the incident type</li>
+            <li>Risk score is calculated based on location history and description keywords</li>
+            <li>Higher priority (severity) reports are reviewed first by authorities</li>
+            <li>You'll receive updates on your dashboard when status changes</li>
+        </ol>
+    </div>
+</div>
+{% endblock %}

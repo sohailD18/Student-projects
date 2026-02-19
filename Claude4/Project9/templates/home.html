@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - AgriSense{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="hero-title"><span>Smart</span> <span>Soil</span> <span>Analysis</span><br><span>for</span> <span>Better</span> <span>Crops</span></h1>
+            <p class="hero-subtitle">Harness the power of AI to analyze your soil health and get personalized crop recommendations</p>
+            <div class="hero-buttons">
+                <a href="{% url 'analyze' %}" class="btn btn-primary btn-large">Check Soil Health</a>
+                <a href="{% url 'history' %}" class="btn btn-secondary btn-large">View History</a>
+            </div>
+        </div>
+        <div class="hero-image">
+            <div class="hero-illustration">
+                <div class="crop-circle">
+                    <span class="crop-emoji">🌾</span>
+                </div>
+                <div class="stats-circle">
+                    <span class="stats-number">98%</span>
+                    <span class="stats-label">Accuracy</span>
+                </div>
+                <div class="ai-circle">
+                    <span class="ai-icon">🤖</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features">
+    <div class="container">
+        <h2 class="section-title">Why Choose AgriSense?</h2>
+        <p class="section-subtitle">Experience the future of smart farming with cutting-edge AI technology and data-driven insights</p>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>AI-Powered Analysis</h3>
+                <p>Advanced machine learning algorithms analyze your soil parameters to provide accurate crop recommendations.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Instant Results</h3>
+                <p>Get immediate insights about your soil health and suitable crops without any waiting time.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💡</div>
+                <h3>Fertilizer Advisory</h3>
+                <p>Receive personalized fertilizer recommendations based on your soil's nutrient levels.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Easy to Use</h3>
+                <p>Simple interface designed for farmers and agricultural enthusiasts of all technical backgrounds.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Soil Parameters Info Section -->
+<section class="soil-info">
+    <div class="container">
+        <h2 class="section-title">Understanding Soil Parameters</h2>
+        <div class="info-cards">
+            <div class="info-card">
+                <div class="info-header nitrogen">
+                    <span class="info-icon">🌱</span>
+                    <h3>Nitrogen (N)</h3>
+                </div>
+                <div class="info-body">
+                    <p><strong>Role:</strong> Essential for leaf and stem growth, chlorophyll production, and overall plant vigor.</p>
+                    <p><strong>Deficiency:</strong> Yellowing leaves, stunted growth</p>
+                    <p><strong>Good Range:</strong> 50-90 mg/kg</p>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-header phosphorus">
+                    <span class="info-icon">💪</span>
+                    <h3>Phosphorus (P)</h3>
+                </div>
+                <div class="info-body">
+                    <p><strong>Role:</strong> Promotes root development, flowering, and seed production. Essential for energy transfer.</p>
+                    <p><strong>Deficiency:</strong> Poor root growth, purpling leaves</p>
+                    <p><strong>Good Range:</strong> 20-50 mg/kg</p>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-header potassium">
+                    <span class="info-icon">🍌</span>
+                    <h3>Potassium (K)</h3>
+                </div>
+                <div class="info-body">
+                    <p><strong>Role:</strong> Enhances disease resistance, improves fruit quality, and regulates water uptake.</p>
+                    <p><strong>Deficiency:</strong> Brown leaf edges, weak stems</p>
+                    <p><strong>Good Range:</strong> 30-80 mg/kg</p>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-header ph">
+                    <span class="info-icon">⚗️</span>
+                    <h3>pH Level</h3>
+                </div>
+                <div class="info-body">
+                    <p><strong>Role:</strong> Measures soil acidity/alkalinity. Affects nutrient availability to plants.</p>
+                    <p><strong>Too Acidic (pH < 5.5):</strong> Nutrients get locked</p>
+                    <p><strong>Too Alkaline (pH > 7.5):</strong> Reduced nutrient uptake</p>
+                    <p><strong>Ideal:</strong> 6.0 - 7.0 for most crops</p>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-header moisture">
+                    <span class="info-icon">💧</span>
+                    <h3>Moisture</h3>
+                </div>
+                <div class="info-body">
+                    <p><strong>Role:</strong> Critical for nutrient transport, photosynthesis, and overall plant metabolism.</p>
+                    <p><strong>Too Low:</strong> Wilting, nutrient deficiency</p>
+                    <p><strong>Too High:</strong> Root rot, poor aeration</p>
+                    <p><strong>Ideal:</strong> 40-80% depending on crop</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Ready to Analyze Your Soil?</h2>
+            <p>Take the first step towards smarter farming decisions.</p>
+            <a href="{% url 'analyze' %}" class="btn btn-primary btn-large">Start Analysis</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

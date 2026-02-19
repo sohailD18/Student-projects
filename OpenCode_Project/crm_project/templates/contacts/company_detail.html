@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ company.name }} - CRM System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ company.name }}</h1>
+    <div class="btn-group">
+        <a href="{% url 'company_update' company.pk %}" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Edit Company
+        </a>
+        <a href="{% url 'company_delete' company.pk %}" class="btn btn-danger">
+            <i class="fas fa-trash"></i> Delete Company
+        </a>
+        <a href="{% url 'company_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Companies
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Company Information</h5>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Industry:</strong> {{ company.get_industry_display }}</p>
+                        <p><strong>Size:</strong> {{ company.company_size }}</p>
+                        <p><strong>Website:</strong> <a href="{{ company.website }}" target="_blank">{{ company.website }}</a></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Email:</strong> {{ company.email }}</p>
+                        <p><strong>Phone:</strong> {{ company.phone }}</p>
+                        <p><strong>Total Contacts:</strong> {{ company.contacts.count }}</p>
+                    </div>
+                </div>
+                <hr>
+                <h6>Description</h6>
+                <p>{{ company.description }}</p>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">Contacts</h5>
+                    <a href="{% url 'contact_create' %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus"></i> Add Contact
+                    </a>
+                </div>
+                <hr>
+                {% if company.contacts.exists %}
+                <div class="list-group">
+                    {% for contact in company.contacts.all %}
+                    <a href="{% url 'contact_detail' contact.pk %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ contact.full_name }}</strong>
+                                <p class="mb-0 text-muted small">{{ contact.job_title }}</p>
+                            </div>
+                            <span class="badge bg-{{ contact.status|lower }}">{{ contact.status }}</span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No contacts associated with this company.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Location</h5>
+                <hr>
+                <p>{{ company.address }}</p>
+                <p>{{ company.city }}, {{ company.state }}</p>
+                <p>{{ company.country }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

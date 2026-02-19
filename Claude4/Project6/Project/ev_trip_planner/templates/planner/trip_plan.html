@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Trip Plan - EV Trip Planner{% endblock %}
+
+{% block content %}
+<section class="trip-result-section">
+    <div class="container">
+        <div class="section-header">
+            <h1>Your Trip Plan</h1>
+            <a href="{% url 'planner:trip_history' %}" class="btn btn-secondary">View Trip History</a>
+        </div>
+
+        <!-- Trip Summary -->
+        <div class="trip-summary-cards">
+            <div class="summary-card">
+                <div class="summary-icon">📍</div>
+                <div class="summary-content">
+                    <div class="summary-label">Total Distance</div>
+                    <div class="summary-value">{{ trip_plan.distance }} km</div>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-icon">⏱️</div>
+                <div class="summary-content">
+                    <div class="summary-label">Driving Time</div>
+                    <div class="summary-value">{{ trip_plan.formatted_duration }}</div>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-icon">🔋</div>
+                <div class="summary-content">
+                    <div class="summary-label">Battery Used</div>
+                    <div class="summary-value">{{ trip_plan.consumption }} kWh</div>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-icon">⚡</div>
+                <div class="summary-content">
+                    <div class="summary-label">Final Battery</div>
+                    <div class="summary-value">{{ trip_plan.final_battery }}%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Route Visualization -->
+        <div class="route-card">
+            <div class="card-header">
+                <h2>🗺️ Route</h2>
+            </div>
+            <div class="route-info">
+                <div class="route-point route-start">
+                    <div class="point-icon">🟢</div>
+                    <div class="point-info">
+                        <h4>Start</h4>
+                        <p>{{ trip.start_location }}</p>
+                        <p class="battery-status">Battery: {{ trip_plan.initial_battery }}%</p>
+                    </div>
+                </div>
+
+                {% for stop in trip_plan.charging_stops %}
+                    <div class="route-point route-stop">
+                        <div class="point-icon">⚡</div>
+                        <div class="point-info">
+                            <h4>Charging Stop {{ stop.stop_number }}</h4>
+                            <p>{{ stop.station.name }}</p>
+                            <p class="stop-details">
+                                Charge: {{ stop.battery_before }}% → {{ stop.battery_after }}% |
+                                Time: ~{{ stop.charge_time }} min |
+                                Cost: ₹{{ stop.charge_cost }}
+                            </p>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <div class="route-point route-end">
+                    <div class="point-icon">🏁</div>
+                    <div class="point-info">
+                        <h4>Destination</h4>
+                        <p>{{ trip.destination }}</p>
+                        <p class="battery-status">Battery: {{ trip_plan.final_battery }}%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if trip_plan.charging_stops %}
+            <!-- Charging Stops Details -->
+            <div class="charging-stops-card">
+                <div class="card-header">
+                    <h2>⚡ Charging Stops</h2>
+                    <div class="charging-summary">
+                        <span>Total Time: {{ trip_plan.total_charging_time }} min</span>
+                        <span>Total Cost: ₹{{ trip_plan.total_charging_cost }}</span>
+                    </div>
+                </div>
+
+                <div class="charging-stops-list">
+                    {% for stop in trip_plan.charging_stops %}
+                        <div class="charging-stop-item">
+                            <div class="stop-header">
+                                <h4>Stop {{ stop.stop_number }}: {{ stop.station.name }}</h4>
+                                <span class="stop-cost">₹{{ stop.charge_cost }}</span>
+                            </div>
+                            <p class="stop-location">📍 {{ stop.station.location }}</p>
+                            <div class="stop-details">
+                                <div class="stop-detail">
+                                    <span class="detail-label">Battery Before:</span>
+                                    <span class="detail-value">{{ stop.battery_before }}%</span>
+                                </div>
+                                <div class="stop-detail">
+                                    <span class="detail-label">Battery After:</span>
+                                    <span class="detail-value">{{ stop.battery_after }}%</span>
+                                </div>
+                                <div class="stop-detail">
+                                    <span class="detail-label">Charging Time:</span>
+                                    <span class="detail-value">~{{ stop.charge_time }} minutes</span>
+                                </div>
+                                <div class="stop-detail">
+                                    <span class="detail-label">Energy Needed:</span>
+                                    <span class="detail-value">{{ stop.kwh_needed }} kWh</span>
+                                </div>
+                            </div>
+                            <a href="{% url 'core:station_detail' stop.station.id %}" class="btn btn-sm btn-secondary">View Station Details</a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <!-- No Charging Needed -->
+            <div class="no-charging-card">
+                <div class="no-charging-content">
+                    <div class="success-icon">✅</div>
+                    <h3>No Charging Stops Needed!</h3>
+                    <p>Great news! Your vehicle has enough battery to complete this trip without charging.</p>
+                    <p class="note">Remember: Always plan for unexpected delays and weather conditions.</p>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="trip-actions">
+            <a href="{% url 'planner:trip_detail' trip.pk %}" class="btn btn-primary">Save & View Details</a>
+            <a href="{% url 'planner:plan_trip' %}" class="btn btn-secondary">Plan Another Trip</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

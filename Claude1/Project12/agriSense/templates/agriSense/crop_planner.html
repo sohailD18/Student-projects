@@ -1,0 +1,212 @@
+{% extends 'agriSense/base.html' %}
+
+{% block title %}Crop Planner - AgriSense{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="text-center mb-5">
+    <h1 class="page-title">
+        <i class="bi bi-calendar-check me-2"></i>Crop Planner
+    </h1>
+    <p class="page-subtitle">Find the best crops for your soil type and growing season</p>
+</div>
+
+<div class="row">
+    <!-- Form Section -->
+    <div class="col-lg-5 mb-4">
+        <div class="agri-card">
+            <h5 class="mb-4">
+                <i class="bi bi-sliders me-2"></i>Select Your Conditions
+            </h5>
+
+            <form id="cropPlannerForm">
+                <div class="mb-4">
+                    <label for="soil_type" class="form-label">
+                        <i class="bi bi-dot me-1"></i>Soil Type
+                    </label>
+                    <select id="soil_type" name="soil_type" class="form-select" required>
+                        <option value="">Choose your soil type...</option>
+                        {% for value, label in soil_types %}
+                        <option value="{{ value }}">
+                            <i class="bi bi-circle me-1"></i>{{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>Select the type of soil in your field
+                    </small>
+                </div>
+
+                <div class="mb-4">
+                    <label for="season" class="form-label">
+                        <i class="bi bi-dot me-1"></i>Season
+                    </label>
+                    <select id="season" name="season" class="form-select" required>
+                        <option value="">Choose growing season...</option>
+                        {% for season in seasons %}
+                        <option value="{{ season.name }}">{{ season.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>Select the current planting season
+                    </small>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-agri btn-lg">
+                        <i class="bi bi-search me-2"></i>Get Recommendations
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tips Card -->
+        <div class="agri-card mt-4">
+            <h6 class="mb-3">
+                <i class="bi bi-lightbulb me-2" style="color: #ffd54f;"></i>Quick Tips
+            </h6>
+            <ul class="list-group list-group-flush mb-0">
+                <li class="list-group-item">
+                    <small>Loamy soil is ideal for most crops</small>
+                </li>
+                <li class="list-group-item">
+                    <small>Sandy soil drains quickly - good for root vegetables</small>
+                </li>
+                <li class="list-group-item">
+                    <small>Clay soil retains water - good for rice and certain grains</small>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="col-lg-7">
+        <!-- Loading State -->
+        <div id="loadingState" style="display: none;" class="text-center py-5">
+            <div class="spinner-agri mx-auto mb-3"></div>
+            <p class="text-muted">Finding the best crops for you...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="agri-card text-center py-5">
+            <i class="bi bi-basket display-1 text-muted mb-3"></i>
+            <h5 class="text-muted mb-3">Ready to Plan Your Crops</h5>
+            <p class="text-muted mb-0">Select your soil type and season to get personalized crop recommendations</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="error-box" style="display: none;">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <span id="errorMessage"></span>
+        </div>
+
+        <!-- Results -->
+        <div id="resultsState" style="display: none;">
+            <div class="agri-card mb-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-check-circle me-2 text-success"></i>Recommended Crops
+                </h5>
+                <small id="resultsCount" class="text-muted"></small>
+            </div>
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('cropPlannerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const soilType = document.getElementById('soil_type').value;
+    const season = document.getElementById('season').value;
+
+    // Hide all states
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('errorState').style.display = 'none';
+    document.getElementById('resultsState').style.display = 'none';
+    document.getElementById('loadingState').style.display = 'block';
+
+    // Build URL with query parameters
+    let url = '/api/recommendations/?';
+    if (soilType) url += 'soil_type=' + encodeURIComponent(soilType);
+    if (season) url += (soilType ? '&' : '') + 'season=' + encodeURIComponent(season);
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        document.getElementById('loadingState').style.display = 'none';
+
+        if (data.recommendations && data.recommendations.length > 0) {
+            document.getElementById('resultsCount').textContent =
+                `Found ${data.count} crops matching your criteria`;
+
+            let html = '';
+            data.recommendations.forEach(function(crop, index) {
+                const percent = crop.suitability_percent;
+                let badgeClass = 'bg-success';
+                if (percent < 40) badgeClass = 'bg-danger';
+                else if (percent < 70) badgeClass = 'bg-warning text-dark';
+
+                html += `
+                    <div class="agri-card mb-3" style="animation: slideIn 0.3s ease-out; animation-delay: ${index * 0.1}s;">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap">
+                            <div class="mb-2 mb-md-0">
+                                <h6 class="mb-1">
+                                    <i class="bi bi-basket me-2"></i>${crop.name}
+                                </h6>
+                                <div class="mb-2">
+                                    <span class="badge bg-light text-dark me-1">${crop.type}</span>
+                                    <span class="badge bg-secondary">${crop.duration} days</span>
+                                </div>
+                            </div>
+                            <div class="text-md-end">
+                                <span class="badge ${badgeClass} fs-6 mb-0">
+                                    ${percent}% Match
+                                </span>
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <div class="mb-2">
+                            <small class="text-muted"><strong>Suitability:</strong></small>
+                        </div>
+                        <ul class="mb-3 ps-3">
+                            ${crop.reasons.map(r => `<li><small>${r}</small></li>`).join('')}
+                        </ul>
+
+                        ${crop.average_yield ? `
+                            <div class="alert alert-info mb-0 py-2">
+                                <i class="bi bi-graph-up me-2"></i>
+                                <strong>Average Yield:</strong> ${crop.average_yield} tons/hectare
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            document.getElementById('resultsContent').innerHTML = html;
+            document.getElementById('resultsState').style.display = 'block';
+
+            // Scroll to results on mobile
+            if (window.innerWidth < 992) {
+                document.getElementById('resultsState').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        } else {
+            document.getElementById('errorMessage').textContent =
+                'No crops found matching your criteria. Try different soil type or season options.';
+            document.getElementById('errorState').style.display = 'block';
+        }
+    } catch (err) {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('errorMessage').textContent =
+            'Error fetching recommendations. Please try again.';
+        document.getElementById('errorState').style.display = 'block';
+        console.error(err);
+    }
+});
+</script>
+{% endblock %}

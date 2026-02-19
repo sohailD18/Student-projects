@@ -1,0 +1,40 @@
+{% extends 'analytics/base.html' %}
+
+{% block title %}Alert Logs - Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Alert Logs</h1>
+        <a href="/alerts/" class="btn btn-secondary">Back to Alerts</a>
+    </div>
+
+    {% if logs %}
+    <div class="logs-list">
+        {% for log in logs %}
+        <div class="card log-item alert-{{ log.severity }} {% if log.is_acknowledged %}acknowledged{% endif %}">
+            <div class="log-header">
+                <h3>{{ log.alert.name }}</h3>
+                <span class="badge badge-{{ log.severity }}">{{ log.severity|title }}</span>
+            </div>
+            <p>{{ log.message }}</p>
+            <div class="log-meta">
+                <span>Value: {{ log.metric_value }}</span>
+                <span>{{ log.triggered_at|date:"M d, Y H:i" }}</span>
+                {% if log.is_acknowledged %}
+                <span class="badge badge-success">Acknowledged by {{ log.acknowledged_by.username }}</span>
+                {% else %}
+                <a href="/alerts/logs/{{ log.id }}/acknowledge/" class="btn btn-sm btn-primary">Acknowledge</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h2>No alert logs yet</h2>
+        <p>Alert logs will appear here when alerts are triggered.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

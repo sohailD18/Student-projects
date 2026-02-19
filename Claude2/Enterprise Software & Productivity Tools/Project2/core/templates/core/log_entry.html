@@ -1,0 +1,129 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Log Data - OptiFlow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-plus-lg"></i> Log Operational Data</h1>
+            <a href="{% url 'core:log_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Logs
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="process" class="form-label">Process <span class="text-danger">*</span></label>
+                                <select class="form-select" id="process" name="process" required>
+                                    <option value="">Select a process...</option>
+                                    {% for process in processes %}
+                                    <option value="{{ process.id }}">{{ process.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="run_id" class="form-label">Run ID <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="run_id" name="run_id" required
+                                       placeholder="e.g., RUN-2024-001">
+                                <small class="form-text text-muted">Unique identifier for this execution</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="pending" selected>Pending</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="failed">Failed</option>
+                                    <option value="skipped">Skipped</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="priority" class="form-label">Priority</label>
+                                <select class="form-select" id="priority" name="priority">
+                                    <option value="low">Low</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="critical">Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="start_time" class="form-label">Start Time</label>
+                                <input type="datetime-local" class="form-control" id="start_time" name="start_time">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="end_time" class="form-label">End Time</label>
+                                <input type="datetime-local" class="form-control" id="end_time" name="end_time">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="assigned_to" class="form-label">Assigned To</label>
+                        <input type="text" class="form-control" id="assigned_to" name="assigned_to"
+                               placeholder="e.g., John Doe or System Name">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"
+                                  placeholder="Additional notes or comments..."></textarea>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Log Entry
+                        </button>
+                        <a href="{% url 'core:log_list' %}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card bg-info bg-opacity-10">
+            <div class="card-body">
+                <h5><i class="bi bi-info-circle"></i> About Data Logging</h5>
+                <p>Log operational data to track the performance of your business processes.</p>
+                <h6>What to log:</h6>
+                <ul>
+                    <li>Each execution of a process</li>
+                    <li>Start and end times</li>
+                    <li>Status (completed, failed, etc.)</li>
+                    <li>Assigned person or system</li>
+                </ul>
+                <hr>
+                <p class="mb-0"><strong>Tip:</strong> Regular data logging improves the accuracy of AI recommendations.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "tasks/base.html" %}
+
+{% block page_title %}Projects{% endblock %}
+
+{% block content %}
+<div class="projects-container">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Projects</h3>
+            <button class="btn btn-primary" onclick="Toast.info('Project creation coming soon!')">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                    <path d="M10 5v10M5 10h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                New Project
+            </button>
+        </div>
+        <div class="card-body">
+            <div style="text-align: center; padding: 4rem 2rem;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" style="color: var(--gray-300); margin: 0 auto 1.5rem;">
+                    <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h3 style="color: var(--gray-600); margin-bottom: 0.5rem;">Projects Coming Soon</h3>
+                <p style="color: var(--gray-500);">Manage your projects and track progress across initiatives</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

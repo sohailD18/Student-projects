@@ -1,0 +1,334 @@
+{% extends 'core/base.html' %}
+{% load core_filters %}
+
+{% block title %}Analytics - OptiFlow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-graph-up"></i> Process Analytics</h1>
+        </div>
+    </div>
+</div>
+
+<!-- Cycle Time Chart -->
+<div class="row mb-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Average Cycle Time by Process</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="cycleTimeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-speedometer"></i> Efficiency Scores</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="efficiencyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Throughput and Step Performance -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-graph-up-arrow"></i> Daily Throughput (Last 30 Days)</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="throughputChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-list-task"></i> Analyze Process</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Select a process to run AI-powered bottleneck detection and generate optimization recommendations.</p>
+                <div class="list-group">
+                    {% for process in processes %}
+                    <a href="{% url 'core:process_analysis' process.id %}"
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        {{ process.name }}
+                        <i class="bi bi-arrow-right-circle text-primary"></i>
+                    </a>
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <p class="text-muted mb-0">No processes available.</p>
+                        <a href="{% url 'core:process_create' %}" class="btn btn-sm btn-primary mt-2">
+                            Create Process
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Step Performance Comparison -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Step Performance Comparison</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="stepPerformanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Process Details Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-table"></i> Process Performance Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Process</th>
+                                <th>Avg Cycle Time</th>
+                                <th>Target Time</th>
+                                <th>Variance</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for process in processes %}
+                            <tr>
+                                <td><strong>{{ process.name }}</strong></td>
+                                <td>{{ process.get_average_cycle_time|floatformat:2 }} min</td>
+                                <td>{{ process.target_cycle_time|default:"N/A" }}</td>
+                                <td>
+                                    {% if process.target_cycle_time %}
+                                        {% with variance=process.get_average_cycle_time|subtract:process.target_cycle_time %}
+                                            {% if variance > 0 %}
+                                                <span class="text-danger">+{{ variance|floatformat:2 }} min</span>
+                                            {% else %}
+                                                <span class="text-success">{{ variance|floatformat:2 }} min</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ process.status|yesno:'success,secondary' }}">
+                                        {{ process.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'core:process_analysis' process.id %}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-search"></i> Analyze
+                                    </a>
+                                    <a href="{% url 'core:process_dashboard' process.id %}"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    No processes found.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Cycle Time Chart
+const cycleTimeCtx = document.getElementById('cycleTimeChart').getContext('2d');
+const cycleTimeData = {{ cycle_time_data|safe }};
+
+new Chart(cycleTimeCtx, {
+    type: 'bar',
+    data: {
+        labels: cycleTimeData.map(d => d.name),
+        datasets: [{
+            label: 'Actual Avg Time',
+            data: cycleTimeData.map(d => d.avg_time),
+            backgroundColor: 'rgba(67, 97, 238, 0.7)',
+            borderColor: '#4361ee',
+            borderWidth: 1
+        }, {
+            label: 'Target Time',
+            data: cycleTimeData.map(d => d.target_time),
+            backgroundColor: 'rgba(76, 201, 240, 0.5)',
+            borderColor: '#4cc9f0',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Time (minutes)'
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'top'
+            }
+        }
+    }
+});
+
+// Efficiency Chart
+const efficiencyCtx = document.getElementById('efficiencyChart').getContext('2d');
+const efficiencyData = {{ efficiency_data|safe }};
+
+new Chart(efficiencyCtx, {
+    type: 'radar',
+    data: {
+        labels: efficiencyData.map(d => d.name),
+        datasets: [{
+            label: 'Efficiency Score',
+            data: efficiencyData.map(d => d.efficiency),
+            borderColor: '#4361ee',
+            backgroundColor: 'rgba(67, 97, 238, 0.2)',
+            pointBackgroundColor: '#4361ee'
+        }, {
+            label: 'Consistency Score',
+            data: efficiencyData.map(d => d.consistency),
+            borderColor: '#f72585',
+            backgroundColor: 'rgba(247, 37, 133, 0.2)',
+            pointBackgroundColor: '#f72585'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            r: {
+                beginAtZero: true,
+                max: 100
+            }
+        }
+    }
+});
+
+// Throughput Chart
+const throughputCtx = document.getElementById('throughputChart').getContext('2d');
+const throughputData = {{ throughput_data|safe }};
+
+new Chart(throughputCtx, {
+    type: 'line',
+    data: {
+        labels: throughputData.map(d => d.date),
+        datasets: [{
+            label: 'Completed Tasks',
+            data: throughputData.map(d => d.count),
+            borderColor: '#4cc9f0',
+            backgroundColor: 'rgba(76, 201, 240, 0.1)',
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Number of Tasks'
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'top'
+            }
+        }
+    }
+});
+
+// Step Performance Chart
+const stepPerfCtx = document.getElementById('stepPerformanceChart').getContext('2d');
+const stepPerfData = {{ step_performance|safe }};
+
+new Chart(stepPerfCtx, {
+    type: 'bar',
+    data: {
+        labels: stepPerfData.map(d => `${d.process} - ${d.step}`),
+        datasets: [{
+            label: 'Average Time',
+            data: stepPerfData.map(d => d.avg_time),
+            backgroundColor: stepPerfData.map(d => {
+                if (d.estimated > 0 && d.avg_time > d.estimated) {
+                    return 'rgba(220, 53, 69, 0.7)';
+                }
+                return 'rgba(25, 135, 84, 0.7)';
+            }),
+            borderWidth: 1
+        }, {
+            label: 'Estimated Time',
+            data: stepPerfData.map(d => d.estimated),
+            backgroundColor: 'rgba(108, 117, 125, 0.3)',
+            borderColor: 'rgba(108, 117, 125, 0.7)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        scales: {
+            x: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Time (minutes)'
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'top'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

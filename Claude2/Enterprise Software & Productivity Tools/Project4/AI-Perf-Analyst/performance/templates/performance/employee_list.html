@@ -1,0 +1,134 @@
+{% extends 'performance/base.html' %}
+
+{% block title %}Employees - AI Performance Analyst{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h1 class="card-title">👥 Employee Directory</h1>
+                <p class="card-subtitle">View and manage all employees</p>
+            </div>
+            <div class="btn-group">
+                <a href="{% url 'add_employee' %}" class="btn btn-primary">
+                    <span>➕</span> Add Employee
+                </a>
+                <a href="{% url 'add_record' %}" class="btn btn-success">
+                    <span>📝</span> Add Record
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Table -->
+    <div class="card">
+        {% if employees %}
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Department</th>
+                            <th>Role</th>
+                            <th>Records</th>
+                            <th>Avg Efficiency</th>
+                            <th>Avg Quality</th>
+                            <th>Category</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in employees %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'employee_detail' emp.id %}" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                                    {{ emp.name }}
+                                </a>
+                                <div style="font-size: 0.75rem; color: var(--gray-500);">
+                                    Joined: {{ emp.join_date|date:"M Y" }}
+                                </div>
+                            </td>
+                            <td>{{ emp.department }}</td>
+                            <td>{{ emp.role }}</td>
+                            <td>
+                                <span class="badge badge-info">{{ emp.record_count }}</span>
+                            </td>
+                            <td>
+                                <span class="badge {% if emp.avg_efficiency >= 7 %}badge-success{% elif emp.avg_efficiency >= 5 %}badge-warning{% else %}badge-danger{% endif %}">
+                                    {{ emp.avg_efficiency }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if emp.avg_quality >= 7 %}badge-success{% elif emp.avg_quality >= 5 %}badge-warning{% else %}badge-danger{% endif %}">
+                                    {{ emp.avg_quality }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {{ emp.category_class }}">{{ emp.performance_category }}</span>
+                            </td>
+                            <td>
+                                <div class="btn-group" style="gap: 0.25rem;">
+                                    <a href="{% url 'employee_detail' emp.id %}" class="btn btn-sm btn-primary">View</a>
+                                    <a href="{% url 'print_report' emp.id %}" class="btn btn-sm btn-outline" target="_blank">Report</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">👥</div>
+                <div class="empty-state-title">No Employees Yet</div>
+                <div class="empty-state-text">Get started by adding your first employee to the system.</div>
+                <div style="margin-top: 1.5rem;">
+                    <a href="{% url 'add_employee' %}" class="btn btn-primary">
+                        <span>➕</span> Add First Employee
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Statistics Summary -->
+    {% if employees %}
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total Employees</div>
+            <div class="stat-value">{{ employees|length }}</div>
+            <div class="stat-subtext">In all departments</div>
+        </div>
+
+        <div class="stat-card success">
+            <div class="stat-label">High Performers</div>
+            <div class="stat-value">
+                {% widthratio employees|length 4 1 %}
+            </div>
+            <div class="stat-subtext">Approx. 25% of workforce</div>
+        </div>
+
+        <div class="stat-card warning">
+            <div class="stat-label">Avg Efficiency</div>
+            <div class="stat-value">
+                {% if employees %}
+                    {% for emp in employees %}{{ emp.avg_efficiency }}{% if not forloop.last %}|{% endif %}{% endfor %}
+                                        {% endif %}
+            </div>
+            <div class="stat-subtext">Across all employees</div>
+        </div>
+
+        <div class="stat-card info">
+            <div class="stat-label">Avg Quality</div>
+            <div class="stat-value">
+                {% if employees %}
+                    {% for emp in employees %}{{ emp.avg_quality }}{% if not forloop.last %}|{% endif %}{% endfor %}
+                {% endif %}
+            </div>
+            <div class="stat-subtext">Work quality rating</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

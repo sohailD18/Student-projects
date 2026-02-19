@@ -1,0 +1,414 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} | JobPortal Admin</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* Django Admin Overrides */
+        #container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin: 2rem auto;
+            max-width: 1200px;
+            padding: 2rem;
+        }
+
+        #content {
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header */
+        #header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0;
+            margin: 0 0 2rem 0;
+            border-radius: 10px 10px 0 0;
+        }
+
+        #header a {
+            color: white;
+        }
+
+        #header h1 {
+            color: white;
+        }
+
+        #header h1, #header h2, #header h3 {
+            font-weight: 600;
+        }
+
+        /* Breadcrumbs */
+        .breadcrumbs {
+            background: rgba(255,255,255,0.1);
+            padding: 0.75rem 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+
+        .breadcrumbs a {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .breadcrumbs a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+
+        /* Module Headers */
+        .module h2, .module caption {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+
+        /* Form Fields */
+        .form-row {
+            margin-bottom: 1.5rem;
+        }
+
+        .fieldBox {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .fieldBox h2 {
+            color: #495057;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        /* Labels */
+        label {
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Inputs */
+        input[type="text"],
+        input[type="email"],
+        input[type="url"],
+        input[type="number"],
+        input[type="password"],
+        textarea,
+        select {
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.95rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="url"]:focus,
+        input[type="number"]:focus,
+        input[type="password"]:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            outline: none;
+        }
+
+        /* Textarea */
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* Help Text */
+        .help {
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            font-style: italic;
+        }
+
+        /* Error Messages */
+        .errorlist {
+            list-style: none;
+            padding: 0;
+            margin: 0.5rem 0;
+        }
+
+        .errorlist li {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        /* Submit Buttons */
+        input[type="submit"],
+        .submit-row input,
+        .submit-row button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        input[type="submit"]:hover,
+        .submit-row input:hover,
+        .submit-row button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Cancel Link */
+        .deletelink {
+            display: inline-block;
+            margin-left: 1rem;
+            color: #dc3545;
+            text-decoration: none;
+        }
+
+        .deletelink:hover {
+            text-decoration: underline;
+        }
+
+        /* Object Tools */
+        .object-tools {
+            margin-bottom: 1.5rem;
+        }
+
+        .object-tools a {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            color: #495057;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .object-tools a:hover {
+            background: #f8f9fa;
+            color: #667eea;
+        }
+
+        /* Navigation */
+        .paginator {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 2rem 0;
+        }
+
+        .paginator a, .paginator span {
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            color: #495057;
+            text-decoration: none;
+        }
+
+        .paginator a:hover {
+            background: #f8f9fa;
+            color: #667eea;
+        }
+
+        .paginator .this-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* Results */
+        .results {
+            margin-top: 2rem;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 500;
+        }
+
+        td, th {
+            padding: 0.75rem;
+            border-color: #dee2e6;
+        }
+
+        tr:hover td {
+            background-color: #f8f9fa;
+        }
+
+        /* Footer */
+        #footer {
+            background: white;
+            padding: 1rem 2rem;
+            margin-top: 2rem;
+            border-radius: 0 0 10px 10px;
+        }
+
+        /* Related Widgets */
+        .related-widget-wrapper {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .related-widget-wrapper label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Selector */
+        .selector {
+            margin-bottom: 1rem;
+        }
+
+        .selector-available, .selector-chosen {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }
+
+        .selector-filter {
+            background: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .selector-available h2, .selector-chosen h2 {
+            background: none;
+            color: #495057;
+            padding: 0.5rem;
+            border: none;
+        }
+
+        /* Inline Form */
+        .inline-group .aligned label {
+            display: block;
+        }
+
+        /* Submit Row */
+        .submit-row {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+            text-align: right;
+        }
+
+        /* Calendar Widget */
+        .calendarbox {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }
+
+        .calendarbox caption {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 500;
+        }
+
+        .calendarbox tbody a {
+            color: #667eea;
+        }
+
+        /* Stacktrace */
+        .traceback {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        /* Success Messages */
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Warning Messages */
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        {% block breadcrumbs %}
+        <div class="breadcrumbs">
+            <a href="/admin-panel/">Home</a>
+            &rsaquo; {{ title }}
+        </div>
+        {% endblock %}
+
+        {% block content %}
+        {{ content }}
+        {% endblock %}
+    </div>
+
+    {% block footer %}
+    <div id="footer">
+        <p class="text-center mb-0">&copy; 2025 JobPortal Admin. All rights reserved.</p>
+    </div>
+    {% endblock %}
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% block extrahead %}
+    {% endblock %}
+</body>
+</html>

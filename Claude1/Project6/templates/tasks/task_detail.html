@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ task.title }} - TimeBank{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">{{ task.title }}</h3>
+                    <span class="badge {% if task.status == 'Open' %}bg-success{% elif task.status == 'In Progress' %}bg-warning{% elif task.status == 'Assigned' %}bg-info{% else %}bg-secondary{% endif %} fs-6">
+                        {{ task.status }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <span class="text-muted">
+                            <i class="fas fa-user"></i> Posted by
+                            <a href="{% url 'public_profile' task.created_by.username %}">{{ task.created_by.username }}</a>
+                            <span class="ms-3"><i class="fas fa-calendar"></i> {{ task.created_at|date:"F d, Y" }}</span>
+                        </span>
+                    </div>
+
+                    <hr>
+
+                    <h5>Description</h5>
+                    <p>{{ task.description|linebreaks }}</p>
+
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-clock"></i> Duration</h5>
+                            <p>{{ task.estimated_duration }} hour(s)</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-user-check"></i> Assigned To</h5>
+                            <p>
+                                {% if task.assigned_to %}
+                                    <a href="{% url 'public_profile' task.assigned_to.username %}">{{ task.assigned_to.username }}</a>
+                                {% else %}
+                                    <span class="text-muted">Unassigned</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h5><i class="fas fa-tools"></i> Required Skills</h5>
+                    <div>
+                        {% for skill in task.get_skills_list %}
+                            <span class="badge-skill">{{ skill }}</span>
+                        {% empty %}
+                            <span class="text-muted">No specific skills required</span>
+                        {% endfor %}
+                    </div>
+
+                    {% if task.completed_at %}
+                        <hr>
+                        <h5><i class="fas fa-check-circle text-success"></i> Completed On</h5>
+                        <p>{{ task.completed_at|date:"F d, Y" }}</p>
+                    {% endif %}
+
+                    <hr>
+
+                    <div class="d-flex gap-2">
+                        {% if can_apply %}
+                            <a href="{% url 'apply_for_task' task.id %}" class="btn btn-success">
+                                <i class="fas fa-hand-paper"></i> Apply for Task
+                            </a>
+                        {% endif %}
+
+                        {% if can_complete %}
+                            <a href="{% url 'complete_task' task.id %}" class="btn btn-primary"
+                               id="completeTaskBtn"
+                               data-credits="{{ task.estimated_duration }}">
+                                <i class="fas fa-check"></i> Mark Complete
+                            </a>
+                        {% endif %}
+
+                        {% if task.status == 'Completed' and user in task.created_by %}
+                            {% if not task.review.reviewer == user %}
+                                <a href="{% url 'create_review' task.id %}" class="btn btn-warning">
+                                    <i class="fas fa-star"></i> Leave Review
+                                </a>
+                            {% else %}
+                                <span class="text-muted"><i class="fas fa-check"></i> You've reviewed this task</span>
+                            {% endif %}
+                        {% endif %}
+
+                        <a href="{% url 'task_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to List
+                        </a>
+                    </div>
+
+                    {% if is_matched %}
+                        <div class="alert alert-success mt-3">
+                            <i class="fas fa-check-circle"></i> This task matches your skills!
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if task.review %}
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5><i class="fas fa-star"></i> Review</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <strong>By: {{ task.review.reviewer.username }}</strong>
+                            <span class="star-rating">
+                                {% for i in "12345" %}
+                                    <i class="fas fa-star{% if forloop.counter > task.review.rating %} empty{% endif %}"></i>
+                                {% endfor %}
+                            </span>
+                        </div>
+                        <p class="mt-2 mb-0">{{ task.review.comment|default:"No comment provided." }}</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-user-circle"></i> Task Creator</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if task.created_by.profile.profile_image %}
+                        <img src="{{ task.created_by.profile.profile_image.url }}"
+                             alt="{{ task.created_by.username }}"
+                             class="rounded-circle mb-2"
+                             style="width: 100px; height: 100px; object-fit: cover;">
+                    {% endif %}
+                    <h6>{{ task.created_by.username }}</h6>
+                    <p class="text-muted mb-2">{{ task.created_by.profile.get_average_rating }}/5 rating</p>
+                    <p class="small">{{ task.created_by.profile.bio|truncatewords:15 }}</p>
+                    <a href="{% url 'public_profile' task.created_by.username %}" class="btn btn-sm btn-outline-primary">
+                        View Profile
+                    </a>
+                </div>
+            </div>
+
+            {% if task.assigned_to %}
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5><i class="fas fa-user-check"></i> Task Helper</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        {% if task.assigned_to.profile.profile_image %}
+                            <img src="{{ task.assigned_to.profile.profile_image.url }}"
+                                 alt="{{ task.assigned_to.username }}"
+                                 class="rounded-circle mb-2"
+                                 style="width: 100px; height: 100px; object-fit: cover;">
+                        {% endif %}
+                        <h6>{{ task.assigned_to.username }}</h6>
+                        <p class="text-muted mb-2">{{ task.assigned_to.profile.get_average_rating }}/5 rating</p>
+                        <p class="small">{{ task.assigned_to.profile.bio|truncatewords:15 }}</p>
+                        <a href="{% url 'public_profile' task.assigned_to.username %}" class="btn btn-sm btn-outline-primary">
+                            View Profile
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const completeBtn = document.getElementById('completeTaskBtn');
+        if (completeBtn) {
+            completeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const credits = this.getAttribute('data-credits');
+                const url = this.getAttribute('href');
+
+                Swal.fire({
+                    title: 'Mark Task as Complete?',
+                    text: `${credits} credits will be transferred.`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="fas fa-check"></i> Yes, complete it!',
+                    cancelButtonText: '<i class="fas fa-times"></i> Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = url;
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}
+

@@ -1,0 +1,504 @@
+{% extends 'shop/base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - AI E-Commerce{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav class="breadcrumb">
+    <div class="container">
+        <a href="{% url 'shop:home' %}">Home</a>
+        <span class="separator">&rsaquo;</span>
+        <a href="{% url 'shop:category' product.category.id %}">{{ product.category.name }}</a>
+        <span class="separator">&rsaquo;</span>
+        <span class="current">{{ product.name }}</span>
+    </div>
+</nav>
+
+<!-- Product Detail Section -->
+<section class="product-detail-section">
+    <div class="container">
+        <div class="product-detail-grid">
+            <!-- Product Image -->
+            <div class="product-image-container">
+                <div class="main-image">
+                    <img src="{% static 'shop/images/placeholder.jpg' %}" alt="{{ product.name }}">
+                </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="product-info-container">
+                <span class="product-category-badge">{{ product.category.name }}</span>
+                <h1 class="product-title">{{ product.name }}</h1>
+
+                <div class="product-meta">
+                    <span class="price">${{ product.price }}</span>
+                    {% if product.description %}
+                    <div class="description">
+                        <h3>Description</h3>
+                        <p>{{ product.description }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="product-actions">
+                    <button class="btn-primary btn-add-to-cart" onclick="addToCart({{ product.id }})">
+                        Add to Cart
+                    </button>
+                    <button class="btn-secondary btn-wishlist" onclick="addToWishlist({{ product.id }})">
+                        <span class="heart-icon">♥</span> Add to Wishlist
+                    </button>
+                    <button class="btn-purchase" onclick="purchaseProduct({{ product.id }})">
+                        <span class="buy-icon">🛒</span> Buy Now
+                    </button>
+                </div>
+
+                <div class="product-details">
+                    <div class="detail-item">
+                        <span class="label">Category:</span>
+                        <span class="value">{{ product.category.name }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Product ID:</span>
+                        <span class="value">#{{ product.id }}</span>
+                    </div>
+                    {% if product.created_at %}
+                    <div class="detail-item">
+                        <span class="label">Added:</span>
+                        <span class="value">{{ product.created_at|date:"M d, Y" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Similar Products Section -->
+{% if similar_products %}
+<section class="recommendations-section similar-products">
+    <div class="container">
+        <h2 class="section-title">
+            <span class="ai-badge">AI</span> Similar Products
+        </h2>
+        <p class="section-subtitle">Products you might like based on this item</p>
+        <div class="products-grid">
+            {% for similar_product in similar_products %}
+            <div class="product-card compact">
+                <div class="product-image">
+                    <img src="{% static 'shop/images/placeholder.jpg' %}" alt="{{ similar_product.name }}">
+                    <span class="similarity-badge">{{ forloop.counter|ordinal }} match</span>
+                </div>
+                <div class="product-info">
+                    <span class="product-category">{{ similar_product.category.name }}</span>
+                    <h3 class="product-name">
+                        <a href="{% url 'shop:product_detail' similar_product.id %}">{{ similar_product.name }}</a>
+                    </h3>
+                    <div class="product-footer">
+                        <span class="product-price">${{ similar_product.price }}</span>
+                        <button class="btn-add-cart-small" onclick="addToCart({{ similar_product.id }})">Add</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Frequently Bought Together Section -->
+{% if frequently_bought %}
+<section class="recommendations-section frequently-bought">
+    <div class="container">
+        <h2 class="section-title">
+            <span class="ai-badge">Frequently Bought Together</span>
+        </h2>
+        <p class="section-subtitle">Customers who bought this also bought these items</p>
+        <div class="products-grid">
+            {% for fb_product in frequently_bought %}
+            <div class="product-card compact">
+                <div class="product-image">
+                    <img src="{% static 'shop/images/placeholder.jpg' %}" alt="{{ fb_product.name }}">
+                    <span class="bundle-badge">Bundle</span>
+                </div>
+                <div class="product-info">
+                    <span class="product-category">{{ fb_product.category.name }}</span>
+                    <h3 class="product-name">
+                        <a href="{% url 'shop:product_detail' fb_product.id %}">{{ fb_product.name }}</a>
+                    </h3>
+                    <div class="product-footer">
+                        <span class="product-price">${{ fb_product.price }}</span>
+                        <button class="btn-add-cart-small" onclick="addToCart({{ fb_product.id }})">Add</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Empty Recommendations State -->
+{% if not similar_products and not frequently_bought %}
+<section class="no-recommendations">
+    <div class="container">
+        <p class="info-message">
+            <span class="ai-icon">✦</span>
+            Add more products and interactions to enable AI recommendations
+        </p>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Product Detail Specific Styles */
+.breadcrumb {
+    padding: 1rem 0;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.breadcrumb .container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.breadcrumb a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb .separator {
+    color: #a0aec0;
+}
+
+.breadcrumb .current {
+    color: #718096;
+}
+
+.product-detail-section {
+    padding: 3rem 0;
+}
+
+.product-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
+}
+
+.product-image-container {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.main-image {
+    width: 100%;
+    height: 500px;
+    background: #f7fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.main-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-info-container {
+    padding: 1rem 0;
+}
+
+.product-category-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+}
+
+.product-title {
+    font-size: 2.5rem;
+    color: #2d3748;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+}
+
+.product-meta {
+    margin-bottom: 2rem;
+}
+
+.product-meta .price {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #2d3748;
+    display: block;
+    margin-bottom: 1.5rem;
+}
+
+.description h3 {
+    font-size: 1.2rem;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+}
+
+.description p {
+    color: #718096;
+    line-height: 1.8;
+}
+
+.product-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    flex: 1;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-secondary:hover {
+    background: #667eea;
+    color: white;
+}
+
+.btn-purchase {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    color: white;
+    border: none;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-purchase:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(72, 187, 120, 0.4);
+}
+
+.heart-icon {
+    font-size: 1.2rem;
+}
+
+.product-details {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-item .label {
+    color: #718096;
+    font-weight: 500;
+}
+
+.detail-item .value {
+    color: #2d3748;
+    font-weight: 600;
+}
+
+/* Compact Product Cards */
+.product-card.compact {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.product-card.compact:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+.product-card.compact .product-image {
+    position: relative;
+    height: 150px;
+    background: #f7fafc;
+}
+
+.product-card.compact .product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.similarity-badge,
+.bundle-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(102, 126, 234, 0.9);
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.bundle-badge {
+    background: rgba(72, 187, 120, 0.9);
+}
+
+.product-card.compact .product-info {
+    padding: 1rem;
+}
+
+.product-card.compact .product-category {
+    font-size: 0.75rem;
+    color: #667eea;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.product-card.compact .product-name {
+    font-size: 1rem;
+    margin: 0.3rem 0;
+}
+
+.product-card.compact .product-footer {
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
+}
+
+.product-card.compact .product-price {
+    font-size: 1.2rem;
+}
+
+.btn-add-cart-small {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-add-cart-small:hover {
+    transform: scale(1.05);
+}
+
+/* No Recommendations */
+.no-recommendations {
+    padding: 2rem 0;
+}
+
+.info-message {
+    text-align: center;
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    color: #718096;
+    border: 2px dashed #e2e8f0;
+}
+
+.ai-icon {
+    font-size: 1.5rem;
+    color: #667eea;
+    margin-right: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .product-detail-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .product-title {
+        font-size: 2rem;
+    }
+
+    .product-meta .price {
+        font-size: 2.5rem;
+    }
+
+    .main-image {
+        height: 350px;
+    }
+
+    .product-actions {
+        gap: 0.75rem;
+    }
+
+    .btn-primary {
+        width: 100%;
+    }
+
+    .btn-secondary {
+        width: 100%;
+    }
+
+    .btn-purchase {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Activity List - CRM System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Activities</h1>
+    <a href="{% url 'activity_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Log Activity
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link {% if not request.GET.type %}active{% endif %}" href="?">All</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.GET.type == 'CALL' %}active{% endif %}" href="?type=CALL">Calls</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.GET.type == 'EMAIL' %}active{% endif %}" href="?type=EMAIL">Emails</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.GET.type == 'MEETING' %}active{% endif %}" href="?type=MEETING">Meetings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.GET.type == 'TASK' %}active{% endif %}" href="?type=TASK">Tasks</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                {% for activity in activities %}
+                <div class="border-bottom pb-3 mb-3">
+                    <div class="d-flex justify-content-between">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                {% if activity.activity_type == 'CALL' %}
+                                <i class="fas fa-phone fa-2x text-success"></i>
+                                {% elif activity.activity_type == 'EMAIL' %}
+                                <i class="fas fa-envelope fa-2x text-primary"></i>
+                                {% elif activity.activity_type == 'MEETING' %}
+                                <i class="fas fa-users fa-2x text-info"></i>
+                                {% elif activity.activity_type == 'TASK' %}
+                                <i class="fas fa-tasks fa-2x text-warning"></i>
+                                {% else %}
+                                <i class="fas fa-sticky-note fa-2x text-secondary"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h5>{{ activity.subject }}</h5>
+                                <p class="mb-1">{{ activity.description|truncatewords:30 }}</p>
+                                <small class="text-muted">
+                                    {% if activity.contact %}
+                                    <i class="fas fa-user"></i> {{ activity.contact.full_name }}
+                                    {% endif %}
+                                    {% if activity.deal %}
+                                    <i class="fas fa-dollar-sign ms-2"></i> {{ activity.deal.title }}
+                                    {% endif %}
+                                    <i class="fas fa-calendar ms-2"></i> {{ activity.activity_date|date:"M d, Y" }}
+                                </small>
+                            </div>
+                        </div>
+                        <div>
+                            {% if activity.status == 'COMPLETED' %}
+                            <span class="badge bg-success">Completed</span>
+                            {% elif activity.is_overdue %}
+                            <span class="badge bg-danger">Overdue</span>
+                            {% else %}
+                            <span class="badge bg-warning">Pending</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-center text-muted">No activities found</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Overdue</h5>
+            </div>
+            <div class="card-body">
+                {% for activity in overdue %}
+                <div class="border-bottom pb-2 mb-2">
+                    <strong>{{ activity.subject }}</strong>
+                    <small class="d-block text-danger">Due: {{ activity.due_date|date:"M d, Y" }}</small>
+                </div>
+                {% empty %}
+                <p class="text-muted mb-0">No overdue activities</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-check-circle"></i> Upcoming</h5>
+            </div>
+            <div class="card-body">
+                {% for activity in upcoming %}
+                <div class="border-bottom pb-2 mb-2">
+                    <strong>{{ activity.subject }}</strong>
+                    <small class="d-block text-muted">{{ activity.due_date|date:"M d, Y" }}</small>
+                </div>
+                {% empty %}
+                <p class="text-muted mb-0">No upcoming activities</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

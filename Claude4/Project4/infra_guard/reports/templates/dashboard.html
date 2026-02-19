@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}My Dashboard - InfraGuard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>My Dashboard</h1>
+        <p>View your reported incidents and claims</p>
+        <a href="{% url 'reports:report_incident' %}" class="btn btn-primary">
+            <span class="btn-icon">➕</span> Report New Incident
+        </a>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="stats-row">
+        <div class="stat-badge stat-primary">
+            <span class="stat-number">{{ total_incidents }}</span>
+            <span class="stat-label">Total Reports</span>
+        </div>
+        <div class="stat-badge stat-success">
+            <span class="stat-number">{{ verified_count }}</span>
+            <span class="stat-label">Verified</span>
+        </div>
+        <div class="stat-badge stat-warning">
+            <span class="stat-number">{{ user_claims.count }}</span>
+            <span class="stat-label">Claims Filed</span>
+        </div>
+    </div>
+
+    <!-- Incidents Table -->
+    <div class="card">
+        <h3 class="card-title">My Reported Incidents</h3>
+
+        {% if incidents %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Location</th>
+                            <th>Severity</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for incident in incidents %}
+                            <tr>
+                                <td>
+                                    <span class="incident-type-badge type-{{ incident.incident_type }}">
+                                        {{ incident.get_incident_type_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>{{ incident.location }}</strong>
+                                    {% if incident.latitude and incident.longitude %}
+                                        <span class="gps-icon">📍</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="severity-indicator">
+                                        <div class="severity-bar">
+                                            <div class="severity-fill {{ incident.get_severity_color }}"
+                                                 style="width: {{ incident.severity_score }}%"></div>
+                                        </div>
+                                        <span class="severity-score">{{ incident.severity_score }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ incident.status }}">
+                                        {{ incident.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ incident.timestamp|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if incident.status == 'verified' and not incident.claims.exists %}
+                                        <a href="{% url 'reports:file_claim' incident.id %}"
+                                           class="btn btn-sm btn-success">
+                                            File Claim
+                                        </a>
+                                    {% elif incident.claims.exists %}
+                                        <span class="claimed-badge">Claimed</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📋</div>
+                <h3>No incidents reported yet</h3>
+                <p>Start by reporting your first infrastructure issue.</p>
+                <a href="{% url 'reports:report_incident' %}" class="btn btn-primary">
+                    Report Your First Incident
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Claims Table -->
+    {% if user_claims %}
+        <div class="card">
+            <h3 class="card-title">My Claims</h3>
+
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Victim</th>
+                            <th>Incident</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Filed Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for claim in user_claims %}
+                            <tr>
+                                <td>{{ claim.victim_name }}</td>
+                                <td>{{ claim.incident.get_incident_type_display }} at {{ claim.incident.location }}</td>
+                                <td><strong>${{ claim.claim_amount }}</strong></td>
+                                <td>
+                                    <span class="status-badge {{ claim.get_status_color }}">
+                                        {{ claim.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ claim.filed_date|date:"M d, Y" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

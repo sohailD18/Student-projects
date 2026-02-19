@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load deals_filters %}
+
+{% block title %}Pipeline - CRM System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Sales Pipeline</h1>
+    <a href="{% url 'deal_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> New Deal
+    </a>
+</div>
+
+<div class="row flex-nowrap overflow-auto" style="min-height: 600px;">
+    {% for stage in stages %}
+    <div class="col-md-3" id="stage-{{ stage.id }}">
+        <div class="card mb-3" style="background-color: {{ stage.color }}20; border-color: {{ stage.color }};">
+            <div class="card-header d-flex justify-content-between align-items-center" style="background-color: {{ stage.color }}; color: white;">
+                <h6 class="mb-0">{{ stage.name }}</h6>
+                <span class="badge bg-light text-dark">{{ deals_by_stage|dict_key:stage.id|length }}</span>
+            </div>
+            <div class="card-body p-2" style="min-height: 400px;">
+                {% for deal in deals_by_stage|dict_key:stage.id %}
+                <div class="card mb-2 cursor-move deal-card" data-deal-id="{{ deal.id }}" data-stage-id="{{ stage.id }}">
+                    <div class="card-body p-3">
+                        <h6 class="card-title">{{ deal.title }}</h6>
+                        <p class="card-text text-muted small mb-1">
+                            {{ deal.contact.full_name|default:deal.company.name|default:"No contact" }}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>${{ deal.value }}</strong>
+                            <small class="text-muted">{{ deal.days_until_close|default:"" }} days</small>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            <i class="fas fa-calendar"></i> {{ deal.expected_close_date|default:"No date" }}
+                        </small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dealCards = document.querySelectorAll('.deal-card');
+    
+    dealCards.forEach(card => {
+        card.addEventListener('dragstart', function(e) {
+            e.dataTransfer.setData('dealId', this.dataset.dealId);
+            this.style.opacity = '0.5';
+        });
+        
+        card.addEventListener('dragend', function() {
+            this.style.opacity = '1';
+        });
+    });
+    
+    const stages = document.querySelectorAll('.card-body');
+    
+    stages.forEach(stage => {
+        stage.addEventListener('dragover', function(e) {
+            e.preventDefault();
+        });
+        
+        stage.addEventListener('drop', function(e) {
+            e.preventDefault();
+            const dealId = e.dataTransfer.getData('dealId');
+            const stageId = this.closest('.col-md-3').id.replace('stage-', '');
+            
+            if (dealId && stageId) {
+                fetch('/deals/update-stage/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `deal_id=${dealId}&stage_id=${stageId}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    }
+                });
+            }
+        });
+    });
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

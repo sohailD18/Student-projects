@@ -1,0 +1,160 @@
+{% extends 'monitoring/base.html' %}
+
+{% block title %}Create Exam - EduProctor Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="app-container wide">
+        <!-- Header -->
+        <div class="app-header">
+            <h1><i class="bi bi-plus-circle me-2"></i>Create New Exam</h1>
+            <p>Add a new exam with questions for students</p>
+        </div>
+
+        <!-- Exam Form -->
+        <form method="post" id="examForm">
+            {% csrf_token %}
+
+            <!-- Exam Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Exam Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="subject" class="form-label">Subject / Exam Title *</label>
+                                <input type="text" class="form-control" id="subject" name="subject" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="duration" class="form-label">Duration (minutes) *</label>
+                                <input type="number" class="form-control" id="duration" name="duration" value="30" min="5" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="passing_score" class="form-label">Passing Score (%) *</label>
+                                <input type="number" class="form-control" id="passing_score" name="passing_score" value="40" min="0" max="100" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="instructions" class="form-label">Instructions (Optional)</label>
+                        <textarea class="form-control" id="instructions" name="instructions" rows="3" placeholder="Enter any specific instructions for students..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Questions Section -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-question-circle me-2"></i>Questions</h5>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuestion()">
+                        <i class="bi bi-plus-lg me-1"></i>Add Question
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="questions-container">
+                        <!-- Questions will be added here dynamically -->
+                    </div>
+                    <div class="alert alert-info" id="no-questions-alert">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Click "Add Question" to add questions to this exam.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="d-flex gap-3 justify-content-center">
+                <a href="{% url 'monitoring:admin_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg me-2"></i>Cancel
+                </a>
+                <button type="submit" class="btn btn-primary-custom">
+                    <i class="bi bi-check-lg me-2"></i>Create Exam
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let questionCount = 0;
+
+function addQuestion() {
+    questionCount++;
+    const container = document.getElementById('questions-container');
+    const noQuestionsAlert = document.getElementById('no-questions-alert');
+
+    if (noQuestionsAlert) {
+        noQuestionsAlert.style.display = 'none';
+    }
+
+    const questionHTML = `
+        <div class="card mb-3 question-card" id="question-${questionCount}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Question ${questionCount}</h6>
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeQuestion(${questionCount})">
+                    <i class="bi bi-trash"></i> Remove
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Question Text *</label>
+                    <textarea class="form-control" name="question_${questionCount}" rows="2" required placeholder="Enter the question..."></textarea>
+                </div>
+                <div class="row">
+                    ${[1, 2, 3, 4].map(i => `
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label">Choice ${i} *</label>
+                            <div class="input-group">
+                                <div class="input-group-text">
+                                    <input class="form-check-input mt-0" type="radio" name="question_${questionCount}_correct" value="${i}" ${i === 1 ? 'checked' : ''} required>
+                                </div>
+                                <input type="text" class="form-control" name="question_${questionCount}_choice_${i}" placeholder="Choice ${i} text" required>
+                            </div>
+                            <small class="text-muted">Select the radio button for the correct answer</small>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+
+    container.insertAdjacentHTML('beforeend', questionHTML);
+}
+
+function removeQuestion(id) {
+    const question = document.getElementById(`question-${id}`);
+    if (question) {
+        question.remove();
+    }
+
+    const container = document.getElementById('questions-container');
+    if (container.children.length === 0) {
+        const noQuestionsAlert = document.getElementById('no-questions-alert');
+        if (noQuestionsAlert) {
+            noQuestionsAlert.style.display = 'block';
+        }
+    }
+}
+
+document.getElementById('examForm').addEventListener('submit', function(e) {
+    const questions = document.querySelectorAll('.question-card');
+    document.getElementById('question_count').value = questions.length;
+
+    if (questions.length === 0) {
+        e.preventDefault();
+        alert('Please add at least one question to the exam.');
+        return false;
+    }
+});
+
+// Add one question by default on page load
+document.addEventListener('DOMContentLoaded', function() {
+    addQuestion();
+});
+</script>
+{% endblock %}

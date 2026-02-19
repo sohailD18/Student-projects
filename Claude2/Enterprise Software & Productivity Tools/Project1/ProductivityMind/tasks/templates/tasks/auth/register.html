@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - ProductivityMind</title>
+    <link rel="stylesheet" href="/static/static/css/auth.css">
+</head>
+<body>
+    <div class="auth-container register-mode">
+        <!-- Left Side - Registration Form -->
+        <div class="auth-form-container">
+            <div class="auth-form-wrapper">
+                <div class="auth-header">
+                    <h2>Create Account</h2>
+                    <p>Join ProductivityMind and boost your team's productivity</p>
+                </div>
+
+                {% if messages %}
+                <div class="auth-messages">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        <span class="alert-icon">
+                            {% if message.tags == 'error' %}
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            {% else %}
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            {% endif %}
+                        </span>
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="post" class="auth-form" id="registerForm">
+                    {% csrf_token %}
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                </svg>
+                                <input type="text" id="first_name" name="first_name" class="form-input" placeholder="John" value="{{ first_name|default:'' }}" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                </svg>
+                                <input type="text" id="last_name" name="last_name" class="form-input" placeholder="Doe" value="{{ last_name|default:'' }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="username" class="form-label">Username</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                            </svg>
+                            <input type="text" id="username" name="username" class="form-input" placeholder="johndoe" value="{{ username|default:'' }}" required>
+                        </div>
+                        <small class="form-help">Choose a unique username for your account</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Address</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                            </svg>
+                            <input type="email" id="email" name="email" class="form-input" placeholder="john@example.com" value="{{ email|default:'' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <input type="password" id="password" name="password" class="form-input" placeholder="Enter password" required minlength="8">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirm_password" class="form-label">Confirm Password</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <input type="password" id="confirm_password" name="confirm_password" class="form-input" placeholder="Confirm password" required minlength="8">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="department" class="form-label">Department</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                            </svg>
+                            <input type="text" id="department" name="department" class="form-input" placeholder="Engineering, Design, Marketing..." value="{{ department|default:'' }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="role" class="form-label">Role</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+                            </svg>
+                            <select id="role" name="role" class="form-select" required>
+                                <option value="member" {% if role == 'member' %}selected{% endif %}>Team Member</option>
+                                <option value="team_lead" {% if role == 'team_lead' %}selected{% endif %}>Team Lead</option>
+                                <option value="manager" {% if role == 'manager' %}selected{% endif %}>Project Manager</option>
+                                <option value="admin" {% if role == 'admin' %}selected{% endif %}>Administrator</option>
+                                <option value="viewer" {% if role == 'viewer' %}selected{% endif %}>Viewer</option>
+                            </select>
+                        </div>
+                        <small class="form-help">Select your role in the organization</small>
+                    </div>
+
+                    <div class="form-agree">
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" id="terms" required>
+                            <span class="checkbox-label">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        Create Account
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>Already have an account? <a href="{% url 'tasks:login' %}">Sign in</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Branding -->
+        <div class="auth-branding">
+            <div class="branding-content">
+                <div class="logo-large">
+                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                        <rect width="64" height="64" rx="16" fill="#6366f1"/>
+                        <path d="M32 16L44 28H36V36H28V28H20L32 16Z" fill="white"/>
+                        <path d="M20 40H44V48H20V40Z" fill="white" opacity="0.8"/>
+                    </svg>
+                </div>
+                <h1>ProductivityMind</h1>
+                <p>Transform your team's productivity with AI-powered insights</p>
+
+                <div class="benefits-grid">
+                    <div class="benefit-card">
+                        <div class="benefit-icon">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="currentColor">
+                                <path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12 12-5.373 12-12S22.627 4 16 4zm-2 15l-5-5 1.41-1.41L14 16.17l7.59-7.59L23 10l-9 9z"/>
+                            </svg>
+                        </div>
+                        <h3>Smart Prioritization</h3>
+                        <p>AI analyzes deadlines, dependencies, and workload to prioritize tasks automatically</p>
+                    </div>
+
+                    <div class="benefit-card">
+                        <div class="benefit-icon">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="currentColor">
+                                <path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12 12-5.373 12-12S22.627 4 16 4zm0 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/>
+                            </svg>
+                        </div>
+                        <h3>Risk Prediction</h3>
+                        <p>Identify at-risk tasks before they become problems with predictive analytics</p>
+                    </div>
+
+                    <div class="benefit-card">
+                        <div class="benefit-icon">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="currentColor">
+                                <path d="M16 2C8.268 2 2 8.268 2 16s6.268 14 14 14 14-6.268 14-14S23.732 2 16 2zm0 26C9.383 28 4 22.617 4 16S9.383 4 16 4s12 5.383 12 12-5.383 12-12 12zm-2-12V9h4v7h5l-7 7-7-7h5z"/>
+                            </svg>
+                        </div>
+                        <h3>Performance Insights</h3>
+                        <p>Track team performance with detailed analytics and productivity reports</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Password match validation
+        const form = document.getElementById('registerForm');
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirm_password');
+
+        form.addEventListener('submit', function(e) {
+            if (password.value !== confirmPassword.value) {
+                e.preventDefault();
+                alert('Passwords do not match!');
+            }
+        });
+    </script>
+</body>
+</html>

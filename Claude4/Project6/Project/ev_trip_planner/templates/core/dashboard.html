@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - EV Trip Planner{% endblock %}
+
+{% block content %}
+<section class="dashboard-section">
+    <div class="container">
+        <div class="dashboard-header">
+            <h1>Welcome, {{ user.first_name|default:user.username }}!</h1>
+            <p>Manage your EV journey from here</p>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <a href="{% url 'planner:plan_trip' %}" class="quick-action-card">
+                <div class="quick-action-icon">🗺️</div>
+                <div class="quick-action-text">
+                    <h3>Plan a Trip</h3>
+                    <p>Start planning your next EV journey</p>
+                </div>
+            </a>
+
+            <a href="{% url 'core:stations_map' %}" class="quick-action-card">
+                <div class="quick-action-icon">⚡</div>
+                <div class="quick-action-text">
+                    <h3>Find Chargers</h3>
+                    <p>Locate nearby charging stations</p>
+                </div>
+            </a>
+
+            <a href="{% url 'core:vehicle_add' %}" class="quick-action-card">
+                <div class="quick-action-icon">🚗</div>
+                <div class="quick-action-text">
+                    <h3>Add Vehicle</h3>
+                    <p>Add your EV for better planning</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-icon">🚗</div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ vehicles.count }}</div>
+                    <div class="stat-label">Vehicles</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">📍</div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ recent_trips|length }}</div>
+                    <div class="stat-label">Trips Planned</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-info">
+                    <div class="stat-value">{% widthratio recent_trips|length 1 1 %}</div>
+                    <div class="stat-label">Total Kilometers</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- My Vehicles -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h2>My Vehicles</h2>
+                    <a href="{% url 'core:vehicle_list' %}" class="btn-link">View All →</a>
+                </div>
+                <div class="card-body">
+                    {% if vehicles %}
+                        <div class="vehicle-list">
+                            {% for vehicle in vehicles|slice:":3" %}
+                                <div class="vehicle-item">
+                                    <div class="vehicle-info">
+                                        <h4>{{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}</h4>
+                                        <p>{{ vehicle.get_ev_type_display }} • {{ vehicle.range_km }} km range</p>
+                                    </div>
+                                    <span class="vehicle-badge">{{ vehicle.battery_capacity }} kWh</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <p>No vehicles added yet</p>
+                            <a href="{% url 'core:vehicle_add' %}" class="btn btn-primary">Add Your First Vehicle</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Trips -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h2>Recent Trips</h2>
+                    <a href="{% url 'planner:trip_history' %}" class="btn-link">View All →</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_trips %}
+                        <div class="trip-list">
+                            {% for trip in recent_trips %}
+                                <div class="trip-item">
+                                    <div class="trip-info">
+                                        <h4>{{ trip.start_location }} to {{ trip.destination }}</h4>
+                                        <p>{{ trip.estimated_distance }} km • {{ trip.created_at|date:"M d, Y" }}</p>
+                                    </div>
+                                    <span class="trip-badge trip-badge-{{ trip.status }}">{{ trip.get_status_display }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <p>No trips planned yet</p>
+                            <a href="{% url 'planner:plan_trip' %}" class="btn btn-primary">Plan Your First Trip</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

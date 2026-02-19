@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmation - Multi-Vendor Marketplace{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="text-center mb-4">
+            <i class="fas fa-check-circle text-success fa-5x"></i>
+        </div>
+        <div class="text-center mb-4">
+            <h2>Order Confirmed!</h2>
+            <p class="lead">Thank you for your order. Your order number is <strong>#{{ order.order_number }}</strong></p>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Order Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Order Number:</strong>
+                        <p class="mb-0">{{ order.order_number }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Order Date:</strong>
+                        <p class="mb-0">{{ order.created_at|date:"F d, Y" }}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Status:</strong>
+                        <p class="mb-0">
+                            <span class="badge bg-warning">{{ order.status }}</span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Total:</strong>
+                        <p class="mb-0">${{ order.total }}</p>
+                    </div>
+                </div>
+                
+                <h6>Shipping Address:</h6>
+                <p class="mb-3">{{ order.shipping_address|linebreaks }}</p>
+                
+                <a href="{% url 'order_list' %}" class="btn btn-primary">
+                    <i class="fas fa-list"></i> View All Orders
+                </a>
+                <a href="{% url 'product_list' %}" class="btn btn-outline-primary">
+                    Continue Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'appointments/base.html' %}
+
+{% block title %}Providers - Appointment System{% endblock %}
+
+{% block content %}
+{% if service %}
+<h2 class="mb-3">Providers for {{ service.name }}</h2>
+<a href="{% url 'provider_list' %}" class="btn btn-outline-secondary mb-4">Show All Providers</a>
+{% else %}
+<h2 class="mb-4">Our Service Providers</h2>
+{% endif %}
+
+<div class="row">
+    {% for provider in providers %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100" onclick="location.href='{% url 'provider_detail' provider.id %}'" style="cursor: pointer;">
+            <div class="card-body text-center">
+                {% if provider.profile_image %}
+                <img src="{{ provider.profile_image.url }}" class="rounded-circle mb-3" alt="{{ provider }}" style="width: 100px; height: 100px; object-fit: cover;">
+                {% else %}
+                <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px;">
+                    <span class="text-white fs-3">{{ provider.user.username|first|upper }}</span>
+                </div>
+                {% endif %}
+                <h5 class="card-title">{{ provider }}</h5>
+                <p class="card-text text-muted">{{ provider.bio|truncatewords:15 }}</p>
+                <p class="card-text">
+                    <small class="text-muted">Services: {{ provider.services.count }}</small>
+                </p>
+                <a href="{% url 'provider_detail' provider.id %}" class="btn btn-outline-primary">View Profile</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <p class="text-center text-muted">No providers available at the moment.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Analytics Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="/">Analytics Dashboard</a>
+            </div>
+            <ul class="nav-menu">
+                {% if user.is_authenticated %}
+                <li><a href="/">Home</a></li>
+                <li><a href="/dashboards/">Dashboards</a></li>
+                <li><a href="/metrics/">Metrics</a></li>
+                <li><a href="/data-sources/">Data Sources</a></li>
+                <li><a href="/alerts/">Alerts</a></li>
+                <li><a href="/reports/">Reports</a></li>
+                <li>
+                    <form action="/logout/" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" style="background: none; border: none; color: inherit; cursor: pointer; padding: 0; text-decoration: none; font-size: inherit;">
+                            Logout ({{ user.username }})
+                        </button>
+                    </form>
+                </li>
+                {% else %}
+                <li><a href="/login/">Login</a></li>
+                <li><a href="/signup/">Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p>Analytics Dashboard © {% now "Y" %}</p>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

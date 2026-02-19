@@ -1,0 +1,228 @@
+{% extends 'analytics/base.html' %}
+
+{% block title %}Home - Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if user.is_authenticated %}
+    <!-- User Welcome Section -->
+    <div class="user-welcome">
+        <h1>Welcome back, {{ user.username }}!</h1>
+        <p>Here's your analytics overview</p>
+    </div>
+
+    <!-- User Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card stat-primary">
+            <div class="stat-icon">📊</div>
+            <div class="stat-info">
+                <h3>{{ user_stats.dashboards_count }}</h3>
+                <p>Dashboards</p>
+            </div>
+            <a href="/dashboards/" class="stat-link">View All →</a>
+        </div>
+
+        <div class="stat-card stat-success">
+            <div class="stat-icon">📈</div>
+            <div class="stat-info">
+                <h3>{{ user_stats.metrics_count }}</h3>
+                <p>Metrics</p>
+            </div>
+            <a href="/metrics/" class="stat-link">View All →</a>
+        </div>
+
+        <div class="stat-card stat-info">
+            <div class="stat-icon">💾</div>
+            <div class="stat-info">
+                <h3>{{ user_stats.data_points_count }}</h3>
+                <p>Data Points</p>
+            </div>
+            <a href="/metrics/" class="stat-link">Manage →</a>
+        </div>
+
+        <div class="stat-card stat-warning">
+            <div class="stat-icon">🔔</div>
+            <div class="stat-info">
+                <h3>{{ user_stats.unacknowledged_alerts }}</h3>
+                <p>Active Alerts</p>
+            </div>
+            <a href="/alerts/logs/" class="stat-link">View All →</a>
+        </div>
+
+        <div class="stat-card stat-secondary">
+            <div class="stat-icon">🔌</div>
+            <div class="stat-info">
+                <h3>{{ user_stats.data_sources_count }}</h3>
+                <p>Data Sources</p>
+            </div>
+            <a href="/data-sources/" class="stat-link">View All →</a>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <h2>Quick Actions</h2>
+        <div class="action-buttons">
+            <a href="/dashboards/create/" class="btn btn-primary">➕ New Dashboard</a>
+            <a href="/metrics/create/" class="btn btn-success">➕ New Metric</a>
+            <a href="/data-sources/create/" class="btn btn-info">➕ Add Data Source</a>
+            <a href="/alerts/create/" class="btn btn-warning">➕ Create Alert</a>
+            {% if user_metrics.first %}
+            <a href="/metrics/{{ user_metrics.first.id }}/add-data/" class="btn btn-secondary">📝 Add Data Point</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Recent Dashboards -->
+        <section class="card">
+            <div class="card-header">
+                <h2>📊 Your Recent Dashboards</h2>
+                <a href="/dashboards/" class="btn btn-sm btn-link">View All</a>
+            </div>
+            {% if recent_dashboards %}
+            <ul class="list-group">
+                {% for dashboard in recent_dashboards %}
+                <li>
+                    <a href="/dashboards/{{ dashboard.id }}/">{{ dashboard.name }}</a>
+                    <small>
+                        {{ dashboard.widgets.count }} widgets •
+                        Created {{ dashboard.created_at|timesince }} ago
+                        {% if dashboard.description %}• {{ dashboard.description|truncatewords:8 }}{% endif %}
+                    </small>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state-mini">
+                <p>No dashboards yet</p>
+                <a href="/dashboards/create/" class="btn btn-sm btn-primary">Create Your First Dashboard</a>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Recent Metrics -->
+        <section class="card">
+            <div class="card-header">
+                <h2>📈 Your Recent Metrics</h2>
+                <a href="/metrics/" class="btn btn-sm btn-link">View All</a>
+            </div>
+            {% if recent_metrics %}
+            <ul class="list-group">
+                {% for metric in recent_metrics %}
+                <li>
+                    <a href="/metrics/{{ metric.id }}/">{{ metric.name }}</a>
+                    <small>
+                        {{ metric.get_metric_type_display }} •
+                        {{ metric.data_points.count }} data points •
+                        {{ metric.aggregation_period }}
+                        {% if metric.unit %}• {{ metric.unit }}{% endif %}
+                    </small>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state-mini">
+                <p>No metrics yet</p>
+                <a href="/metrics/create/" class="btn btn-sm btn-primary">Create Your First Metric</a>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Active Alerts -->
+        {% if recent_alerts %}
+        <section class="card">
+            <div class="card-header">
+                <h2>🔔 Active Alerts</h2>
+                <a href="/alerts/logs/" class="btn btn-sm btn-link">View All</a>
+            </div>
+            <ul class="list-group">
+                {% for log in recent_alerts %}
+                <li class="alert-item alert-{{ log.severity }}">
+                    <div>
+                        <strong>{{ log.alert.name }}</strong>
+                        <span class="alert-message">{{ log.message|truncatewords:12 }}</span>
+                    </div>
+                    <small>{{ log.triggered_at|timesince }} ago</small>
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+    </div>
+
+    <!-- Getting Started (for new users) -->
+    {% if user_stats.dashboards_count == 0 and user_stats.metrics_count == 0 %}
+    <div class="getting-started card">
+        <h2>🚀 Getting Started with Analytics Dashboard</h2>
+        <div class="steps-grid">
+            <div class="step-item">
+                <div class="step-number">1</div>
+                <h3>Create a Data Source</h3>
+                <p>Connect to external data or use manual entry for your metrics</p>
+                <a href="/data-sources/create/" class="btn btn-sm btn-primary">Create Data Source</a>
+            </div>
+            <div class="step-item">
+                <div class="step-number">2</div>
+                <h3>Define Your Metrics</h3>
+                <p>Set up metrics to track KPIs and important data points</p>
+                <a href="/metrics/create/" class="btn btn-sm btn-primary">Create Metric</a>
+            </div>
+            <div class="step-item">
+                <div class="step-number">3</div>
+                <h3>Add Data Points</h3>
+                <p>Populate your metrics with data to visualize trends</p>
+                {% if user_metrics.first %}
+                <a href="/metrics/{{ user_metrics.first.id }}/add-data/" class="btn btn-sm btn-primary">Add Data</a>
+                {% else %}
+                <span class="text-muted">Create a metric first</span>
+                {% endif %}
+            </div>
+            <div class="step-item">
+                <div class="step-number">4</div>
+                <h3>Create a Dashboard</h3>
+                <p>Build visual dashboards with charts and widgets</p>
+                <a href="/dashboards/create/" class="btn btn-sm btn-primary">Create Dashboard</a>
+            </div>
+            <div class="step-item">
+                <div class="step-number">5</div>
+                <h3>Set Up Alerts</h3>
+                <p>Get notified when metrics reach important thresholds</p>
+                <a href="/alerts/create/" class="btn btn-sm btn-primary">Create Alert</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Not logged in -->
+    <div class="hero">
+        <h1>Welcome to Analytics Dashboard</h1>
+        <p>Create, monitor, and analyze your metrics with powerful data visualization tools.</p>
+        <div class="hero-actions">
+            <a href="/signup/" class="btn btn-primary">Get Started</a>
+            <a href="/login/" class="btn btn-secondary">Login</a>
+        </div>
+    </div>
+
+    <div class="features">
+        <div class="feature-card">
+            <h3>📊 Data Visualization</h3>
+            <p>Create beautiful charts and graphs with multiple widget types including line, bar, pie, and more.</p>
+        </div>
+        <div class="feature-card">
+            <h3>🔄 Real-time Updates</h3>
+            <p>Auto-refreshing dashboards keep your data up-to-date with configurable refresh intervals.</p>
+        </div>
+        <div class="feature-card">
+            <h3>🔔 Alert System</h3>
+            <p>Set up custom alerts based on metric thresholds and receive notifications when conditions are met.</p>
+        </div>
+        <div class="feature-card">
+            <h3>📑 Report Generation</h3>
+            <p>Schedule automated reports in multiple formats (PDF, CSV, Excel) and share with stakeholders.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

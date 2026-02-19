@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}User Profile - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>👤 User Profile</h2>
+
+    <!-- User Info -->
+    <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
+        <h3 style="color: #667eea; margin-bottom: 20px;">
+            {{ user.first_name|default:user.username|title }} {{ user.last_name }}
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div>
+                <div style="color: #666; font-size: 0.9em; margin-bottom: 5px;">Username</div>
+                <div style="font-weight: 600; font-size: 1.1em;">{{ user.username }}</div>
+            </div>
+            <div>
+                <div style="color: #666; font-size: 0.9em; margin-bottom: 5px;">Email</div>
+                <div style="font-weight: 600; font-size: 1.1em;">{{ user.email }}</div>
+            </div>
+            <div>
+                <div style="color: #666; font-size: 0.9em; margin-bottom: 5px;">Member Since</div>
+                <div style="font-weight: 600; font-size: 1.1em;">{{ user.date_joined|date:"F Y" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trip Statistics -->
+    <h3 style="color: #667eea; margin-bottom: 20px;">🚗 Your Driving Statistics</h3>
+
+    {% if user_trips %}
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_trips }}</div>
+            <div class="stat-label">Total Trips</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">
+                {% if avg_risk_score > 0 %}{{ avg_risk_score }}{% else %}N/A{% endif %}
+            </div>
+            <div class="stat-label">Avg Risk Score</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">
+                {% if avg_speed > 0 %}{{ avg_speed }} km/h{% else %}N/A{% endif %}
+            </div>
+            <div class="stat-label">Avg Speed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color: #4caf50;">
+                {{ safe_trips_count }}
+            </div>
+            <div class="stat-label">Safe Trips</div>
+        </div>
+    </div>
+
+    <!-- Recent Trips -->
+    <div class="card">
+        <h3>📋 Your Recent Trips</h3>
+        {% if user_trips %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Avg Speed</th>
+                    <th>Max Speed</th>
+                    <th>Braking</th>
+                    <th>Acceleration</th>
+                    <th>Risk Score</th>
+                    <th>Classification</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trip in user_trips|slice:":10" %}
+                <tr>
+                    <td>{{ trip.trip_date|date:"Y-m-d" }}</td>
+                    <td>{{ trip.average_speed }} km/h</td>
+                    <td>{{ trip.max_speed }} km/h</td>
+                    <td>{{ trip.harsh_braking_events }}</td>
+                    <td>{{ trip.rapid_acceleration_events }}</td>
+                    <td>
+                        {% if trip.risk_score %}{{ trip.risk_score }}{% else %}N/A{% endif %}
+                    </td>
+                    <td>
+                        {% if trip.behavior_class %}
+                        <span class="badge badge-{{ trip.behavior_class|lower }}">
+                            {{ trip.behavior_class }}
+                        </span>
+                        {% else %}
+                        <span style="color: #999;">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'driver_app:trip_detail' trip.id %}" style="color: #667eea;">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="text-align: center; color: #999; padding: 40px;">
+            No trips found for your account.
+        </p>
+        {% endif %}
+    </div>
+
+    {% else %}
+    <div style="text-align: center; padding: 60px 20px; background: #f8f9fa; border-radius: 10px;">
+        <div style="font-size: 4em; margin-bottom: 20px;">🚗</div>
+        <h3 style="color: #667eea; margin-bottom: 10px;">No Trips Recorded Yet</h3>
+        <p style="color: #666; margin-bottom: 30px;">
+            Start tracking your driving behavior to see your statistics here.
+        </p>
+        <a href="{% url 'driver_app:add_data' %}" class="btn">Add Your First Trip</a>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div style="margin-top: 30px; display: flex; gap: 15px; flex-wrap: wrap;">
+        <a href="{% url 'driver_app:home' %}" class="btn">← Back to Dashboard</a>
+        <a href="{% url 'driver_app:add_data' %}" class="btn" style="background: #4caf50;">+ Add New Trip</a>
+    </div>
+</div>
+{% endblock %}

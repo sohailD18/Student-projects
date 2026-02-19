@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb -->
+    <div style="margin-bottom: 1rem;">
+        <a href="{% url 'core:profile_detail' profile.pk %}" style="color: var(--color-accent); text-decoration: none;">
+            ← Back to Profile
+        </a>
+    </div>
+
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1 style="color: var(--color-primary);">Transactions - {{ profile.name }}</h1>
+        <a href="{% url 'core:transaction_create' profile.pk %}" class="btn btn-primary">
+            <span style="margin-right: 0.5rem;">+</span> Add Transaction
+        </a>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-3" style="margin-bottom: 2rem;">
+        <div class="stat-card">
+            <div class="stat-label">Total Income</div>
+            <div class="stat-value" style="color: var(--color-success-dark);">${{ total_income|floatformat:2 }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Expenses</div>
+            <div class="stat-value" style="color: var(--color-aggressive);">${{ total_expenses|floatformat:2 }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Net Savings</div>
+            <div class="stat-value" style="color: {% if net_savings >= 0 %}var(--color-success-dark){% else %}var(--color-aggressive){% endif %};">
+                {% if net_savings >= 0 %}+{% endif %} ${{ net_savings|floatformat:2 }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    {% if transactions %}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">All Transactions</h3>
+                <p class="card-subtitle">{{ transactions.count }} transactions recorded</p>
+            </div>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                        <tr data-transaction-id="{{ transaction.id }}">
+                            <td>{{ transaction.date|date:"M d, Y" }}</td>
+                            <td>{{ transaction.get_category_display }}</td>
+                            <td>
+                                <span class="risk-badge {% if transaction.transaction_type == 'income' %}risk-conservative{% else %}risk-aggressive{% endif %}">
+                                    {{ transaction.get_transaction_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span style="color: {% if transaction.transaction_type == 'income' %}var(--color-success-dark){% else %}var(--color-aggressive){% endif %}; font-weight: 600;">
+                                    {% if transaction.transaction_type == 'income' %}+{% else %}-{% endif %} ${{ transaction.amount|floatformat:2 }}
+                                </span>
+                            </td>
+                            <td>{{ transaction.description|default:"-"|truncatewords:10 }}</td>
+                            <td>
+                                <button onclick="deleteTransaction({{ transaction.id }})" class="btn btn-danger btn-sm">Delete</button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="card" style="text-align: center; padding: 3rem;">
+            <h3 style="color: var(--color-gray-500); margin-bottom: 1rem;">No Transactions Found</h3>
+            <p style="color: var(--color-gray-400); margin-bottom: 2rem;">
+                Start tracking your financial behavior by adding transactions.
+            </p>
+            <a href="{% url 'core:transaction_create' profile.pk %}" class="btn btn-primary">Add First Transaction</a>
+        </div>
+    {% endif %}
+
+    <!-- Analysis Button -->
+    {% if transactions.count >= 2 %}
+        <div style="margin-top: 2rem; text-align: center;">
+            <p style="color: var(--color-gray-600); margin-bottom: 1rem;">
+                Have enough data? Analyze your profile to discover your risk tolerance.
+            </p>
+            <a href="{% url 'core:analyze_profile' profile.pk %}" class="btn btn-success" style="font-size: 1.1rem; padding: 0.75rem 2rem;">
+                🧠 Analyze Risk Profile
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

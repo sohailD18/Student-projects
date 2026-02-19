@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}Compare Documents - LexiGuard{% endblock %}
+
+{% block content %}
+<a href="{% url 'core:dashboard' %}" class="btn btn-secondary mb-3">
+    &larr; Back to Dashboard
+</a>
+
+<div class="card">
+    <div class="card-header">
+        <h2>Compare Legal Documents</h2>
+    </div>
+    <p class="text-muted">Select two documents to analyze their differences and unique terms.</p>
+</div>
+
+<!-- Document Selection Form -->
+{% if documents %}
+<div class="card">
+    <h3>Select Documents to Compare</h3>
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 1.5rem;">
+            <!-- Document 1 Selection -->
+            <div>
+                <div class="form-group">
+                    <label for="document1" class="form-label">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-right: 0.5rem;">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                        First Document
+                    </label>
+                    <select id="document1" name="document1" class="form-control" required>
+                        <option value="">-- Select a document --</option>
+                        {% for doc in documents %}
+                        <option value="{{ doc.id }}" {% if doc1 and doc.id == doc1.id %}selected{% endif %}>
+                            {{ doc.title }} ({{ doc.created_at|date:"M d, Y" }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Document 2 Selection -->
+            <div>
+                <div class="form-group">
+                    <label for="document2" class="form-label">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-right: 0.5rem;">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                        Second Document
+                    </label>
+                    <select id="document2" name="document2" class="form-control" required>
+                        <option value="">-- Select a document --</option>
+                        {% for doc in documents %}
+                        <option value="{{ doc.id }}" {% if doc2 and doc.id == doc2.id %}selected{% endif %}>
+                            {{ doc.title }} ({{ doc.created_at|date:"M d, Y" }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-right: 0.5rem;">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                Compare Documents
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Comparison Results -->
+{% if comparison_result and doc1 and doc2 %}
+<div style="margin-top: 2rem;">
+    <!-- Documents Being Compared -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div class="card" style="margin-bottom: 0; border-left: 4px solid #2c5282;">
+            <h4 style="color: #2c5282; margin-bottom: 0.5rem;">{{ doc1.title }}</h4>
+            <p class="text-muted" style="margin-bottom: 0;">Uploaded: {{ doc1.created_at|date:"M d, Y" }}</p>
+        </div>
+        <div class="card" style="margin-bottom: 0; border-left: 4px solid #2c5282;">
+            <h4 style="color: #2c5282; margin-bottom: 0.5rem;">{{ doc2.title }}</h4>
+            <p class="text-muted" style="margin-bottom: 0;">Uploaded: {{ doc2.created_at|date:"M d, Y" }}</p>
+        </div>
+    </div>
+
+    <!-- Word Count Comparison -->
+    <div class="card">
+        <h3>Word Count Analysis</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>{{ doc1.title }}</th>
+                    <th>{{ doc2.title }}</th>
+                    <th>Difference</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Total Words</strong></td>
+                    <td>{{ comparison_result.text1_word_count|default:0 }}</td>
+                    <td>{{ comparison_result.text2_word_count|default:0 }}</td>
+                    <td>
+                        {% if comparison_result.word_count_diff > 0 %}
+                            <span style="color: #28a745;">+{{ comparison_result.word_count_diff }}</span>
+                        {% elif comparison_result.word_count_diff < 0 %}
+                            <span style="color: #dc3545;">{{ comparison_result.word_count_diff }}</span>
+                        {% else %}
+                            <span class="text-muted">0</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Unique Words Comparison -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+        <!-- Words Only in Document 1 -->
+        <div class="card">
+            <h3 style="color: #2c5282;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-right: 0.5rem;">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                Unique to "{{ doc1.title }}"
+            </h3>
+            <p class="text-muted">{{ comparison_result.unique_words_text1|length }} words found only in this document</p>
+            {% if comparison_result.unique_words_text1 %}
+            <div style="max-height: 300px; overflow-y: auto; background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-top: 1rem;">
+                {% for word in comparison_result.unique_words_text1|slice:":100" %}
+                <span style="display: inline-block; background: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 4px; border: 1px solid #dee2e6; font-size: 0.875rem;">{{ word }}</span>
+                {% endfor %}
+                {% if comparison_result.unique_words_text1|length > 100 %}
+                <p class="text-muted" style="margin-top: 1rem; font-size: 0.875rem;">... and {{ comparison_result.unique_words_text1|length|add:"-100" }} more words</p>
+                {% endif %}
+            </div>
+            {% else %}
+            <p class="text-muted">No unique words found in this document.</p>
+            {% endif %}
+        </div>
+
+        <!-- Words Only in Document 2 -->
+        <div class="card">
+            <h3 style="color: #2c5282;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-right: 0.5rem;">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                Unique to "{{ doc2.title }}"
+            </h3>
+            <p class="text-muted">{{ comparison_result.unique_words_text2|length }} words found only in this document</p>
+            {% if comparison_result.unique_words_text2 %}
+            <div style="max-height: 300px; overflow-y: auto; background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-top: 1rem;">
+                {% for word in comparison_result.unique_words_text2|slice:":100" %}
+                <span style="display: inline-block; background: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 4px; border: 1px solid #dee2e6; font-size: 0.875rem;">{{ word }}</span>
+                {% endfor %}
+                {% if comparison_result.unique_words_text2|length > 100 %}
+                <p class="text-muted" style="margin-top: 1rem; font-size: 0.875rem;">... and {{ comparison_result.unique_words_text2|length|add:"-100" }} more words</p>
+                {% endif %}
+            </div>
+            {% else %}
+            <p class="text-muted">No unique words found in this document.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Key Insights -->
+    <div class="card" style="background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%); color: white; margin-top: 1.5rem;">
+        <h3 style="color: white; border-bottom: 2px solid rgba(255,255,255,0.3);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-right: 0.5rem;">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            Key Insights
+        </h3>
+        <ul style="margin-top: 1rem; padding-left: 1.5rem;">
+            {% if comparison_result.word_count_diff == 0 %}
+                <li>Both documents have identical word counts.</li>
+            {% else %}
+                <li>"{{ doc1.title }}" has {{ comparison_result.text1_word_count|default:0 }} words, while "{{ doc2.title }}" has {{ comparison_result.text2_word_count|default:0 }} words.</li>
+            {% endif %}
+            <li>"{{ doc1.title }}" contains {{ comparison_result.unique_words_text1|length }} unique terms not found in the other document.</li>
+            <li>"{{ doc2.title }}" contains {{ comparison_result.unique_words_text2|length }} unique terms not found in the other document.</li>
+            <li>Consider reviewing the unique words to identify key differences in terms, obligations, or scope.</li>
+        </ul>
+    </div>
+</div>
+{% endif %}
+
+{% elif documents|length == 1 %}
+<div class="card text-center">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ffc107" stroke-width="2" style="margin-bottom: 1rem;">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <h4 style="color: #6c757d; margin-bottom: 0.5rem;">Need More Documents</h4>
+    <p class="text-muted">You need at least 2 documents to compare. Please upload another document.</p>
+    <a href="{% url 'core:dashboard' %}" class="btn btn-primary mt-3">Go to Dashboard</a>
+</div>
+{% else %}
+<div class="card text-center">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2" style="margin-bottom: 1rem;">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+    </svg>
+    <h4 style="color: #6c757d; margin-bottom: 0.5rem;">No Documents Available</h4>
+    <p class="text-muted">Upload some documents first before comparing them.</p>
+    <a href="{% url 'core:dashboard' %}" class="btn btn-primary mt-3">Upload Documents</a>
+</div>
+{% endif %}
+
+<script>
+// Prevent selecting same document for both dropdowns
+document.addEventListener('DOMContentLoaded', function() {
+    const doc1Select = document.getElementById('document1');
+    const doc2Select = document.getElementById('document2');
+
+    function validateSelection() {
+        if (doc1Select.value && doc2Select.value && doc1Select.value === doc2Select.value) {
+            alert('Please select two different documents to compare.');
+            return false;
+        }
+        return true;
+    }
+
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!validateSelection()) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

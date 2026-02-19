@@ -1,0 +1,436 @@
+{% extends 'base.html' %}
+
+{% block title %}Congestion Predictor - Traffic Prediction System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1 class="page-title">Traffic Congestion Predictor</h1>
+        <p class="page-subtitle">AI-powered prediction using Machine Learning</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="predict-grid">
+        <!-- Prediction Form -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Enter Traffic Parameters</h3>
+                <p class="card-subtitle">Provide the following information for prediction</p>
+            </div>
+            <div class="card-body">
+                <form id="predictionForm" class="prediction-form">
+                    {% csrf_token %}
+
+                    <!-- Date Input -->
+                    <div class="form-group">
+                        <label for="date" class="form-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            Date
+                        </label>
+                        <input type="date" id="date" name="date" class="form-control" required>
+                    </div>
+
+                    <!-- Time Input -->
+                    <div class="form-group">
+                        <label for="time" class="form-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12,6 12,12 16,14"/>
+                            </svg>
+                            Time
+                        </label>
+                        <input type="time" id="time" name="time" class="form-control" required>
+                    </div>
+
+                    <!-- Location Dropdown -->
+                    <div class="form-group">
+                        <label for="location" class="form-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            Location
+                        </label>
+                        <select id="location" name="location" class="form-control" required>
+                            <option value="">Select a location</option>
+                            {% for loc in locations %}
+                                <option value="{{ loc.0 }}">{{ loc.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Weather Dropdown -->
+                    <div class="form-group">
+                        <label for="weather" class="form-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17.5,19c4.1,0,7.5-3.4,7.5-7.5c0-4-3-7.3-6.9-7.5c-0.5-3.4-3.4-6-6.9-6c-3.1,0-5.8,2.1-6.7,5c-0.1,0-0.3,0-0.4,0c-2.8,0-5.1,2.3-5.1,5.1c0,2.8,2.3,5.1,5.1,5.1c0.3,0,0.7,0,1-0.1"/>
+                            </svg>
+                            Weather Condition
+                        </label>
+                        <select id="weather" name="weather" class="form-control" required>
+                            <option value="">Select weather condition</option>
+                            {% for weather in weather_options %}
+                                <option value="{{ weather.0 }}">{{ weather.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Vehicle Count Input -->
+                    <div class="form-group">
+                        <label for="vehicle_count" class="form-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="1" y="3" width="15" height="13"/>
+                                <polygon points="16,8 20,8 23,11 23,16 16,16 16,8"/>
+                                <circle cx="5.5" cy="18.5" r="2.5"/>
+                                <circle cx="18.5" cy="18.5" r="2.5"/>
+                            </svg>
+                            Vehicle Count
+                        </label>
+                        <input type="number" id="vehicle_count" name="vehicle_count"
+                               class="form-control" min="0" max="500" placeholder="e.g., 120" required>
+                        <small class="form-hint">Number of vehicles observed</small>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary btn-large" id="submitBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                        Predict Congestion
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Prediction Result -->
+        <div class="card result-card" id="resultCard" style="display: none;">
+            <div class="card-header">
+                <h3>Prediction Result</h3>
+                <p class="card-subtitle">AI Model Analysis</p>
+            </div>
+            <div class="card-body">
+                <div id="predictionResult">
+                    <!-- Result will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="card info-card">
+            <div class="card-header">
+                <h3>How Prediction Works</h3>
+            </div>
+            <div class="card-body">
+                <div class="info-content">
+                    <div class="info-item">
+                        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="16" x2="12" y2="12"/>
+                            <line x1="12" y1="8" x2="12.01" y2="8"/>
+                        </svg>
+                        <div>
+                            <h4>Machine Learning Model</h4>
+                            <p>Uses Random Forest Classifier trained on historical traffic data</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                        </svg>
+                        <div>
+                            <h4>Features Analyzed</h4>
+                            <p>Time of day, day of week, location, weather, and vehicle count</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+                        </svg>
+                        <div>
+                            <h4>Congestion Levels</h4>
+                            <p>Predicts Low, Medium, or High congestion with confidence score</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Set default date and time
+document.addEventListener('DOMContentLoaded', function() {
+    const now = new Date();
+    const dateInput = document.getElementById('date');
+    const timeInput = document.getElementById('time');
+
+    // Set date to today
+    dateInput.valueAsDate = now;
+
+    // Set time to current time (rounded to nearest 15 minutes)
+    const minutes = Math.round(now.getMinutes() / 15) * 15;
+    now.setMinutes(minutes);
+    timeInput.value = now.toTimeString().slice(0, 5);
+});
+
+// Handle form submission
+document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById('submitBtn');
+    const resultCard = document.getElementById('resultCard');
+    const predictionResult = document.getElementById('predictionResult');
+
+    // Get form data
+    const formData = {
+        date: document.getElementById('date').value,
+        time: document.getElementById('time').value,
+        location: document.getElementById('location').value,
+        weather: document.getElementById('weather').value,
+        vehicle_count: parseInt(document.getElementById('vehicle_count').value)
+    };
+
+    // Validate
+    if (!formData.date || !formData.time || !formData.location || !formData.weather || !formData.vehicle_count) {
+        showNotification('Please fill in all fields', 'error');
+        return;
+    }
+
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner"></span> Analyzing...';
+    resultCard.style.display = 'none';
+
+    try {
+        // Get CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // Make API request
+        const response = await fetch('{% url "traffic_app:predict_api" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Show result
+            displayPredictionResult(data);
+            resultCard.style.display = 'block';
+            resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            showNotification('Prediction completed successfully!', 'success');
+        } else {
+            showNotification('Error: ' + (data.error || 'Prediction failed'), 'error');
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Network error. Please try again.', 'error');
+    } finally {
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6v6l4 2"/>
+            </svg>
+            Predict Congestion
+        `;
+    }
+});
+
+function displayPredictionResult(data) {
+    const resultDiv = document.getElementById('predictionResult');
+
+    // Determine congestion class
+    const congestionClass = data.prediction.toLowerCase();
+    const confidencePercent = (data.confidence * 100).toFixed(1);
+
+    // Build HTML
+    let html = `
+        <div class="prediction-main">
+            <div class="congestion-indicator congestion-${congestionClass}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22,4 12,14.01 9,11.01"/>
+                </svg>
+            </div>
+            <h2 class="congestion-title congestion-${congestionClass}">
+                ${data.prediction} Congestion
+            </h2>
+            <p class="congestion-confidence">
+                Confidence: <strong>${confidencePercent}%</strong>
+            </p>
+        </div>
+    `;
+
+    // Add probabilities if available
+    if (data.probabilities) {
+        html += `
+            <div class="probabilities">
+                <h4>Probability Distribution</h4>
+                <div class="prob-item">
+                    <span class="prob-label">Low</span>
+                    <div class="prob-bar">
+                        <div class="prob-fill prob-low" style="width: ${(data.probabilities.Low * 100).toFixed(1)}%"></div>
+                    </div>
+                    <span class="prob-value">${(data.probabilities.Low * 100).toFixed(1)}%</span>
+                </div>
+                <div class="prob-item">
+                    <span class="prob-label">Medium</span>
+                    <div class="prob-bar">
+                        <div class="prob-fill prob-medium" style="width: ${(data.probabilities.Medium * 100).toFixed(1)}%"></div>
+                    </div>
+                    <span class="prob-value">${(data.probabilities.Medium * 100).toFixed(1)}%</span>
+                </div>
+                <div class="prob-item">
+                    <span class="prob-label">High</span>
+                    <div class="prob-bar">
+                        <div class="prob-fill prob-high" style="width: ${(data.probabilities.High * 100).toFixed(1)}%"></div>
+                    </div>
+                    <span class="prob-value">${(data.probabilities.High * 100).toFixed(1)}%</span>
+                </div>
+            </div>
+        `;
+    }
+
+    // Add method info
+    html += `
+        <div class="prediction-meta">
+            <p><small>Method: ${data.method === 'ml_model' ? '✅ ML Model' : '⚡ Rule-based'}</small></p>
+            <p>${data.message || ''}</p>
+        </div>
+    `;
+
+    // Add save status indicator
+    let saveStatus = '';
+    if (data.saved) {
+        saveStatus = `
+            <div class="save-status save-success">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22,4 12,14.01 9,11.01"/>
+                </svg>
+                <span>Saved to database (Record #${data.record_id})</span>
+            </div>
+        `;
+    } else if (data.save_message) {
+        saveStatus = `
+            <div class="save-status save-warning">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span>${data.save_message}</span>
+            </div>
+        `;
+    }
+
+    html += saveStatus;
+
+    resultDiv.innerHTML = html;
+}
+
+function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.classList.add('notification-hidden');
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+</script>
+
+{% block extra_css %}
+<style>
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #fff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 16px 24px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    animation: slideIn 0.3s ease;
+}
+
+.notification-success { background: #10b981; }
+.notification-error { background: #ef4444; }
+
+.notification-hidden {
+    animation: slideOut 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(400px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(400px); opacity: 0; }
+}
+
+.save-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}
+
+.save-status.save-success {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.save-status.save-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.save-status svg {
+    width: 20px;
+    height: 20px;
+}
+</style>
+{% endblock %}
+{% endblock %}
